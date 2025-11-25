@@ -1,0 +1,214 @@
+// Prisma schema for Dental Clinic Management System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  MANAGER
+  DOCTOR
+  ASSISTANT
+  RECEPTIONIST
+}
+
+enum AppointmentStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum TreatmentType {
+  CONSULTATION
+  FILLING
+  EXTRACTION
+  ROOT_CANAL
+  CLEANING
+  IMPLANT
+  ORTHODONTICS
+  OTHER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  INSURANCE
+  TRANSFER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  firstName    String
+  lastName     String
+  phone        String?
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  doctorProfile    Doctor?
+  managerProfile   Manager?
+  assistantProfile Assistant?
+
+  // Relations
+  appointments     Appointment[] @relation("UserAppointments")
+  // treatments      Treatment[] // Removed: Treatment is linked to Doctor, not User directly
+  payments         Payment[]     @relation("UserPayments")
+  expensesApproved Expense[]     @relation("ExpenseApprovedBy")
+  expensesRecorded Expense[]     @relation("ExpenseRecordedBy")
+  auditLogs        AuditLog[]
+
+  // New relations based on user request
+  registeredPatients Patient[] @relation("PatientRegistrations")
+
+  supervisor   User?         @relation("Supervision", fields: [supervisorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  supervisorId String?
+  subordinates User[]        @relation("Supervision")
+}
+
+model Doctor {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  userId         String   @unique
+  specialization String?
+  // Working schedule or times — stored as JSON array of objects or strings
+  workingTime    Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  appointments Appointment[]
+  treatments   Treatment[]
+  Patient      Patient[]
+}
+
+model Manager {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Assistant {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Patient {
+  id               String    @id @default(uuid())
+  firstName        String
+  lastName         String
+  dateOfBirth      DateTime?
+  phone            String?
+  email            String?
+  primaryDentist   Doctor?   @relation(fields: [primaryDentistId], references: [id])
+  primaryDentistId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  appointments Appointment[]
+  treatments   Treatment[]
+  payments     Payment[]
+
+  registeredBy   User?   @relation("PatientRegistrations", fields: [registeredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  registeredById String?
+}
+
+model Appointment {
+  id        String  @id @default(uuid())
+  doctor    Doctor  @relation(fields: [doctorId], references: [id])
+  doctorId  String
+  patient   Patient @relation(fields: [patientId], references: [id])
+  patientId String
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+
+  dateOfTreatment  DateTime
+  status           AppointmentStatus @default(SCHEDULED)
+  typeOfTreatment  TreatmentType?
+  notes            String?
+  procedure        String?
+  teethInvolved    Int[]             @default([])
+  followUpRequired Boolean           @default(false)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // audit
+  createdByUser   User?       @relation("UserAppointments", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  createdByUserId String?
+  Treatment       Treatment[]
+}
+
+model Treatment {
+  id               String        @id @default(uuid())
+  doctor           Doctor        @relation(fields: [doctorId], references: [id])
+  doctorId         String
+  patient          Patient       @relation(fields: [patientId], references: [id])
+  patientId        String
+  dateOfTreatment  DateTime
+  typeOfTreatment  TreatmentType
+  notes            String?
+  procedure        String?
+  teethInvolved    Int[]         @default([])
+  followUpRequired Boolean       @default(false)
+  completed        Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Link to an appointment if this treatment was performed as part of one
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  appointmentId String?
+}
+
+model Payment {
+  id           String        @id @default(uuid())
+  patient      Patient       @relation(fields: [patientId], references: [id])
+  patientId    String
+  recordedBy   User?         @relation("UserPayments", fields: [recordedById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  recordedById String?
+  date         DateTime      @default(now())
+  amount       Decimal       @db.Decimal(10, 2)
+  method       PaymentMethod
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Expense {
+  id           String   @id @default(uuid())
+  category     String
+  paidTo       String
+  amount       Decimal  @db.Decimal(10, 2)
+  date         DateTime @default(now())
+  recordedBy   User?    @relation("ExpenseRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  recordedById String?
+  approved     Boolean  @default(false)
+  approvedBy   User?    @relation("ExpenseApprovedBy", fields: [approvedById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  approvedById String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Optional: Audit logs or settings
+model AuditLog {
+  id        String   @id @default(uuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  action    String
+  target    String?
+  meta      Json?
+  createdAt DateTime @default(now())
+}
+
+// Indexes and constraints for common lookups
