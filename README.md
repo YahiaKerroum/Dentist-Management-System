@@ -131,6 +131,8 @@ dental-clinic-app/
 ├── pnpm-workspace.yaml     # pnpm workspace config
 └── README.md               # Project README
 ```
+### UML Class Diagram
+
 ```mermaid
 
 
