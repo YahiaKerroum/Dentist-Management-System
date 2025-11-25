@@ -131,3 +131,187 @@ dental-clinic-app/
 ├── pnpm-workspace.yaml     # pnpm workspace config
 └── README.md               # Project README
 ```
+```mermaid
+
+
+classDiagram
+    class Staff {
+        <<abstract>>
+        -UserID: String
+        -Fname: String
+        -Lname: String
+        -phone: String
+        -email: String
+        -username: String
+        -password: String
+        +login(): Boolean
+        +logout(): void
+        +updateProfile(): void
+        +resetPassword(): void
+        +viewSchedule(): void
+    }
+
+    class Manager {
+        -ManagerID: String
+        +ModifyPermissions(staff): void
+        +ViewExpenses(): List~Expense~
+        +addStaff(staff): void
+        +removeStaff(staffID): void
+        +updateStaff(staff): void
+        +generateReport(): Report
+        +approveExpense(expenseID): void
+        +viewAllAppointments(): List~Appointment~
+    }
+
+    class Assistant {
+        -AssistantID: String
+        +ScheduleAppointment(): Appointment
+        +managePatient(): void
+        +ModifyPayments(): Payment
+        +cancelAppointment(appointmentID): void
+        +rescheduleAppointment(appointmentID, newDate): void
+        +checkInPatient(patientID): void
+        +sendReminder(appointmentID): void
+        +registerPatient(): Patient
+        +updatePatientInfo(patientID): void
+    }
+
+    class Doctor {
+        -DoctorID: String
+        -Specialization: String
+        -WorkingTime: List~String~
+        +CreateTreatment(): Treatment
+        +ViewAppointments(): List~Appointment~
+        +UpdatePatientDetails(): void
+        +viewPatientHistory(patientID): void
+        +addDiagnosis(patientID, diagnosis): void
+        +completeTreatment(treatmentID): void
+        +addTreatmentNotes(treatmentID, notes): void
+        +updateAvailability(): void
+    }
+
+    class Patient {
+        -ID: String
+        -Fname: String
+        -Lname: String
+        -date_of_birth: Date
+        -phone: String
+        -email: String
+        -PrimaryDentistID: String(FK)
+        -creation_date: Date
+        -last_update: Date
+        +UpdatePatient(): Patient
+        +viewTreatmentHistory(): List~Treatment~
+        +viewAppointments(): List~Appointment~
+        +viewPaymentHistory(): List~Payment~
+        +getOutstandingBalance(): Decimal
+        +updateContactInfo(): void
+    }
+
+    class Appointment {
+        <<association class>>
+        -AppointmentID: String
+        -DoctorID: String(FK)
+        -PatientID: String(FK)
+        -dateofTreatment: Date
+        -type_of_treatment: Enum
+        -notes: String
+        -Procedure: String
+        -TeethInvolved: List~Integer~
+        -CreatedAt: Date
+        -FollowUpRequired: Boolean
+        +reschedule(newDate): void
+        +cancel(): void
+        +markComplete(): void
+        +updateNotes(notes): void
+        +getDetails(): Appointment
+    }
+
+    class Treatment {
+        <<association class>>
+        -TreatmentID: String
+        -DoctorID: String(FK)
+        -PatientID: String(FK)
+        -dateofTreatment: Date
+        -type_of_treatment: Enum
+        -notes: String
+        -Procedure: String
+        -TeethInvolved: List~Integer~
+        -CreatedAt: Date
+        -FollowUpRequired: Boolean
+        +UpdatePatient(): Patient
+        +addNotes(notes): void
+        +updateProcedure(procedure): void
+        +getTreatmentDetails(): Treatment
+        +markAsComplete(): void
+        +scheduleFollowUp(): Appointment
+    }
+
+    class Payment {
+        -PatientID: String(FK)
+        -UserID: String(FK)
+        -PaymentID: String
+        -date: Date
+        -amount: Decimal
+        -method: Enum
+        +processPayment(): Boolean
+        +generateReceipt(): Receipt
+        +refund(): void
+        +updateAmount(amount): void
+        +getPaymentDetails(): Payment
+    }
+
+    class FinancialRecord {
+        <<abstract>>
+        -ID: String
+        -date: Date
+        -amount: Decimal
+        -method: Enum
+        -RecordedByID: String(FK)
+        -RecordedAt: Date
+        -Notes: String
+        +generateReport(): Report
+        +updateRecord(): void
+        +deleteRecord(): void
+        +getRecordDetails(): FinancialRecord
+    }
+
+    class Expense {
+        -Category: String
+        -PaidTo: String
+        +requestApproval(): void
+        +markAsPaid(): void
+        +updateCategory(category): void
+        +getExpenseDetails(): Expense
+    }
+
+    %% Inheritance Relationships - Staff hierarchy
+    Staff <|-- Doctor : inherits
+    
+    %% Inheritance Relationships - FinancialRecord hierarchy
+    FinancialRecord <|-- Payment : inherits
+    FinancialRecord <|-- Expense : inherits
+        Assistant -- Payment : processes
+
+    Staff -- FinancialRecord : manage
+
+
+
+    %% Assistant Associations
+    Assistant -- Appointment : schedules
+    Assistant -- Patient : registers
+
+    %% Manager Associations
+
+    Patient "1" -- "0..*" Treatment : receives
+    Patient "1" -- "0..*" Appointment : books
+    Doctor "1" -- "0..*" Appointment : has
+    Doctor "1" -- "0..*" Treatment : creates
+    Patient "1" -- "0..*" Payment : makes
+    Manager -- Expense : reviews
+    Manager -- Staff : supervises
+
+    Staff <|-- Manager : inherits
+    Staff <|-- Assistant : inherits
+  end
+```
