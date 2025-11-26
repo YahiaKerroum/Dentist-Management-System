@@ -65,7 +65,6 @@ model User {
   expensesRecorded Expense[]     @relation("ExpenseRecordedBy")
   auditLogs        AuditLog[]
 
-  // New relations based on user request
   registeredPatients Patient[] @relation("PatientRegistrations")
 
   supervisor   User?         @relation("Supervision", fields: [supervisorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
@@ -130,8 +129,6 @@ model Appointment {
   doctorId  String
   patient   Patient @relation(fields: [patientId], references: [id])
   patientId String
-  user      User    @relation(fields: [userId], references: [id])
-  userId    String
 
   dateOfTreatment  DateTime
   status           AppointmentStatus @default(SCHEDULED)
@@ -148,6 +145,7 @@ model Appointment {
   createdByUserId String?
   Treatment       Treatment[]
 }
+
 
 model Treatment {
   id               String        @id @default(uuid())
