@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { FilterBar } from '../appointments/FilterBar';
-import WeeklyCalendar, { AppointmentItem } from '../appointments/WeeklyCalendar';
-import AppointmentDetailsPanel from '../appointments/AppointmentDetailsPanel';
+import { FilterBar } from '../components/appointments/FilterBar';
+import WeeklyCalendar, { AppointmentItem } from '../components/appointments/WeeklyCalendar';
+import AppointmentDetailsPanel from '../components/appointments/AppointmentDetailsPanel';
 
 interface AppointmentsPageProps {
     token?: string;
