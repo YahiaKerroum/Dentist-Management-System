@@ -5,6 +5,7 @@ import { Patient, CreatePatientDTO } from '../types/patient';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { PatientForm } from '../components/patients/PatientForm';
+import { PatientDetailPanel } from './PatientDetailPage';
 import {
     Plus,
     Search,
@@ -39,6 +40,10 @@ export function PatientsPage({ token }: PatientsPageProps) {
     const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
     const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
+    // Detail panel state - now tracks viewing detail page
+    const [viewingDetail, setViewingDetail] = useState(false);
+    const [detailPatient, setDetailPatient] = useState<Patient | null>(null);
+
     // Delete confirmation
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -67,6 +72,11 @@ export function PatientsPage({ token }: PatientsPageProps) {
         setModalMode('edit');
         setSelectedPatient(patient);
         setIsModalOpen(true);
+    };
+
+    const handleViewPatientDetails = (patient: Patient) => {
+        setDetailPatient(patient);
+        setViewingDetail(true);
     };
 
     const handleFormSubmit = async (data: CreatePatientDTO) => {
@@ -209,6 +219,21 @@ export function PatientsPage({ token }: PatientsPageProps) {
         );
     }
 
+    // Show detail page if viewing patient
+    if (viewingDetail && detailPatient) {
+        return (
+            <div className="bg-gray-50 min-h-full p-8">
+                <PatientDetailPanel
+                    patient={detailPatient}
+                    token={token}
+                    userRole="DOCTOR"
+                    currentUserId="current-user-id"
+                    onClose={() => setViewingDetail(false)}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="bg-gray-50 min-h-full p-8">
             {/* Header */}
@@ -332,7 +357,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
                                 </tr>
                             ) : (
                                 paginatedPatients.map((patient) => (
-                                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleViewPatientDetails(patient)}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10">
