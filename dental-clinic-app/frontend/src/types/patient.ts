@@ -6,6 +6,12 @@ export interface Patient {
     phone: string | null;
     email: string | null;
     primaryDentistId: string | null;
+    primaryDentist?: {
+        user: {
+            firstName: string;
+            lastName: string;
+        };
+    } | null;
     createdAt: string;
     updatedAt: string;
     registeredById: string | null;
