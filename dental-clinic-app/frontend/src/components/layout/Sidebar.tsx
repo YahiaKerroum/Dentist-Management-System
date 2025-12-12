@@ -1,21 +1,26 @@
-import { LayoutDashboard, User, Users, Calendar, Stethoscope, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, User, Users, Calendar, Stethoscope, FileText, LogOut, UserCog } from 'lucide-react';
 
 interface SidebarProps {
     activePage: string;
     onPageChange: (page: string) => void;
     onLogout: () => void;
+    userRole?: string;
 }
 
 const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard' },
-    { icon: User, label: 'Profile', page: 'profile' },
-    { icon: Users, label: 'Patients', page: 'patients' },
-    { icon: Calendar, label: 'Appointments', page: 'appointments' },
-    { icon: Stethoscope, label: 'Treatments', page: 'treatments' },
-    { icon: FileText, label: 'Reports', page: 'reports' },
+    { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: User, label: 'Profile', page: 'profile', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: Users, label: 'Patients', page: 'patients', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: Calendar, label: 'Appointments', page: 'appointments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: Stethoscope, label: 'Treatments', page: 'treatments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: UserCog, label: 'Staff', page: 'staff', roles: ['MANAGER'] },
+    { icon: FileText, label: 'Reports', page: 'reports', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
 ];
 
-export function Sidebar({ activePage, onPageChange, onLogout }: SidebarProps) {
+export function Sidebar({ activePage, onPageChange, onLogout, userRole = 'DOCTOR' }: SidebarProps) {
+    // Filter menu items based on user role
+    const visibleMenuItems = menuItems.filter(item => item.roles.includes(userRole));
+
     return (
         <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
             {/* Logo */}
@@ -25,7 +30,7 @@ export function Sidebar({ activePage, onPageChange, onLogout }: SidebarProps) {
 
             {/* Navigation */}
             <nav className="flex-1 px-3 py-4">
-                {menuItems.map((item) => {
+                {visibleMenuItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = activePage === item.page;
 
