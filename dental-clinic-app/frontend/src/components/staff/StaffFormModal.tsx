@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { User, CreateUserDTO, UpdateUserDTO, Role } from '../../types/user';
 import { X } from 'lucide-react';
+import { getUserPermissions, grantUserPermission, revokeUserPermission } from '../../services/user.service';
 
 interface StaffFormModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSubmit: (data: CreateUserDTO | UpdateUserDTO) => void;
+    onSubmit: (data: CreateUserDTO | UpdateUserDTO) => Promise<any> | void;
     staff?: User | null;
     loading?: boolean;
+    token: string;
 }
 
 export const StaffFormModal: React.FC<StaffFormModalProps> = ({
@@ -15,7 +17,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     onClose,
     onSubmit,
     staff,
-    loading = false
+    loading = false,
+    token
 }) => {
     const [formData, setFormData] = useState({
         firstName: '',
@@ -30,6 +33,8 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     });
 
     const [showWorkingHours, setShowWorkingHours] = useState(false);
+    const [permissions, setPermissions] = useState<string[]>([]);
+    const [originalPermissions, setOriginalPermissions] = useState<string[]>([]);
 
     useEffect(() => {
         if (staff) {
@@ -45,6 +50,16 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 workingTime: staff.doctorProfile?.workingTime || []
             });
             setShowWorkingHours(staff.role === 'DOCTOR');
+            // Load permissions for existing staff
+            getUserPermissions(staff.id, token)
+                .then((res) => {
+                    setPermissions(res.data || []);
+                    setOriginalPermissions(res.data || []);
+                })
+                .catch(() => {
+                    setPermissions([]);
+                    setOriginalPermissions([]);
+                });
         } else {
             setFormData({
                 firstName: '',
@@ -58,14 +73,16 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 workingTime: []
             });
             setShowWorkingHours(false);
+            setPermissions([]);
+            setOriginalPermissions([]);
         }
-    }, [staff]);
+    }, [staff, token]);
 
     useEffect(() => {
         setShowWorkingHours(formData.role === 'DOCTOR');
     }, [formData.role]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const submitData: any = {
@@ -87,7 +104,82 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
             submitData.workingTime = formData.workingTime.length > 0 ? formData.workingTime : undefined;
         }
 
-        onSubmit(submitData);
+        await onSubmit(submitData);
+
+        // Apply permission differences after main submit when editing
+        if (staff) {
+            const toAdd = permissions.filter((p) => !originalPermissions.includes(p));
+            const toRemove = originalPermissions.filter((p) => !permissions.includes(p));
+            const promises: Promise<any>[] = [];
+            toAdd.forEach((perm) => promises.push(grantUserPermission(staff.id, perm, token)));
+            toRemove.forEach((perm) => promises.push(revokeUserPermission(staff.id, perm, token)));
+            Promise.all(promises).catch(() => {});
+            setOriginalPermissions(permissions);
+        }
+    };
+
+    const permissionGroups: Array<{
+        key: string;
+        label: string;
+        actions: { label: string; value?: string }[];
+    }> = [
+        {
+            key: 'patients',
+            label: 'Patients',
+            actions: [
+                { label: 'View', value: 'patients.view' },
+                { label: 'Create', value: 'patients.create' },
+                { label: 'Update', value: 'patients.update' },
+                { label: 'Delete', value: 'patients.delete' },
+            ],
+        },
+        {
+            key: 'appointments',
+            label: 'Appointments',
+            actions: [
+                { label: 'View', value: 'appointments.view' },
+                { label: 'Create', value: 'appointments.create' },
+                { label: 'Update', value: 'appointments.update' },
+                { label: 'Delete', value: 'appointments.cancel' },
+            ],
+        },
+        {
+            key: 'treatments',
+            label: 'Treatments',
+            actions: [
+                { label: 'View', value: 'treatments.view' },
+                { label: 'Create', value: 'treatments.create' },
+                { label: 'Update', value: 'treatments.update' },
+                { label: 'Delete', value: 'treatments.delete' },
+            ],
+        },
+        {
+            key: 'payments',
+            label: 'Payments',
+            actions: [
+                { label: 'View', value: 'payment.view' },
+                { label: 'Create', value: 'payment.create' },
+                { label: 'Update', value: 'payment.update' },
+                { label: 'Delete', value: 'payment.delete' },
+            ],
+        },
+        {
+            key: 'documents',
+            label: 'Documents',
+            actions: [
+                { label: 'View', value: 'documents.view' },
+                { label: 'Create', value: 'documents.create' },
+                { label: 'Update', value: 'documents.update' },
+                { label: 'Delete', value: 'documents.delete' },
+            ],
+        },
+    ];
+
+    const togglePermission = (perm?: string) => {
+        if (!perm) return;
+        setPermissions((prev) =>
+            prev.includes(perm) ? prev.filter((p) => p !== perm) : [...prev, perm]
+        );
     };
 
     const handleWorkingHourChange = (index: number, field: 'day' | 'hours', value: string) => {
@@ -412,6 +504,33 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                                 ))}
                             </div>
                         </>
+                    )}
+
+                    {/* Permissions (edit existing staff only) */}
+                    {staff && (
+                        <div style={{ marginTop: '16px' }}>
+                            <h3 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: 600 }}>Permissions</h3>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                {permissionGroups.map((group) => (
+                                    <div key={group.key} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px' }}>
+                                        <div style={{ fontWeight: 600, marginBottom: '8px', color: '#111827' }}>{group.label}</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+                                            {group.actions.map((action) => (
+                                                <label key={action.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: action.value ? '#111827' : '#9ca3af' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        disabled={!action.value}
+                                                        checked={action.value ? permissions.includes(action.value) : false}
+                                                        onChange={() => togglePermission(action.value)}
+                                                    />
+                                                    <span>{action.label}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     )}
 
                     {/* Footer */}

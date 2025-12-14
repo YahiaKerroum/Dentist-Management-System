@@ -1,6 +1,7 @@
 import { PrismaClient, Role, TreatmentType, PaymentMethod, AppointmentStatus, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { seedPermissions } from "./seeders/permissions.seed";
 
 const prisma = new PrismaClient();
 
@@ -19,6 +20,9 @@ function getRandomItem<T>(array: T[]): T {
 
 async function main() {
     console.log("🌱 Seeding database with comprehensive data...");
+
+    // Seed permissions first
+    await seedPermissions();
 
     // Password hash for test accounts
     const password = await bcrypt.hash("password123", 10);

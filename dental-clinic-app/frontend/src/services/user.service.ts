@@ -153,3 +153,67 @@ export const deleteStaff = async (
 
   return response.json();
 };
+
+// Permissions management
+export const getUserPermissions = async (
+  id: string,
+  token: string
+): Promise<{ success: boolean; data: string[] }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to fetch permissions');
+  }
+
+  return response.json();
+};
+
+export const grantUserPermission = async (
+  id: string,
+  permissionName: string,
+  token: string
+): Promise<{ success: boolean; message?: string }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ permissionName }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to grant permission');
+  }
+
+  return response.json();
+};
+
+export const revokeUserPermission = async (
+  id: string,
+  permissionName: string,
+  token: string
+): Promise<{ success: boolean; message?: string }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions/${encodeURIComponent(permissionName)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to revoke permission');
+  }
+
+  return response.json();
+};
