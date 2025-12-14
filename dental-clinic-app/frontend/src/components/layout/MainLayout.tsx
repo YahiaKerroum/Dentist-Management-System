@@ -7,6 +7,7 @@ import { PatientsPage } from '../../pages/PatientsPage';
 import { AppointmentsPage } from '../../pages/AppointmentsPage';
 import { TreatmentsPage } from '../../pages/TreatmentsPage';
 import { ReportsPage } from '../../pages/ReportsPage';
+import { StaffPage } from '../../pages/StaffPage';
 
 interface MainLayoutProps {
   token: string;
@@ -16,13 +17,22 @@ interface MainLayoutProps {
 export function MainLayout({ token, onLogout }: MainLayoutProps) {
   const [activePage, setActivePage] = useState('dashboard');
 
-  // Extract username from token for display
+  // Extract username and role from token for display
   const getUserName = () => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.username || 'User';
     } catch {
       return 'User';
+    }
+  };
+
+  const getUserRole = () => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.role || 'DOCTOR';
+    } catch {
+      return 'DOCTOR';
     }
   };
 
@@ -33,6 +43,7 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
       patients: 'Patients',
       appointments: 'Appointments',
       treatments: 'Treatments',
+      staff: 'Staff Management',
       reports: 'Reports',
     };
     return titles[activePage] || 'Dashboard';
@@ -50,6 +61,8 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
           return <AppointmentsPage token={token} />;
       case 'treatments':
         return <TreatmentsPage />;
+      case 'staff':
+        return <StaffPage token={token} />;
       case 'reports':
         return <ReportsPage />;
       default:
@@ -63,6 +76,7 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
         activePage={activePage}
         onPageChange={setActivePage}
         onLogout={onLogout}
+        userRole={getUserRole()}
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">

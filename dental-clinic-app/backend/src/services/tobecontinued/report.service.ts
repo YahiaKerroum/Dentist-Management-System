@@ -99,4 +99,26 @@ export class ReportService {
             withoutAppointments: total - withAppointments,
         };
     }
+
+    // ============================
+    // FINANCIAL REPORT
+    // ============================
+    static async getFinancialReport(dateFrom?: Date, dateTo?: Date) {
+        const filters = { dateFrom, dateTo };
+
+        const [revenue, expenses] = await Promise.all([
+            PaymentService.getTotalRevenue(filters),
+            ExpenseService.getTotalExpenses({ approved: true, ...filters }),
+        ]);
+
+        return {
+            revenue,
+            expenses,
+            profit: revenue - expenses,
+            period: {
+                from: dateFrom ?? null,
+                to: dateTo ?? null,
+            },
+        };
+    }
 }

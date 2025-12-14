@@ -6,8 +6,8 @@
     "scripts": {
         "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
         "build": "tsc",
-        "start": "node dist/server.js",
-        "seed": "ts-node src/scripts/seed.ts"
+        "start": "node dist/src/server.js",
+        "seed": "ts-node prisma/seed.ts"
     },
     "prisma": {
         "seed": "ts-node prisma/seed.ts"
