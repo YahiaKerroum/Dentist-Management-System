@@ -119,7 +119,10 @@ export function PatientsPage({ token }: PatientsPageProps) {
             setIsModalOpen(false);
             setError('');
         } catch (err: any) {
-            setError(err.message || 'Failed to save patient');
+            // Show permission or other errors clearly
+            const msg = err.message || 'Failed to save patient';
+            setError(msg);
+            alert(msg);
         }
     };
 

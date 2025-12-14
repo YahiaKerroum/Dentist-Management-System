@@ -1,5 +1,7 @@
-import { NotFoundError } from "../errors/app.errors";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
 import prisma from "../config/prisma";
+import { userHasPermission } from "../utils/permission.utils";
+import { Permission } from "../types/permission.types";
 
 
 export class PatientService {
@@ -12,6 +14,22 @@ export class PatientService {
     primaryDentistId?: string;
     registeredById?: string;
   }) {
+    // check if the user trying to create patient has the permission to create patient
+    if (!data.registeredById) {
+      throw new ValidationError("registeredById is required to create a patient");
+    }
+
+    const hasCreatePermission = await userHasPermission(
+      data.registeredById,
+      Permission.PATIENTS_CREATE
+    );
+
+    if (!hasCreatePermission) {
+      throw new ForbiddenError("You do not have permission to create patients");
+    }
+
+
+    // Create patient in the database
     const patient = await prisma.patient.create({
       data: {
         firstName: data.firstName,
@@ -174,8 +192,22 @@ export class PatientService {
       phone?: string;
       email?: string;
       primaryDentistId?: string;
-    }
+    },
+    actorUserId?: string
   ) {
+    if (!actorUserId) {
+      throw new ValidationError("actorUserId is required to update a patient");
+    }
+
+    const hasUpdatePermission = await userHasPermission(
+      actorUserId,
+      Permission.PATIENTS_UPDATE
+    );
+
+    if (!hasUpdatePermission) {
+      throw new ForbiddenError("You do not have permission to update patients");
+    }
+
     await this.getPatientById(id);
 
     const patient = await prisma.patient.update({
@@ -198,7 +230,20 @@ export class PatientService {
     return patient;
   }
 
-  static async deletePatient(id: string) {
+  static async deletePatient(id: string, actorUserId?: string) {
+    if (!actorUserId) {
+      throw new ValidationError("actorUserId is required to delete a patient");
+    }
+
+    const hasDeletePermission = await userHasPermission(
+      actorUserId,
+      Permission.PATIENTS_DELETE
+    );
+
+    if (!hasDeletePermission) {
+      throw new ForbiddenError("You do not have permission to delete patients");
+    }
+
     await this.getPatientById(id);
 
     // Delete related records first (due to foreign key constraints)

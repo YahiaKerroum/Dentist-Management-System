@@ -12,7 +12,17 @@ export const getPatients = async (token: string): Promise<PatientResponse> => {
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch patients');
+    let message = 'Failed to fetch patients';
+    try {
+      const errorData = await response.json();
+      message = errorData.message || message;
+    } catch (_) {
+      // response body may be empty; keep default message
+    }
+    if (response.status === 403) {
+      message = 'You do not have permission to view patients';
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -28,7 +38,17 @@ export const getPatientById = async (id: string, token: string): Promise<SingleP
   });
 
   if (!response.ok) {
-    throw new Error('Failed to fetch patient');
+    let message = 'Failed to fetch patient';
+    try {
+      const errorData = await response.json();
+      message = errorData.message || message;
+    } catch (_) {
+      // response body may be empty; keep default message
+    }
+    if (response.status === 403) {
+      message = 'You do not have permission to view patients';
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -58,8 +78,17 @@ export const createPatient = async (data: CreatePatientDTO, token: string): Prom
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create patient');
+    let message = 'Failed to create patient';
+    try {
+      const errorData = await response.json();
+      message = errorData.message || message;
+    } catch (_) {
+      // response body may be empty; keep default message
+    }
+    if (response.status === 403) {
+      message = 'You do not have permission to create patients';
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -88,8 +117,17 @@ export const updatePatient = async (
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to update patient');
+    let message = 'Failed to update patient';
+    try {
+      const errorData = await response.json();
+      message = errorData.message || message;
+    } catch (_) {
+      // response body may be empty; keep default message
+    }
+    if (response.status === 403) {
+      message = 'You do not have permission to update patients';
+    }
+    throw new Error(message);
   }
 
   return response.json();
@@ -106,7 +144,16 @@ export const deletePatient = async (id: string, token: string): Promise<void> =>
   });
 
   if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to delete patient');
+    let message = 'Failed to delete patient';
+    try {
+      const errorData = await response.json();
+      message = errorData.message || message;
+    } catch (_) {
+      // response body may be empty; keep default message
+    }
+    if (response.status === 403) {
+      message = 'You do not have permission to delete patients';
+    }
+    throw new Error(message);
   }
 };
