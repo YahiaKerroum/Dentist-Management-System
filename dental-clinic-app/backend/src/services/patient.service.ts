@@ -201,8 +201,27 @@ export class PatientService {
   static async deletePatient(id: string) {
     await this.getPatientById(id);
 
-    await prisma.patient.delete({
-      where: { id },
+    // Delete related records first (due to foreign key constraints)
+    await prisma.$transaction(async (tx) => {
+      // Delete payments first
+      await tx.payment.deleteMany({
+        where: { patientId: id },
+      });
+      
+      // Delete treatments
+      await tx.treatment.deleteMany({
+        where: { patientId: id },
+      });
+      
+      // Delete appointments
+      await tx.appointment.deleteMany({
+        where: { patientId: id },
+      });
+      
+      // Finally delete the patient
+      await tx.patient.delete({
+        where: { id },
+      });
     });
 
     return { message: "Patient deleted successfully" };

@@ -34,6 +34,7 @@ export interface User {
     doctorProfile?: DoctorProfile;
     managerProfile?: ManagerProfile;
     assistantProfile?: AssistantProfile;
+    permissions?: string[];
 }
 
 export interface CreateUserDTO {

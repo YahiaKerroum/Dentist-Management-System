@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Lock,
   FileText,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 
 interface PatientDetailPanelProps {
@@ -16,7 +18,10 @@ interface PatientDetailPanelProps {
   token: string;
   userRole?: string;
   currentUserId?: string;
+  userPermissions?: string[];
   onClose: () => void;
+  onEdit?: (patient: Patient) => void;
+  onDelete?: (patient: Patient) => void;
 }
 
 // Mock treatment data (hardcoded - to be replaced with real data)
@@ -77,9 +82,17 @@ export function PatientDetailPanel({
   token,
   userRole = 'ASSISTANT',
   currentUserId = '',
+  userPermissions = [],
   onClose,
+  onEdit,
+  onDelete,
 }: PatientDetailPanelProps) {
   const [activeTab, setActiveTab] = useState<'info' | 'treatments' | 'appointments' | 'documents'>('info');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Permission checks
+  const canEditPatient = userPermissions.includes('patients.update');
+  const canDeletePatient = userPermissions.includes('patients.delete');
 
   // Mock teeth states for odontogram
   const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = {
@@ -125,17 +138,58 @@ export function PatientDetailPanel({
     <div>
       {/* Back Button Header */}
       <div className="mb-6 pb-4 border-b border-gray-200">
-        <button 
-          onClick={onClose}
-          className="mb-4 text-blue-600 hover:text-blue-900 font-medium flex items-center gap-2 text-sm"
-        >
-          ← Back to Patients
-        </button>
-        <div>
-          <h2 className="text-3xl font-bold">
-            {patient.firstName} {patient.lastName}
-          </h2>
-          <p className="text-gray-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <button 
+              onClick={onClose}
+              className="mb-4 text-blue-600 hover:text-blue-900 font-medium flex items-center gap-2 text-sm"
+            >
+              ← Back to Patients
+            </button>
+            <h2 className="text-3xl font-bold">
+              {patient.firstName} {patient.lastName}
+            </h2>
+            <p className="text-gray-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
+          </div>
+          <div className="flex gap-2">
+            {canEditPatient && onEdit && (
+              <button
+                onClick={() => onEdit(patient)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Edit className="w-4 h-4" />
+                Edit Patient
+              </button>
+            )}
+            {canDeletePatient && onDelete && (
+              <>
+                {showDeleteConfirm ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onDelete(patient)}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      Confirm Delete
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Patient
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 

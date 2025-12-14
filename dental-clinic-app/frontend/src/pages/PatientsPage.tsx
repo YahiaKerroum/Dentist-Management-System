@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { getPatients, createPatient, updatePatient, deletePatient } from '../services/patient.service';
+import { getUserPermissions } from '../services/user.service';
 import { Patient, CreatePatientDTO } from '../types/patient';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -33,7 +34,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
     const [dateFilter, setDateFilter] = useState('all');
     const [sortBy, setSortBy] = useState('name-asc');
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 7;
+    const itemsPerPage = 20;
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -47,9 +48,28 @@ export function PatientsPage({ token }: PatientsPageProps) {
     // Delete confirmation
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+    // User permissions
+    const [userPermissions, setUserPermissions] = useState<string[]>([]);
+    const [currentUserId, setCurrentUserId] = useState<string>('');
+
     useEffect(() => {
         fetchPatients();
+        fetchUserPermissions();
     }, [token]);
+
+    const fetchUserPermissions = async () => {
+        try {
+            // Decode token to get userId
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const userId = payload.userId;
+            setCurrentUserId(userId);
+            const response = await getUserPermissions(userId, token);
+            setUserPermissions(response.data || []);
+        } catch (err) {
+            console.error('Failed to fetch permissions:', err);
+            setUserPermissions([]);
+        }
+    };
 
     const fetchPatients = async () => {
         try {
@@ -84,6 +104,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
             if (modalMode === 'add') {
                 const response = await createPatient(data, token);
                 setPatients(prev => [...prev, response.data]);
+                alert('Patient created successfully');
             } else {
                 if (!selectedPatient) {
                     setError('No patient selected for update');
@@ -93,6 +114,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
                 setPatients(prev =>
                     prev.map(p => p.id === response.data.id ? response.data : p)
                 );
+                alert('Patient updated successfully');
             }
             setIsModalOpen(false);
             setError('');
@@ -107,6 +129,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
             setPatients(prev => prev.filter(p => p.id !== id));
             setDeleteConfirmId(null);
             setError('');
+            alert('Patient deleted successfully');
         } catch (err: any) {
             setError(err.message || 'Failed to delete patient');
         }
@@ -227,8 +250,24 @@ export function PatientsPage({ token }: PatientsPageProps) {
                     patient={detailPatient}
                     token={token}
                     userRole="DOCTOR"
-                    currentUserId="current-user-id"
+                    currentUserId={currentUserId}
+                    userPermissions={userPermissions}
                     onClose={() => setViewingDetail(false)}
+                    onEdit={(patient) => {
+                        setViewingDetail(false);
+                        handleEditPatient(patient);
+                    }}
+                    onDelete={async (patient) => {
+                        try {
+                            await deletePatient(patient.id, token);
+                            setPatients(prev => prev.filter(p => p.id !== patient.id));
+                            setViewingDetail(false);
+                            setDetailPatient(null);
+                            alert('Patient deleted successfully');
+                        } catch (err: any) {
+                            alert(err.message || 'Failed to delete patient');
+                        }
+                    }}
                 />
             </div>
         );
@@ -397,7 +436,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end gap-3">
                                                 <button
-                                                    onClick={() => handleEditPatient(patient)}
+                                                    onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
                                                     className="text-blue-600 hover:text-blue-900 transition-colors"
                                                     title="Edit"
                                                 >
@@ -406,13 +445,13 @@ export function PatientsPage({ token }: PatientsPageProps) {
                                                 {deleteConfirmId === patient.id ? (
                                                     <div className="flex items-center gap-2 animate-fadeIn">
                                                         <button
-                                                            onClick={() => handleDeletePatient(patient.id)}
+                                                            onClick={(e) => { e.stopPropagation(); handleDeletePatient(patient.id); }}
                                                             className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                                                         >
                                                             Confirm
                                                         </button>
                                                         <button
-                                                            onClick={() => setDeleteConfirmId(null)}
+                                                            onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
                                                             className="text-gray-500 hover:text-gray-700"
                                                         >
                                                             Cancel
@@ -420,7 +459,7 @@ export function PatientsPage({ token }: PatientsPageProps) {
                                                     </div>
                                                 ) : (
                                                     <button
-                                                        onClick={() => setDeleteConfirmId(patient.id)}
+                                                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }}
                                                         className="text-gray-400 hover:text-red-600 transition-colors"
                                                         title="Delete"
                                                     >

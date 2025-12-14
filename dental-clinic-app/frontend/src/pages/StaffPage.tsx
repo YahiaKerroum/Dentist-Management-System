@@ -73,6 +73,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
             setIsFormModalOpen(false);
             setSelectedStaff(null);
             fetchStaff();
+            alert('Staff member created successfully');
         } catch (err: any) {
             alert(err.message || 'Failed to create staff member');
         } finally {
@@ -89,6 +90,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
             setIsFormModalOpen(false);
             setSelectedStaff(null);
             fetchStaff();
+            alert('Staff member updated successfully');
         } catch (err: any) {
             alert(err.message || 'Failed to update staff member');
         } finally {
@@ -105,6 +107,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
         try {
             await deleteStaff(staffMember.id, token);
             fetchStaff();
+            alert('Staff member deleted successfully');
         } catch (err: any) {
             alert(err.message || 'Failed to delete staff member');
         }
@@ -295,6 +298,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                 onSubmit={selectedStaff ? handleUpdate : handleCreate}
                 staff={selectedStaff}
                 loading={formLoading}
+                token={token}
             />
 
             {/* Profile View Modal */}
