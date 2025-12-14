@@ -16,4 +16,9 @@ router.get("/:id", authorize(Role.MANAGER, Role.DOCTOR, Role.ASSISTANT), UserCon
 router.put("/:id", authorize(Role.MANAGER), UserController.update);
 router.delete("/:id", authorize(Role.MANAGER), UserController.delete);
 
+// Permissions management (Manager only)
+router.get("/:id/permissions", authorize(Role.MANAGER), UserController.getPermissions);
+router.post("/:id/permissions", authorize(Role.MANAGER), UserController.grantPermission);
+router.delete("/:id/permissions/:permissionName", authorize(Role.MANAGER), UserController.revokePermission);
+
 export default router;
