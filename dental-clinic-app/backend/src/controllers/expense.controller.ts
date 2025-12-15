@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/async.handler";
 import { AuthenticatedRequest } from "../types/auth.types";
 
 export class ExpenseController {
+
   static create = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const expense = await ExpenseService.createExpense({
       ...req.body,
@@ -38,4 +39,42 @@ export class ExpenseController {
     );
     sendSuccess(res, expense, "Expense approved successfully");
   });
+
+  // additional controller methods
+  static update = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { category, paidTo, amount, date, notes } = req.body;
+
+  const expense = await ExpenseService.updateExpense(id, {
+    category,
+    paidTo,
+    amount: amount ? Number(amount) : undefined,
+    date: date ? new Date(date) : undefined,
+    notes,
+  });
+
+  sendSuccess(res, expense, "Expense updated successfully");
+});
+
+static delete = asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const result = await ExpenseService.deleteExpense(id);
+
+  sendSuccess(res, result, "Expense deleted successfully");
+});
+
+static search = asyncHandler(async (req: Request, res: Response) => {
+  const { query } = req.query;
+
+  if (!query || typeof query !== "string") {
+    sendSuccess(res, [], "No search query provided");
+    return;
+  }
+
+  const expenses = await ExpenseService.searchExpenses(query);
+
+  sendSuccess(res, expenses);
+});
+
 }

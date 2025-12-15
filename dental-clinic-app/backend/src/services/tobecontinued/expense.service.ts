@@ -3,6 +3,7 @@ import prisma from "../../config/prisma";
 
 
 export class ExpenseService {
+    
     static async createExpense(data: {
         category: string;
         paidTo: string;
@@ -166,4 +167,90 @@ export class ExpenseService {
 
         return Number(result._sum.amount) || 0;
     }
+
+
+//methods to be continued later 
+static async updateExpense(
+  id: string,
+  data: {
+    category?: string;
+    paidTo?: string;
+    amount?: number;
+    date?: Date;
+    notes?: string;
+  }
+) {
+  // First check if expense exists
+  await this.getExpenseById(id);
+
+  const updatedExpense = await prisma.expense.update({
+    where: { id },
+    data: {
+      ...(data.category && { category: data.category }),
+      ...(data.paidTo && { paidTo: data.paidTo }),
+      ...(data.amount !== undefined && { amount: data.amount }),
+      ...(data.date && { date: data.date }),
+      ...(data.notes !== undefined && { notes: data.notes }),
+    },
+    include: {
+      recordedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      approvedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+  });
+
+  return updatedExpense;
+}
+
+static async deleteExpense(id: string) {
+  // First check if expense exists
+  await this.getExpenseById(id);
+
+  await prisma.expense.delete({
+    where: { id },
+  });
+
+  return { message: "Expense deleted successfully" };
+}
+
+static async searchExpenses(query: string) {
+  const expenses = await prisma.expense.findMany({
+    where: {
+      OR: [
+        { category: { contains: query, mode: "insensitive" } },
+        { paidTo: { contains: query, mode: "insensitive" } },
+        { notes: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    include: {
+      recordedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+      approvedBy: {
+        select: {
+          firstName: true,
+          lastName: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+  });
+
+  return expenses;
+}
+
 }
