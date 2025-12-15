@@ -8,6 +8,7 @@ import { AppointmentsPage } from '../../pages/AppointmentsPage';
 import { TreatmentsPage } from '../../pages/TreatmentsPage';
 import { ReportsPage } from '../../pages/ReportsPage';
 import { StaffPage } from '../../pages/StaffPage';
+import FinancesPage from '../../pages/FinancesPage'; // ← ADD THIS IMPORT
 
 interface MainLayoutProps {
   token: string;
@@ -45,6 +46,7 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
       treatments: 'Treatments',
       staff: 'Staff Management',
       reports: 'Reports',
+      finances: 'Finances', // ← ADD THIS LINE
     };
     return titles[activePage] || 'Dashboard';
   };
@@ -57,14 +59,16 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
         return <ProfilePage token={token} />;
       case 'patients':
         return <PatientsPage token={token} />;
-        case 'appointments':
-          return <AppointmentsPage token={token} />;
+      case 'appointments':
+        return <AppointmentsPage token={token} />;
       case 'treatments':
         return <TreatmentsPage />;
       case 'staff':
         return <StaffPage token={token} />;
       case 'reports':
         return <ReportsPage />;
+      case 'finances': // ← ADD THIS CASE
+        return <FinancesPage />;
       default:
         return <DashboardPage token={token} />;
     }

@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { getAllPayments, deletePayment } from '../../services/payment.service';
 import { Payment } from '../../types/payment.types';
-
-// TODO: Import toast library when available
-// import { toast } from 'react-toastify';
-// import PaymentModal from './PaymentModal';
+import PaymentFormModal from './PaymentFormModal';
 
 const PaymentTable: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -93,29 +90,22 @@ const PaymentTable: React.FC = () => {
 
     try {
       await deletePayment(payment.id);
-      
-      // TODO: Replace with toast notification
-      // toast.success('Payment deleted successfully');
       console.log('Payment deleted successfully');
-      
       await fetchPayments();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete payment';
-      
-      // TODO: Replace with toast notification
-      // toast.error(errorMessage);
       console.error('Error deleting payment:', err);
       alert(errorMessage);
     }
   };
 
-  const handleModalClose = async (refreshData: boolean = false) => {
+  const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedPayment(null);
-    
-    if (refreshData) {
-      await fetchPayments();
-    }
+  };
+
+  const handleModalSave = async () => {
+    await fetchPayments();
   };
 
   const formatDate = (dateString: string): string => {
@@ -325,13 +315,12 @@ const PaymentTable: React.FC = () => {
       )}
 
       {/* Payment Modal */}
-      {/* TODO: Uncomment when PaymentModal is available */}
-      {/* {isModalOpen && (
-        <PaymentModal
-          payment={selectedPayment}
-          onClose={handleModalClose}
-        />
-      )} */}
+      <PaymentFormModal
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        payment={selectedPayment}
+        onSave={handleModalSave}
+      />
     </div>
   );
 };
