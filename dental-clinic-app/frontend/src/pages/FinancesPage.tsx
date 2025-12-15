@@ -1,92 +1,120 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
+import PaymentTable from '../components/finances/PaymentTable';
 import { ExpenseTable } from '../components/finances/ExpenseTable';
-import { DollarSign, Receipt, TrendingDown } from 'lucide-react';
 
-// TODO: Import PaymentTable when implemented
-// import { PaymentTable } from '../components/finances/PaymentTable';
+const FinancesPage: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'payments' | 'expenses'>('payments');
 
-interface FinancesPageProps {
-  token: string;
-}
-
-export function FinancesPage({ token }: FinancesPageProps) {
-  // Tab state: 'payments' or 'expenses'
-  // TODO: Change default to 'payments' when PaymentTable is implemented
-  const [activeTab, setActiveTab] = useState<'payments' | 'expenses'>('expenses');
+  // Get token from localStorage for ExpenseTable
+  const token = localStorage.getItem('token') || '';
 
   return (
-    <div className="bg-gray-50 min-h-full p-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Finances</h1>
-          <p className="text-gray-500 mt-1">Manage payments and expenses</p>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-        <div className="flex border-b border-gray-200">
-          {/* Payments Tab */}
-          <button
-            onClick={() => setActiveTab('payments')}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-              activeTab === 'payments'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <DollarSign size={18} />
-            Payments
-          </button>
-
-          {/* Expenses Tab */}
-          <button
-            onClick={() => setActiveTab('expenses')}
-            className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
-              activeTab === 'expenses'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Receipt size={18} />
-            Expenses
-          </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="px-4 md:px-6 lg:px-8 pt-6 pb-4">
+          <h1 className="text-3xl font-bold text-gray-900">Finances</h1>
+          <p className="text-gray-600 mt-2">Manage payments and expenses</p>
         </div>
 
-        {/* Tab Content */}
-        <div className="p-0">
-          {/* 
-            TODO: PAYMENT TABLE IMPLEMENTATION NEEDED
-            ==========================================
-            When PaymentTable is ready, replace the placeholder below with:
-            
+        {/* Tab Navigation */}
+        <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+            <nav className="flex -mb-px" aria-label="Tabs">
+              {/* Payments Tab */}
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`
+                  flex-1 py-4 px-6 text-center font-medium text-sm md:text-base
+                  border-b-2 transition-colors duration-200
+                  ${
+                    activeTab === 'payments'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-current={activeTab === 'payments' ? 'page' : undefined}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  Payments
+                </span>
+              </button>
+
+              {/* Expenses Tab */}
+              <button
+                onClick={() => setActiveTab('expenses')}
+                className={`
+                  flex-1 py-4 px-6 text-center font-medium text-sm md:text-base
+                  border-b-2 transition-colors duration-200
+                  ${
+                    activeTab === 'expenses'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }
+                `}
+                aria-current={activeTab === 'expenses' ? 'page' : undefined}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                  Expenses
+                </span>
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content with Animation */}
+        <div className="relative overflow-hidden">
+          {/* Animated Background Gradient */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+          </div>
+
+          {/* Content with Slide Animation */}
+          <div className="relative z-10">
             {activeTab === 'payments' && (
-              <PaymentTable token={token} />
+              <div className="animate-slideInRight">
+                <PaymentTable />
+              </div>
             )}
-            
-            PaymentTable should include:
-            - Display payments in a table with columns: Name, Patient Name, Date, Amount, Method, Actions
-            - Search functionality
-            - Create, Edit, Delete buttons
-            - Pagination
-            - Patient dropdown for selecting which patient made the payment
-            
-            See documentation: FEATURE_GUIDE_FINANCES.md - Step 3.3 and Step 3.4
-          */}
-          {activeTab === 'payments' && (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-500">
-              <TrendingDown size={48} className="mb-4 text-gray-300" />
-              <p className="text-lg font-medium">Payments Coming Soon</p>
-              <p className="text-sm mt-1">This feature is under development.</p>
-            </div>
-          )}
 
-          {activeTab === 'expenses' && (
-            <ExpenseTable token={token} />
-          )}
+            {activeTab === 'expenses' && (
+              <div className="animate-slideInLeft">
+                <ExpenseTable token={token} />
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default FinancesPage;

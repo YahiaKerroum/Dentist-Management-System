@@ -1,4 +1,4 @@
-import { LayoutDashboard, User, Users, Calendar, Stethoscope, FileText, LogOut, UserCog } from 'lucide-react';
+import { LayoutDashboard, User, Users, Calendar, Stethoscope, FileText, LogOut, UserCog, Wallet } from 'lucide-react';
 
 interface SidebarProps {
     activePage: string;
@@ -13,6 +13,7 @@ const menuItems = [
     { icon: Users, label: 'Patients', page: 'patients', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
     { icon: Calendar, label: 'Appointments', page: 'appointments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
     { icon: Stethoscope, label: 'Treatments', page: 'treatments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    { icon: Wallet, label: 'Finances', page: 'finances', roles: ['MANAGER', 'DOCTOR'] }, // ← NEW FINANCES ITEM
     { icon: UserCog, label: 'Staff', page: 'staff', roles: ['MANAGER'] },
     { icon: FileText, label: 'Reports', page: 'reports', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
 ];
