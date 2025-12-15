@@ -72,6 +72,11 @@ model User {
   supervisor   User?         @relation("Supervision", fields: [supervisorId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   supervisorId String?
   subordinates User[]        @relation("Supervision")
+  // supervisor and subordinates are not needed
+
+
+  // RBAC: User-level permissions
+  permissions UserPermission[]
 }
 
 model Doctor {
@@ -211,4 +216,35 @@ model AuditLog {
   createdAt DateTime @default(now())
 }
 
+// RBAC: Global Permissions System
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+}
+
+model RolePermission {
+  id           String   @id @default(uuid())
+  role         Role
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  @@unique([role, permissionId])
+}
+
+model UserPermission {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  @@unique([userId, permissionId])
+}
 // Indexes and constraints for common lookups

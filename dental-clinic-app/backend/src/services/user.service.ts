@@ -48,6 +48,7 @@ export class UserService {
       };
     }
 
+    // Create user
     const user = await prisma.user.create({
       data: {
         firstName: data.firstName,
@@ -65,6 +66,29 @@ export class UserService {
         assistantProfile: true,
       },
     });
+
+    // Auto-assign role permissions to user
+    try {
+      const rolePermissions = await prisma.rolePermission.findMany({
+        where: { role: data.role },
+        include: { permission: true },
+      });
+
+      if (rolePermissions.length > 0) {
+        const userPermissionsData = rolePermissions.map((rp) => ({
+          userId: user.id,
+          permissionId: rp.permissionId,
+        }));
+
+        await prisma.userPermission.createMany({
+          data: userPermissionsData,
+          skipDuplicates: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error assigning role permissions to user:", error);
+      // Don't fail user creation if permission assignment fails
+    }
 
     const { passwordHash, ...userWithoutPassword } = user;
     return userWithoutPassword;
@@ -185,12 +209,121 @@ export class UserService {
   }
 
   static async deleteUser(id: string) {
-    await this.getUserById(id);
+    const user = await this.getUserById(id);
 
-    await prisma.user.delete({
-      where: { id },
+    // Delete related records in a transaction (due to foreign key constraints)
+    await prisma.$transaction(async (tx) => {
+      // Delete user permissions
+      await tx.userPermission.deleteMany({
+        where: { userId: id },
+      });
+
+      // Delete profile based on role
+      if (user.role === Role.DOCTOR && user.doctorProfile) {
+        // Delete doctor-related records first
+        await tx.treatment.deleteMany({
+          where: { doctorId: user.doctorProfile.id },
+        });
+        await tx.appointment.deleteMany({
+          where: { doctorId: user.doctorProfile.id },
+        });
+        // Update patients who have this doctor as primary
+        await tx.patient.updateMany({
+          where: { primaryDentistId: user.doctorProfile.id },
+          data: { primaryDentistId: null },
+        });
+        await tx.doctor.delete({
+          where: { userId: id },
+        });
+      } else if (user.role === Role.MANAGER && user.managerProfile) {
+        await tx.manager.delete({
+          where: { userId: id },
+        });
+      } else if (user.role === Role.ASSISTANT && user.assistantProfile) {
+        await tx.assistant.delete({
+          where: { userId: id },
+        });
+      }
+
+      // Delete audit logs for this user
+      await tx.auditLog.deleteMany({
+        where: { actorId: id },
+      });
+
+      // Update payments recorded by this user
+      await tx.payment.updateMany({
+        where: { recordedById: id },
+        data: { recordedById: null },
+      });
+
+      // Update expenses
+      await tx.expense.updateMany({
+        where: { recordedById: id },
+        data: { recordedById: null },
+      });
+      await tx.expense.updateMany({
+        where: { approvedById: id },
+        data: { approvedById: null },
+      });
+
+      // Update appointments created by this user
+      await tx.appointment.updateMany({
+        where: { createdByUserId: id },
+        data: { createdByUserId: null },
+      });
+
+      // Update patients registered by this user
+      await tx.patient.updateMany({
+        where: { registeredById: id },
+        data: { registeredById: null },
+      });
+
+      // Finally delete the user
+      await tx.user.delete({
+        where: { id },
+      });
     });
 
     return { message: "User deleted successfully" };
+  }
+
+  static async getUserPermissions(userId: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError("User not found");
+    const permissions = await prisma.userPermission.findMany({
+      where: { userId },
+      include: { permission: true },
+    });
+    return permissions.map((up) => up.permission.name);
+  }
+
+  static async grantPermission(userId: string, permissionName: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError("User not found");
+
+    const permission = await prisma.permission.findUnique({
+      where: { name: permissionName },
+    });
+    if (!permission) throw new NotFoundError("Permission not found");
+
+    await prisma.userPermission.create({
+      data: { userId, permissionId: permission.id },
+    });
+    return { message: "Permission granted" };
+  }
+
+  static async revokePermission(userId: string, permissionName: string) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundError("User not found");
+
+    const permission = await prisma.permission.findUnique({
+      where: { name: permissionName },
+    });
+    if (!permission) throw new NotFoundError("Permission not found");
+
+    await prisma.userPermission.deleteMany({
+      where: { userId, permissionId: permission.id },
+    });
+    return { message: "Permission revoked" };
   }
 }
