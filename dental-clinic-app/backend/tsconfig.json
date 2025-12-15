@@ -8,5 +8,9 @@
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "src/services/tobecontinued/app.ts",
+    "src/services/tobecontinued/server.ts"
+  ]
 }

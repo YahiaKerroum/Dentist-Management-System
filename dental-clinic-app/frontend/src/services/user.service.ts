@@ -1,4 +1,4 @@
-import { UserResponse, UpdateUserDTO } from '../types/user';
+import { UserResponse, UpdateUserDTO, CreateUserDTO, Role, User } from '../types/user';
 
 const API_URL = 'http://localhost:4000/api/users';
 
@@ -40,6 +40,179 @@ export const updateUserProfile = async (
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || 'Failed to update profile');
+  }
+
+  return response.json();
+};
+
+// Staff Management Functions
+
+export const getAllStaff = async (
+  token: string,
+  filters?: { role?: Role; search?: string }
+): Promise<{ success: boolean; data: User[] }> => {
+  const params = new URLSearchParams();
+  if (filters?.role) params.append('role', filters.role);
+  if (filters?.search) params.append('search', filters.search);
+
+  const response = await fetch(`${API_URL}${params.toString() ? `?${params.toString()}` : ''}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to fetch staff');
+  }
+
+  return response.json();
+};
+
+export const getStaffById = async (
+  id: string,
+  token: string
+): Promise<{ success: boolean; data: UserResponse }> => {
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to fetch staff member');
+  }
+
+  return response.json();
+};
+
+export const createStaff = async (
+  data: CreateUserDTO,
+  token: string
+): Promise<{ success: boolean; data: UserResponse }> => {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to create staff member');
+  }
+
+  return response.json();
+};
+
+export const updateStaff = async (
+  id: string,
+  data: UpdateUserDTO,
+  token: string
+): Promise<{ success: boolean; data: UserResponse }> => {
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to update staff member');
+  }
+
+  return response.json();
+};
+
+export const deleteStaff = async (
+  id: string,
+  token: string
+): Promise<{ success: boolean; message: string }> => {
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to delete staff member');
+  }
+
+  return response.json();
+};
+
+// Permissions management
+export const getUserPermissions = async (
+  id: string,
+  token: string
+): Promise<{ success: boolean; data: string[] }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to fetch permissions');
+  }
+
+  return response.json();
+};
+
+export const grantUserPermission = async (
+  id: string,
+  permissionName: string,
+  token: string
+): Promise<{ success: boolean; message?: string }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ permissionName }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to grant permission');
+  }
+
+  return response.json();
+};
+
+export const revokeUserPermission = async (
+  id: string,
+  permissionName: string,
+  token: string
+): Promise<{ success: boolean; message?: string }> => {
+  const response = await fetch(`${API_URL}/${id}/permissions/${encodeURIComponent(permissionName)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to revoke permission');
   }
 
   return response.json();

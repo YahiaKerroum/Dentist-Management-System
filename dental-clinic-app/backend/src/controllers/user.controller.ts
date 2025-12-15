@@ -66,4 +66,21 @@ export class UserController {
         const result = await UserService.deleteUser(req.params.id);
         sendSuccess(res, result);
     });
+
+    static getPermissions = asyncHandler(async (req: Request, res: Response) => {
+        const perms = await UserService.getUserPermissions(req.params.id);
+        sendSuccess(res, perms);
+    });
+
+    static grantPermission = asyncHandler(async (req: Request, res: Response) => {
+        const { permissionName } = req.body;
+        const result = await UserService.grantPermission(req.params.id, permissionName);
+        sendSuccess(res, result, "Permission granted");
+    });
+
+    static revokePermission = asyncHandler(async (req: Request, res: Response) => {
+        const { permissionName } = req.params as any;
+        const result = await UserService.revokePermission(req.params.id, permissionName);
+        sendSuccess(res, result, "Permission revoked");
+    });
 }
