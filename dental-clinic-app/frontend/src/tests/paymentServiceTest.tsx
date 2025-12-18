@@ -23,7 +23,7 @@ const PaymentServiceTest: React.FC = () => {
     patientId: '',
     date: new Date().toISOString(),
     amount: 100,
-    method: 'cash',
+    method: 'Cash',
     notes: 'Test notes'
   });
 
