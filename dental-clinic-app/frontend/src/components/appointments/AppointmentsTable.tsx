@@ -1,5 +1,8 @@
-import { Calendar, Clock } from 'lucide-react';
+import { Calendar, Clock, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Appointment, AppointmentStatus } from '../../types/appointment';
+import { useState } from 'react';
+
+const ITEMS_PER_PAGE = 15;
 
 interface AppointmentsTableProps {
     appointments: Appointment[];
@@ -14,6 +17,20 @@ export function AppointmentsTable({
     onAppointmentClick,
     userRole
 }: AppointmentsTableProps) {
+
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // Calculate pagination
+    const totalPages = Math.ceil(appointments.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage-1) * ITEMS_PER_PAGE;  
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    const currentAppointments = appointments.slice(startIndex, endIndex); //appointments of the current page
+
+
+    if (currentPage > totalPages && totalPages > 0) {
+        setCurrentPage(1);
+    }
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -88,7 +105,7 @@ export function AppointmentsTable({
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {appointments.map((appointment) => (
+                        {currentAppointments.map((appointment) => (
                             <tr 
                                 key={appointment.id} 
                                 onClick={() => onAppointmentClick(appointment)}
@@ -137,6 +154,49 @@ export function AppointmentsTable({
                     </tbody>
                 </table>
             </div>
+        {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
+                        <span className="font-medium">{Math.min(endIndex, appointments.length)}</span> of{' '}
+                        <span className="font-medium">{appointments.length}</span> appointments
+                    </div>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                            Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-3 py-2 rounded-lg text-sm font-medium ${
+                                        currentPage === page
+                                            ? 'bg-blue-600 text-white'
+                                            : 'text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                            Next
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
