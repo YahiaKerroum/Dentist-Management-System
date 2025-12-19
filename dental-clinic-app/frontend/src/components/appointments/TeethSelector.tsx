@@ -89,14 +89,6 @@ export function TeethSelector({ selectedTeeth, onChange }: TeethSelectorProps) {
                             </div>
                         ))}
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={() => setIsOpen(false)}
-                        className="w-full mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                    >
-                        Done
-                    </button>
                 </div>
             )}
 
