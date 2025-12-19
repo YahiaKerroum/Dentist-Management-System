@@ -36,6 +36,12 @@ export const getAllPayments = async (): Promise<Payment[]> => {
     });
 
     const data: PaymentResponse = await handleResponse(response);
+    
+    // Extract the nested payments array from the response
+    if (data.data && typeof data.data === 'object' && 'payments' in data.data) {
+      return (data.data as any).payments || [];
+    }
+    
     return Array.isArray(data.data) ? data.data : [];
   } catch (error) {
     throw new Error(
@@ -79,6 +85,12 @@ export const getPaymentsByPatient = async (patientId: string): Promise<Payment[]
     });
 
     const data: PaymentResponse = await handleResponse(response);
+    
+    // Extract the nested payments array from the response
+    if (data.data && typeof data.data === 'object' && 'payments' in data.data) {
+      return (data.data as any).payments || [];
+    }
+    
     return Array.isArray(data.data) ? data.data : [];
   } catch (error) {
     throw new Error(
@@ -181,12 +193,18 @@ export const searchPayments = async (query: string): Promise<Payment[]> => {
       return getAllPayments();
     }
 
-    const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`, {
+    const response = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}`, {
       method: 'GET',
       headers: getHeaders(),
     });
 
     const data: PaymentResponse = await handleResponse(response);
+    
+    // Extract the nested payments array from the response
+    if (data.data && typeof data.data === 'object' && 'payments' in data.data) {
+      return (data.data as any).payments || [];
+    }
+    
     return Array.isArray(data.data) ? data.data : [];
   } catch (error) {
     throw new Error(
