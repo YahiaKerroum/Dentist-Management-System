@@ -16,6 +16,7 @@ import {
     Plus,
     Search,
 } from 'lucide-react';
+import { SuccessDialog, ErrorDialog } from '../components/appointments/Dialogs';
 
 interface AppointmentsPageProps {
     token: string;
@@ -27,6 +28,11 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
+    
+    const [showSuccess, setShowSuccess] = useState(false);  
+    const [successMessage, setSuccessMessage] = useState(''); 
+    const [showError, setShowError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(''); 
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -83,7 +89,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
 
             // Fetch appointments with filters
             const data = await getAllAppointments(filters);
-            setAppointments(data);
+            setAppointments(data.reverse());
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to load appointments');
@@ -110,50 +116,56 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     };
 
     const handleFormSubmit = async (data: CreateAppointmentDTO) => {
-        try {
-            if (modalMode === 'add') {
-                const newAppointment = await createAppointment(data);
-                setAppointments(prev => [...prev, newAppointment]);
-            } else {
-                if (!selectedAppointment) {
-                    setError('No appointment selected for update');
-                    return;
-                }
-                const updatedAppointment = await updateAppointment(selectedAppointment.id, data);
-                setAppointments(prev =>
-                    prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a)
-                );
-                
-                // Update detail panel if this appointment is currently displayed
-                if (detailAppointment?.id === updatedAppointment.id) {
-                    setDetailAppointment(updatedAppointment);
-                }
+        try{
+        if (modalMode === 'add') {
+            const newAppointment = await createAppointment(data);
+            setAppointments(prev => [...prev, newAppointment]);
+            setSuccessMessage('Appointment created successfully!');
+        } else {
+            if (!selectedAppointment) {
+                throw new Error('No appointment selected for update');
             }
-            setIsModalOpen(false);
-            setError('');
-        } catch (err: any) {
-            setError(err.message || 'Failed to save appointment');
-            console.error('Error saving appointment:', err);
-        }
-    };
-
-    const handleStatusUpdate = async (id: string, status: AppointmentStatus) => {
-        try {
-            const updatedAppointment = await updateAppointmentStatus(id, status);
+            const updatedAppointment = await updateAppointment(selectedAppointment.id, data);
             setAppointments(prev =>
                 prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a)
             );
             
-            // Update detail panel
+            // Update detail panel if this appointment is currently displayed
             if (detailAppointment?.id === updatedAppointment.id) {
                 setDetailAppointment(updatedAppointment);
             }
-            
-            setError('');
-        } catch (err: any) {
-            setError(err.message || 'Failed to update status');
-            console.error('Error updating status:', err);
+
+            setSuccessMessage('Appointment updated successfully!');
         }
+        setIsModalOpen(false);
+        setError('');
+        setShowSuccess(true);} 
+        catch(err : any)
+        {
+            setErrorMessage(err.message || 'Failed to save appointment');
+            setIsModalOpen(false);
+            setShowError(true); 
+        }
+    };
+
+    const handleStatusUpdate = async (id: string, status: AppointmentStatus) => {
+       try {
+         const updatedAppointment = await updateAppointmentStatus(id, status);
+         setAppointments(prev =>
+             prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a)
+         );
+         
+         // Update detail panel
+         if (detailAppointment?.id === updatedAppointment.id) {
+             setDetailAppointment(updatedAppointment);
+         }
+         setSuccessMessage('Appointment status updated successfully!');
+         setShowSuccess(true);
+         setError('');
+       } catch (error: any) {
+        setErrorMessage(error.message || 'Failed to update appointment status');
+        setShowError(true);
+       }
     };
 
     const handleDeleteAppointment = async (id: string) => {
@@ -162,9 +174,11 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             setAppointments(prev => prev.filter(a => a.id !== id));
             setDetailAppointment(null);
             setError('');
-        } catch (err: any) {
-            setError(err.message || 'Failed to delete appointment');
-            console.error('Error deleting appointment:', err);
+            setSuccessMessage('Appointment Deleted Successfully');
+            setShowSuccess(true);
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Failed to delete appointment');
+            setShowError(true);
         }
     };
 
@@ -247,7 +261,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             </div>
 
             {/* Main Content: Table + Details Panel */}
-            <div className="flex gap-6">
+            <div className="flex gap-2">
                 {/* Appointments Table */}
                 <div className="flex-1">
                     <AppointmentsTable
@@ -283,6 +297,21 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                     token={token}
                 />
             </Modal>
+
+             {/*Success Dialog */}
+            <SuccessDialog
+                isOpen={showSuccess}
+                message={successMessage}
+                onClose={() => setShowSuccess(false)} 
+                autoClose={true}  
+            />
+
+            {/* Error Dialog */}
+            <ErrorDialog
+                isOpen={showError} 
+                message={errorMessage}
+                onClose={() => setShowError(false)} 
+            />
         </div>
     );
 }
