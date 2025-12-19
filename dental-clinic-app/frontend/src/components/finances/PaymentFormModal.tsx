@@ -32,11 +32,11 @@ interface FormErrors {
 
 const PAYMENT_METHODS = [
   { value: '', label: 'Select method (optional)' },
-  { value: 'Cash', label: 'Cash' },
-  { value: 'Card', label: 'Card' },
-  { value: 'Bank Transfer', label: 'Bank Transfer' },
-  { value: 'Insurance', label: 'Insurance' },
-  { value: 'Other', label: 'Other' },
+  { value: 'CASH', label: 'Cash' },
+  { value: 'CARD', label: 'Card' },
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+  { value: 'INSURANCE', label: 'Insurance' },
+  { value: 'OTHER', label: 'Other' },
 ];
 
 const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
