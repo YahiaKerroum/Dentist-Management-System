@@ -13,7 +13,6 @@ interface PaymentFormModalProps {
 }
 
 interface FormData {
-  name: string;
   patientId: string;
   date: string;
   amount: string;
@@ -22,7 +21,6 @@ interface FormData {
 }
 
 interface FormErrors {
-  name?: string;
   patientId?: string;
   date?: string;
   amount?: string;
@@ -34,9 +32,8 @@ const PAYMENT_METHODS = [
   { value: '', label: 'Select method (optional)' },
   { value: 'CASH', label: 'Cash' },
   { value: 'CARD', label: 'Card' },
-  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+  { value: 'TRANSFER', label: 'Bank Transfer' },
   { value: 'INSURANCE', label: 'Insurance' },
-  { value: 'OTHER', label: 'Other' },
 ];
 
 const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
@@ -46,7 +43,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
   onSave,
 }) => {
   const [formData, setFormData] = useState<FormData>({
-    name: '',
     patientId: '',
     date: new Date().toISOString().split('T')[0],
     amount: '',
@@ -73,7 +69,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
   useEffect(() => {
     if (payment) {
       setFormData({
-        name: payment.name,
         patientId: payment.patientId,
         date: payment.date.split('T')[0], // Extract date part
         amount: payment.amount.toString(),
@@ -88,7 +83,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
     } else {
       // Reset form for new payment
       setFormData({
-        name: '',
         patientId: '',
         date: new Date().toISOString().split('T')[0],
         amount: '',
@@ -176,10 +170,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Payment name is required';
-    }
-
     if (!formData.patientId) {
       newErrors.patientId = 'Please select a patient';
     }
@@ -215,7 +205,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
 
     try {
       const paymentData = {
-        name: formData.name.trim(),
         patientId: formData.patientId,
         date: formData.date,
         amount: parseFloat(formData.amount),
@@ -287,26 +276,6 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
               {serverError}
             </div>
           )}
-
-          {/* Payment Name */}
-          <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Payment Name <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="e.g., Consultation Payment"
-              disabled={submitting}
-            />
-            {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
-          </div>
 
           {/* Patient Selection */}
           <div className="relative">
