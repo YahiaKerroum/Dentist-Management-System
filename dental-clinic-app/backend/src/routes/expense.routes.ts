@@ -8,17 +8,25 @@ const router = Router();
 
 router.use(authenticate);
 
+// Only MANAGER can create expenses
 router.post("/", authorize(Role.MANAGER), ExpenseController.create);
-router.get("/", authorize(Role.MANAGER), ExpenseController.getAll);
-// search route
-router.get("/search", authorize(Role.MANAGER), ExpenseController.search);
 
-router.get("/:id", authorize(Role.MANAGER), ExpenseController.getById);
-// update route
+// MANAGER & ASSISTANT can view expenses
+router.get("/", authorize(Role.MANAGER, Role.ASSISTANT), ExpenseController.getAll);
+
+// MANAGER & ASSISTANT can search expenses
+router.get("/search", authorize(Role.MANAGER, Role.ASSISTANT), ExpenseController.search);
+
+// MANAGER & ASSISTANT can view single expense
+router.get("/:id", authorize(Role.MANAGER, Role.ASSISTANT), ExpenseController.getById);
+
+// Only MANAGER can update expenses
 router.put("/:id", authorize(Role.MANAGER), ExpenseController.update);
-// delete route
+
+// Only MANAGER can delete expenses
 router.delete("/:id", authorize(Role.MANAGER), ExpenseController.delete);
 
+// Only MANAGER can approve expenses
 router.patch("/:id/approve", authorize(Role.MANAGER), ExpenseController.approve);
 
 export default router;

@@ -132,3 +132,24 @@ export const searchExpenses = async (
 
   return response.json();
 };
+
+// Approve expense (Manager only)
+export const approveExpense = async (
+  id: string,
+  token: string
+): Promise<{ success: boolean; data: Expense }> => {
+  const response = await fetch(`${API_URL}/${id}/approve`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to approve expense');
+  }
+
+  return response.json();
+};

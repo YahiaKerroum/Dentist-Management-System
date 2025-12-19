@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { getExpenses, deleteExpense, searchExpenses } from '../../services/expense.service';
+import { getExpenses, deleteExpense, searchExpenses, approveExpense } from '../../services/expense.service';
 import { Expense } from '../../types/expense.types';
 import { ExpenseFormModal } from './ExpenseFormModal';
-import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Filter } from 'lucide-react';
 
 interface ExpenseTableProps {
   token: string;
@@ -11,14 +11,30 @@ interface ExpenseTableProps {
 // Items per page for pagination
 const ITEMS_PER_PAGE = 10;
 
+// Category options for filter
+const CATEGORIES = ['All', 'Equipment', 'Supplies', 'Utilities', 'Salaries', 'Rent', 'Maintenance', 'Insurance', 'Marketing', 'Other'];
+
+// Sort options
+const SORT_OPTIONS = [
+  { value: 'date-desc', label: 'Date (Newest First)' },
+  { value: 'date-asc', label: 'Date (Oldest First)' },
+  { value: 'amount-desc', label: 'Amount (Highest First)' },
+  { value: 'amount-asc', label: 'Amount (Lowest First)' },
+];
+
 export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
   // Data state
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter & Sort state
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('date-desc');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,6 +73,45 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
     }
   };
 
+  // Apply filters and sorting
+  useEffect(() => {
+    let result = [...expenses];
+
+    // Apply category filter
+    if (categoryFilter !== 'All') {
+      result = result.filter(expense => expense.category === categoryFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(expense =>
+        expense.category.toLowerCase().includes(query) ||
+        expense.paidTo?.toLowerCase().includes(query) ||
+        expense.notes?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'date-asc':
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+        case 'amount-desc':
+          return Number(b.amount) - Number(a.amount);
+        case 'amount-asc':
+          return Number(a.amount) - Number(b.amount);
+        default:
+          return 0;
+      }
+    });
+
+    setFilteredExpenses(result);
+    setCurrentPage(1); // Reset to first page when filters change
+  }, [expenses, categoryFilter, searchQuery, sortBy]);
+
   // Debounced search
   const debounce = (func: Function, delay: number) => {
     let timeoutId: ReturnType<typeof setTimeout>;
@@ -66,49 +121,16 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
     };
   };
 
-  // Search expenses
-  const performSearch = async (query: string) => {
-    if (!query.trim()) {
-      fetchExpenses();
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError('');
-      const response = await searchExpenses(query, token);
-      const anyRes: any = response;
-      if (Array.isArray(anyRes)) {
-        setExpenses(anyRes);
-      } else if (anyRes && anyRes.data) {
-        setExpenses(anyRes.data);
-      }
-      setCurrentPage(1); // Reset to first page on search
-    } catch (err: any) {
-      setError(err.message || 'Search failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Debounced search handler
-  const debouncedSearch = useCallback(
-    debounce((query: string) => performSearch(query), 500),
-    [token]
-  );
-
   // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    debouncedSearch(value);
+    setSearchQuery(e.target.value);
   };
 
-  // Clear search
-  const handleClearSearch = () => {
+  // Clear all filters
+  const handleClearFilters = () => {
     setSearchQuery('');
-    fetchExpenses();
-    setCurrentPage(1);
+    setCategoryFilter('All');
+    setSortBy('date-desc');
   };
 
   // Delete expense
@@ -123,6 +145,21 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       fetchExpenses();
     } catch (err: any) {
       showToast(err.message || 'Failed to delete expense', 'error');
+    }
+  };
+
+  // Approve expense
+  const handleApprove = async (id: string) => {
+    if (!window.confirm('Are you sure you want to approve this expense?')) {
+      return;
+    }
+
+    try {
+      await approveExpense(id, token);
+      showToast('Expense approved successfully', 'success');
+      fetchExpenses();
+    } catch (err: any) {
+      showToast(err.message || 'Failed to approve expense', 'error');
     }
   };
 
@@ -152,10 +189,10 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
   };
 
   // Pagination calculations
-  const totalPages = Math.ceil(expenses.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredExpenses.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentExpenses = expenses.slice(startIndex, endIndex);
+  const currentExpenses = filteredExpenses.slice(startIndex, endIndex);
 
   // Pagination handlers
   const goToNextPage = () => {
@@ -212,8 +249,9 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
         </button>
       </div>
 
-      {/* Search bar */}
-      <div className="mb-5 flex gap-3">
+      {/* Search and Filters */}
+      <div className="mb-5 flex flex-col sm:flex-row gap-3">
+        {/* Search bar */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
           <input
@@ -225,13 +263,52 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
           />
           {searchQuery && (
             <button
-              onClick={handleClearSearch}
+              onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <X size={20} />
             </button>
           )}
         </div>
+
+        {/* Category Filter */}
+        <div className="flex items-center gap-2">
+          <Filter size={18} className="text-gray-500" />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat === 'All' ? 'All Categories' : cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Sort By */}
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {SORT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {/* Clear Filters */}
+        {(searchQuery || categoryFilter !== 'All' || sortBy !== 'date-desc') && (
+          <button
+            onClick={handleClearFilters}
+            className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* Loading spinner */}
@@ -250,15 +327,19 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       )}
 
       {/* Empty state */}
-      {!loading && !error && expenses.length === 0 && (
+      {!loading && !error && filteredExpenses.length === 0 && (
         <div className="text-center py-10 text-gray-500">
           <p className="text-lg">No expenses found.</p>
-          <p className="mt-2">Click "Add Expense" to create one.</p>
+          <p className="mt-2">
+            {expenses.length === 0 
+              ? 'Click "Add Expense" to create one.' 
+              : 'Try adjusting your filters.'}
+          </p>
         </div>
       )}
 
       {/* Expenses table */}
-      {!loading && !error && expenses.length > 0 && (
+      {!loading && !error && filteredExpenses.length > 0 && (
         <>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -294,6 +375,16 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
                     </td>
                     <td className="p-3">
                       <div className="flex gap-2">
+                        {/* Approve button - only show for pending expenses */}
+                        {!expense.approved && (
+                          <button
+                            onClick={() => handleApprove(expense.id)}
+                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                            title="Approve"
+                          >
+                            <CheckCircle size={18} />
+                          </button>
+                        )}
                         <button
                           onClick={() => handleEdit(expense)}
                           className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
@@ -320,7 +411,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-4 px-2">
               <span className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, expenses.length)} of {expenses.length} expenses
+                Showing {startIndex + 1} to {Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length} expenses
               </span>
               <div className="flex gap-2">
                 <button
