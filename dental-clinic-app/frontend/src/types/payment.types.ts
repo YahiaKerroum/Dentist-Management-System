@@ -3,7 +3,6 @@ import { Patient } from '../types/patient';
 // Main Payment interface
 export interface Payment {
   id: string;
-  name: string;
   patientId: string;
   patient: Patient;
   date: string;
@@ -16,7 +15,6 @@ export interface Payment {
 
 // Data structure for creating a new payment
 export interface CreatePaymentData {
-  name: string;
   patientId: string;
   date: string;
   amount: number;
@@ -26,7 +24,6 @@ export interface CreatePaymentData {
 
 // Data structure for updating an existing payment
 export interface UpdatePaymentData {
-  name?: string;
   patientId?: string;
   date?: string;
   amount?: number;

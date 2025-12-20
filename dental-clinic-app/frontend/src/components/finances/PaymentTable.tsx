@@ -59,7 +59,6 @@ const PaymentTable: React.FC = () => {
         : '';
       
       return (
-        payment.name.toLowerCase().includes(query) ||
         patientFullName.includes(query) ||
         payment.method?.toLowerCase().includes(query) ||
         payment.amount.toString().includes(query) ||
@@ -82,8 +81,12 @@ const PaymentTable: React.FC = () => {
   };
 
   const handleDeletePayment = async (payment: Payment) => {
+    const patientName = payment.patient 
+      ? `${payment.patient.firstName} ${payment.patient.lastName}`
+      : 'this payment';
+    
     const confirmed = window.confirm(
-      `Are you sure you want to delete the payment "${payment.name}"?`
+      `Are you sure you want to delete the payment for ${patientName}?`
     );
 
     if (!confirmed) return;
@@ -192,9 +195,6 @@ const PaymentTable: React.FC = () => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Patient Name
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -215,9 +215,6 @@ const PaymentTable: React.FC = () => {
                   {currentPayments.map((payment) => (
                     <tr key={payment.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {payment.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {payment.patient 
                           ? `${payment.patient.firstName} ${payment.patient.lastName}`
                           : 'N/A'}

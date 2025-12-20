@@ -105,8 +105,8 @@ export const getPaymentsByPatient = async (patientId: string): Promise<Payment[]
 export const createPayment = async (paymentData: CreatePaymentData): Promise<Payment> => {
   try {
     // Client-side validation
-    if (!paymentData.name || !paymentData.patientId || !paymentData.date || paymentData.amount === undefined) {
-      throw new Error('Required fields are missing: name, patientId, date, and amount are required');
+    if (!paymentData.patientId || !paymentData.date || paymentData.amount === undefined) {
+      throw new Error('Required fields are missing: patientId, date, and amount are required');
     }
 
     if (paymentData.amount < 0) {
