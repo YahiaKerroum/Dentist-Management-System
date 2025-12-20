@@ -55,16 +55,9 @@ export class PaymentController {
    * POST /api/payments
    */
   static create = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-    const { name, patientId, date, amount, method, notes } = req.body;
+    const { patientId, date, amount, method, notes } = req.body;
 
     // Validate required fields
-    if (!name) {
-      return res.status(400).json({
-        success: false,
-        message: "Payment name is required",
-      });
-    }
-
     if (!patientId) {
       return res.status(400).json({
         success: false,
@@ -95,7 +88,6 @@ export class PaymentController {
     }
 
     const payment = await PaymentService.createPayment({
-      
       patientId,
       recordedById: req.user?.userId,
       date: date ? new Date(date) : undefined,
@@ -113,7 +105,7 @@ export class PaymentController {
    */
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { name, patientId, date, amount, method, notes } = req.body;
+    const { patientId, date, amount, method, notes } = req.body;
 
     // Validate payment method if provided
     if (method && !Object.values(PaymentMethod).includes(method)) {
@@ -124,7 +116,6 @@ export class PaymentController {
     }
 
     const updateData: any = {};
-    if (name) updateData.name = name;
     if (patientId) updateData.patientId = patientId;
     if (date) updateData.date = new Date(date);
     if (amount !== undefined) updateData.amount = amount;
