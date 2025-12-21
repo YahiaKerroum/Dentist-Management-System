@@ -22,9 +22,11 @@ import {
 
 interface PatientsPageProps {
     token: string;
+    initialPatientId?: string;
+    onPatientOpened?: () => void;
 }
 
-export function PatientsPage({ token }: PatientsPageProps) {
+export function PatientsPage({ token, initialPatientId, onPatientOpened }: PatientsPageProps) {
     const [patients, setPatients] = useState<Patient[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -45,6 +47,9 @@ export function PatientsPage({ token }: PatientsPageProps) {
     const [viewingDetail, setViewingDetail] = useState(false);
     const [detailPatient, setDetailPatient] = useState<Patient | null>(null);
 
+    // Track if we've handled the initial patient
+    const [initialPatientHandled, setInitialPatientHandled] = useState(false);
+
     // Delete confirmation
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -56,6 +61,29 @@ export function PatientsPage({ token }: PatientsPageProps) {
         fetchPatients();
         fetchUserPermissions();
     }, [token]);
+
+    // Handle initial patient ID - open detail panel for specific patient
+    useEffect(() => {
+        console.log('PatientsPage useEffect - initialPatientId:', initialPatientId);
+        console.log('PatientsPage useEffect - patients.length:', patients.length);
+        console.log('PatientsPage useEffect - initialPatientHandled:', initialPatientHandled);
+        
+        if (initialPatientId && patients.length > 0 && !initialPatientHandled) {
+            const patient = patients.find(p => p.id === initialPatientId);
+            console.log('Found patient:', patient);
+            if (patient) {
+                setDetailPatient(patient);
+                setViewingDetail(true);
+                setInitialPatientHandled(true);
+                // Delay the callback to avoid triggering a re-render that resets state
+                setTimeout(() => {
+                    if (onPatientOpened) {
+                        onPatientOpened();
+                    }
+                }, 500);
+            }
+        }
+    }, [initialPatientId, patients, initialPatientHandled]);
 
     const fetchUserPermissions = async () => {
         try {

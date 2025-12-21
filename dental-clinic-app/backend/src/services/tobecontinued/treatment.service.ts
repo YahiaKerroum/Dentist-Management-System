@@ -182,4 +182,14 @@ export class TreatmentService {
 
         return treatment;
     }
+
+    static async deleteTreatment(id: string) {
+        await this.getTreatmentById(id);
+
+        await prisma.treatment.delete({
+            where: { id },
+        });
+
+        return { message: "Treatment deleted successfully" };
+    }
 }

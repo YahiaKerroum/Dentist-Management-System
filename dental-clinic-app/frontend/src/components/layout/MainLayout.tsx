@@ -17,6 +17,7 @@ interface MainLayoutProps {
 
 export function MainLayout({ token, onLogout }: MainLayoutProps) {
   const [activePage, setActivePage] = useState('dashboard');
+  const [targetPatientId, setTargetPatientId] = useState<string | null>(null);
 
   // Extract username and role from token for display
   const getUserName = () => {
@@ -58,11 +59,26 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
       case 'profile':
         return <ProfilePage token={token} />;
       case 'patients':
-        return <PatientsPage token={token} />;
+        return (
+          <PatientsPage 
+            token={token} 
+            initialPatientId={targetPatientId || undefined}
+            onPatientOpened={() => setTargetPatientId(null)}
+          />
+        );
       case 'appointments':
         return <AppointmentsPage token={token} />;
       case 'treatments':
-        return <TreatmentsPage />;
+        return (
+          <TreatmentsPage
+            token={token}
+            onNavigateToPatient={(patientId) => {
+              console.log('MainLayout onNavigateToPatient called with:', patientId);
+              setTargetPatientId(patientId);
+              setActivePage('patients');
+            }}
+          />
+        );
       case 'staff':
         return <StaffPage token={token} />;
       case 'reports':
