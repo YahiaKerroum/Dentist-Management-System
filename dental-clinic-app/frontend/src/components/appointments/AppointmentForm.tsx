@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Appointment, CreateAppointmentDTO, TreatmentType } from '../../types/appointment';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
+import { TeethSelector } from './TeethSelector';
+import { ConfirmationDialog} from './Dialogs';
 
 interface AppointmentFormProps {
     mode: 'add' | 'edit';
     initialData?: Appointment | null;
-    onSubmit: (data: CreateAppointmentDTO) => void;
+    onSubmit: (data: CreateAppointmentDTO) => Promise<void>;
     onCancel: () => void;
     token: string;
 }
@@ -28,6 +30,10 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
     const [loadingDoctors, setLoadingDoctors] = useState(true);
     const [loadingPatients, setLoadingPatients] = useState(true);
     const [isFormReady, setIsFormReady] = useState(false);
+    
+    // Confirmation dialog states
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -132,8 +138,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
         }
     };
 
-    const handleTeethChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const teeth = e.target.value.split(',').map(t => parseInt(t.trim())).filter(n => !isNaN(n));
+    const handleTeethChange = (teeth: number[]) => {
         setFormData(prev => ({ ...prev, teethInvolved: teeth }));
     };
 
@@ -168,16 +173,41 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
             }
         }
 
-        // Convert datetime-local string to ISO string for backend
-        const submitData = {
-            ...formData,
-            dateOfTreatment: new Date(formData.dateOfTreatment).toISOString()
-        };
+        // Show confirmation dialog
+        setShowConfirm(true);
+    };
 
-        onSubmit(submitData);
+    const confirmSubmit = async () => {
+        setIsSubmitting(true);
+        
+        try {
+            // Convert datetime-local string to ISO string for backend
+            const submitData = {
+                ...formData,
+                dateOfTreatment: new Date(formData.dateOfTreatment).toISOString()
+            };
+
+            await onSubmit(submitData);
+            
+            setShowConfirm(false);
+            
+            // Close form after success dialog closes (2 seconds)
+            setTimeout(() => {
+                onCancel();
+            }, 2100);
+        } catch (error: any) {
+            setShowConfirm(false);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const cancelSubmit = () => {
+        setShowConfirm(false);
     };
 
     return (
+        <>
         <form onSubmit={handleSubmit} className="space-y-4">
             {!isFormReady ? (
                 <div className="py-12">
@@ -291,19 +321,10 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                     </div>
 
                     {/* Teeth Involved */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Teeth Involved (comma-separated tooth numbers)
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.teethInvolved?.join(', ') || ''}
-                            onChange={handleTeethChange}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="e.g., 1, 2, 3"
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Enter tooth numbers separated by commas</p>
-                    </div>
+                    <TeethSelector
+                        selectedTeeth={formData.teethInvolved || []}
+                        onChange={handleTeethChange}
+                    />
 
                     {/* Notes */}
                     <div>
@@ -336,15 +357,31 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                     </div>
 
                     <div className="flex gap-2 pt-4">
-                        <Button type="submit" className="flex-1">
+                        <Button type="submit" className="flex-1" disabled={isSubmitting}>
                             {mode === 'add' ? 'Create Appointment' : 'Save Changes'}
                         </Button>
-                        <Button type="button" variant="secondary" onClick={onCancel} className="flex-1">
+                        <Button type="button" variant="secondary" onClick={onCancel} className="flex-1" disabled={isSubmitting}>
                             Cancel
                         </Button>
                     </div>
                 </>
             )}
         </form>
+
+         {/* Confirmation Dialog */}
+            <ConfirmationDialog
+                isOpen={showConfirm}
+                title={mode === 'add' ? 'Confirm Create Appointment' : 'Confirm Update Appointment'}
+                message={mode === 'add' 
+                    ? 'Are you sure you want to create this appointment?' 
+                    : 'Are you sure you want to update this appointment?'}
+                confirmText={mode === 'add' ? 'Create' : 'Update'}
+                cancelText="Cancel"
+                onConfirm={confirmSubmit}
+                onCancel={cancelSubmit}
+                isLoading={isSubmitting}
+            />
+
+        </>
     );
 }
