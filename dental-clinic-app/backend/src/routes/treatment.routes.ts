@@ -13,5 +13,6 @@ router.get("/", authorize(Role.MANAGER, Role.DOCTOR), TreatmentController.getAll
 router.get("/:id", authorize(Role.MANAGER, Role.DOCTOR), TreatmentController.getById);
 router.put("/:id", authorize(Role.MANAGER, Role.DOCTOR), TreatmentController.update);
 router.patch("/:id/complete", authorize(Role.MANAGER, Role.DOCTOR), TreatmentController.markCompleted);
+router.delete("/:id", authorize(Role.MANAGER, Role.DOCTOR), TreatmentController.delete);
 
 export default router;

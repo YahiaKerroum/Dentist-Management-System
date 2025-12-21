@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Tooth outline -->
+  <path d="M32 8C24 8 18 14 18 22C18 28 16 36 14 42C12 48 14 54 20 56C24 57 26 54 28 50C29 48 30 46 32 46C34 46 35 48 36 50C38 54 40 57 44 56C50 54 52 48 50 42C48 36 46 28 46 22C46 14 40 8 32 8Z" stroke="#6b7280" stroke-width="3" fill="#f3f4f6"/>
+  <!-- Three dots for "other/more" -->
+  <circle cx="24" cy="28" r="3" fill="#6b7280"/>
+  <circle cx="32" cy="28" r="3" fill="#6b7280"/>
+  <circle cx="40" cy="28" r="3" fill="#6b7280"/>
+</svg>

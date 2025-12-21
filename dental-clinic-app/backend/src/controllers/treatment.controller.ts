@@ -37,4 +37,9 @@ export class TreatmentController {
         const treatment = await TreatmentService.markAsCompleted(req.params.id);
         sendSuccess(res, treatment, "Treatment marked as completed");
     });
+
+    static delete = asyncHandler(async (req: Request, res: Response) => {
+        await TreatmentService.deleteTreatment(req.params.id);
+        sendSuccess(res, null, "Treatment deleted successfully");
+    });
 }
