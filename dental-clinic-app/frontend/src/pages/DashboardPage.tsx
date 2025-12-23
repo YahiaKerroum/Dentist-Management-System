@@ -3,8 +3,9 @@ import { StatsCard } from '../components/dashboard/StatsCard';
 import { AppointmentTable } from '../components/dashboard/AppointmentTable';
 import { PatientCard } from '../components/dashboard/PatientCard';
 import DonutChart from '../components/dashboard/DonutChart';
-import { Calendar, Users, DollarSign, Stethoscope, UserCheck, Activity, ArrowRight } from 'lucide-react'; // ==================== NEW: Added ArrowRight icon ====================
+import { Calendar, Users, DollarSign, Stethoscope, UserCheck, Activity, ArrowRight } from 'lucide-react';
 import { getPatients } from '../services/patient.service';
+import { getUserProfile } from '../services/user.service';
 import type { Patient as PatientType } from '../types/patient';
 import { getAllAppointments } from '../services/appointment.service';
 import { getTreatments } from '../services/treatment.service';
@@ -18,8 +19,7 @@ import type { Expense } from '../types/expense.types';
 import type { User } from '../types/user';
 
 interface DashboardPageProps {
-    token?: string;
-    user?: User;
+    token: string;
 }
 
 interface DashboardStats {
@@ -52,7 +52,8 @@ const TREATMENT_COLORS: Record<string, string> = {
     OTHER: '#6b7280',
 };
 
-export function DashboardPage({ token, user }: DashboardPageProps) {
+export function DashboardPage({ token }: DashboardPageProps) {
+    const [user, setUser] = useState<User | null>(null);
     const [stats, setStats] = useState<DashboardStats>({
         todayAppointments: 0,
         totalPatients: 0,
@@ -70,17 +71,21 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetch = async () => {
-            if (!token || !user) {
+        const fetchDashboardData = async () => {
+            if (!token) {
                 setLoading(false);
                 return;
             }
 
             try {
-                const isDoctor = user.role === 'DOCTOR';
-                const isManager = user.role === 'MANAGER';
-                const isAssistant = user.role === 'ASSISTANT';
-                const doctorId = user.doctorProfile?.id;
+                const userResponse = await getUserProfile(token);
+                const currentUser = userResponse.data;
+                setUser(currentUser);
+
+                const isDoctor = currentUser.role === 'DOCTOR';
+                const isManager = currentUser.role === 'MANAGER';
+                const isAssistant = currentUser.role === 'ASSISTANT';
+                const doctorId = currentUser.doctorProfile?.id;
 
                 // fetch appointments
                 let allAppointments: Appointment[] = [];
@@ -120,10 +125,10 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                     console.error('Error fetching patients:', err);
                 }
 
+                // Fetch recent payments for assistants
                 if (isAssistant) {
                     try {
                         const payments: Payment[] = await getAllPayments();
-                        // Sort by date descending and get latest 5
                         const sortedPayments = payments.sort((a, b) => 
                             new Date(b.date).getTime() - new Date(a.date).getTime()
                         );
@@ -223,6 +228,7 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                         });
                     }
                 } else {
+                    // Stats for doctor and assistant
                     setStats({
                         todayAppointments: todayAppts.length,
                         totalPatients: allPatients.length,
@@ -236,20 +242,18 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 setLoading(false);                
             } catch (err: any) {
                 setError(err?.message || 'Failed to load data');
-            } finally {
                 setLoading(false);
             }
         };
 
-        fetch();
-    }, [token, user]);
+        fetchDashboardData();
+    }, [token]);
 
     if (loading) {
         return (
             <div className="p-8 flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <Activity className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Loading dashboard...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 </div>
             </div>
         );
@@ -271,23 +275,20 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
         );
     }
 
-    const isManager = false;
-    const isDoctor = false;
-    const isAssistant = true;
+    const isManager = user?.role === 'MANAGER';
+    const isDoctor = user?.role === 'DOCTOR';
+    const isAssistant = user?.role === 'ASSISTANT';
 
     return (
         <div className="p-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-500 mt-1">
-                        Welcome back, {user?.firstName} {user?.lastName}
-                    </p>
+                    <h3 className="text-2xl text-gray-900"> Welcome back, {user?.firstName} {user?.lastName}</h3>
                 </div>                    
             </div>
 
-            {/*Role-based stats cards*/}
+            {/* Role-based stats cards */}
             {isManager ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <StatsCard 
@@ -322,7 +323,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                     />
                 </div>
             ) : isAssistant ? (
-                // ==================== NEW: Assistant gets only today's appointments count ====================
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatsCard 
                         icon={<Calendar className="text-blue-600" size={24} />} 
@@ -331,7 +331,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                     />
                 </div>
             ) : (
-                // Doctor stats
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatsCard 
                         icon={<Calendar className="text-blue-600" size={24} />} 
@@ -346,14 +345,14 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 </div>
             )}
 
-            {/*Appointments Table*/}
+            {/* Appointments Table with navigation link */}
             {(isDoctor || isAssistant) && (
                 <div className="mb-8">
                     <AppointmentTable appointments={todayAppointments} />
                 </div>
             )}
 
-            {/* Recently Added Patients*/}
+            {/* Recently Added Patients with navigation link */}
             {(isDoctor || isAssistant) && (
                 <div className="mb-8">
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -387,7 +386,7 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 </div>
             )}
 
-            {/* Latest Payments for Assistant */}
+            {/* Latest Payments for Assistants */}
             {isAssistant && (
                 <div className="mb-8">
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
@@ -442,7 +441,7 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 </div>
             )}
 
-            {/* Charts*/}
+            {/* Charts - Doctor only */}
             {isDoctor && treatmentData.length > 0 && (
                 <div className="grid grid-cols-2 gap-6">
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
