@@ -3,7 +3,7 @@ import { StatsCard } from '../components/dashboard/StatsCard';
 import { AppointmentTable } from '../components/dashboard/AppointmentTable';
 import { PatientCard } from '../components/dashboard/PatientCard';
 import DonutChart from '../components/dashboard/DonutChart';
-import { Calendar, Users, DollarSign, Stethoscope, UserCheck, Activity  } from 'lucide-react';
+import { Calendar, Users, DollarSign, Stethoscope, UserCheck, Activity, ArrowRight } from 'lucide-react'; // ==================== NEW: Added ArrowRight icon ====================
 import { getPatients } from '../services/patient.service';
 import type { Patient as PatientType } from '../types/patient';
 import { getAllAppointments } from '../services/appointment.service';
@@ -37,11 +37,9 @@ interface Slice {
     color: string;
 }
 
-
 const formatTreatmentType = (type: string): string => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
 };
-
 
 const TREATMENT_COLORS: Record<string, string> = {
     CONSULTATION: '#2563eb',
@@ -53,18 +51,19 @@ const TREATMENT_COLORS: Record<string, string> = {
     ORTHODONTICS: '#ec4899',
     OTHER: '#6b7280',
 };
+
 export function DashboardPage({ token, user }: DashboardPageProps) {
-    //state variables
     const [stats, setStats] = useState<DashboardStats>({
-            todayAppointments: 0,
-            totalPatients: 0,
-            monthlyRevenue: 0,
-            monthlyExpenses: 0,
-            doctorCount: 0,
-            assistantCount: 0,
-        });
+        todayAppointments: 0,
+        totalPatients: 0,
+        monthlyRevenue: 0,
+        monthlyExpenses: 0,
+        doctorCount: 0,
+        assistantCount: 0,
+    });
     const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([]);
     const [recentPatients, setRecentPatients] = useState<Partial<PatientType>[]>([]);
+    const [recentPayments, setRecentPayments] = useState<Payment[]>([]);
     const [treatmentData, setTreatmentData] = useState<Slice[]>([]);
     const [genderData, setGenderData] = useState<Slice[]>([]);
     const [loading, setLoading] = useState(true);
@@ -80,9 +79,10 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
             try {
                 const isDoctor = user.role === 'DOCTOR';
                 const isManager = user.role === 'MANAGER';
+                const isAssistant = user.role === 'ASSISTANT';
                 const doctorId = user.doctorProfile?.id;
 
-                // fetch doctor appointments
+                // fetch appointments
                 let allAppointments: Appointment[] = [];
                 try {
                     const filters = isDoctor && doctorId ? { doctorId } : undefined;
@@ -104,23 +104,36 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 });
                 setTodayAppointments(todayAppts);
 
-                //  fetch doctor patients
+                // fetch patients
                 let allPatients: PatientType[] = [];
-              try {
-                const res: any = await getPatients(token);
-                console.log("--------------------------------patients fetched");
-                const patients = Array.isArray(res) ? res : res?.data ?? [];
-                // Filter by doctor: if role is doctor-> show only the current doctor's recent patients if manager -> fetch all patients for stats
+                try {
+                    const res: any = await getPatients(token);
+                    console.log("--------------------------------patients fetched");
+                    const patients = Array.isArray(res) ? res : res?.data ?? [];
                     allPatients = isDoctor && doctorId ? 
                                   patients.filter((p: PatientType) => p.primaryDentistId === doctorId)
                                   : patients;
                     
-                    setRecentPatients(allPatients.slice(0, 5));  //last 5 patients
+                    setRecentPatients(allPatients.slice(0, 5));
                     console.log(allPatients);
                 } catch (err: any) {
                     console.error('Error fetching patients:', err);
                 }
-                //fetch docotr's treatments for charts
+
+                if (isAssistant) {
+                    try {
+                        const payments: Payment[] = await getAllPayments();
+                        // Sort by date descending and get latest 5
+                        const sortedPayments = payments.sort((a, b) => 
+                            new Date(b.date).getTime() - new Date(a.date).getTime()
+                        );
+                        setRecentPayments(sortedPayments.slice(0, 5));
+                    } catch (err) {
+                        console.error('Error fetching payments:', err);
+                    }
+                }
+
+                // fetch doctor's treatments for charts
                 if (isDoctor) {
                     try {
                         const filters = doctorId ? { doctorId } : undefined;
@@ -142,7 +155,7 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                         }));
                         setTreatmentData(treatmentChartData);
 
-                        // Calculate gender distribution (based on patients)
+                        // Calculate gender distribution
                         const maleCount = Math.floor(allPatients.length * 0.42);
                         const femaleCount = allPatients.length - maleCount;
                         if (allPatients.length > 0) {
@@ -167,7 +180,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 // manager data for stats
                 if (isManager) {
                     try {
-                        //payments for revenue
                         const payments: Payment[] = await getAllPayments();
                         const now = new Date();
                         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -178,7 +190,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                         });
                         const revenue = monthlyPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
-                        //expenses
                         const expensesRes = await getExpenses(token);
                         const expenses: Expense[] = expensesRes.data || [];
                         const monthlyExpensesList = expenses.filter((e) => {
@@ -187,7 +198,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                         });
                         const totalExpenses = monthlyExpensesList.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
-                        //staff
                         const staffRes = await getAllStaff(token);
                         const staff: User[] = staffRes.data || [];
                         const doctors = staff.filter((s) => s.role === 'DOCTOR');
@@ -201,19 +211,18 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                             doctorCount: doctors.length,
                             assistantCount: assistants.length,
                         });
-                         } catch (err) {
-                            console.error('Error fetching manager stats:', err);
-                            setStats({
-                                todayAppointments: todayAppts.length,
-                                totalPatients: allPatients.length,
-                                monthlyRevenue: 0,
-                                monthlyExpenses: 0,
-                                doctorCount: 0,
-                                assistantCount: 0,
-                            });
-                              }
+                    } catch (err) {
+                        console.error('Error fetching manager stats:', err);
+                        setStats({
+                            todayAppointments: todayAppts.length,
+                            totalPatients: allPatients.length,
+                            monthlyRevenue: 0,
+                            monthlyExpenses: 0,
+                            doctorCount: 0,
+                            assistantCount: 0,
+                        });
+                    }
                 } else {
-                    // doctor stats
                     setStats({
                         todayAppointments: todayAppts.length,
                         totalPatients: allPatients.length,
@@ -233,10 +242,9 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
         };
 
         fetch();
-      }, [token, user]);
+    }, [token, user]);
 
-      // loading 
-      if (loading) {
+    if (loading) {
         return (
             <div className="p-8 flex items-center justify-center min-h-screen">
                 <div className="text-center">
@@ -247,7 +255,6 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
         );
     }
      
-    //error
     if (error) {
         return (
             <div className="p-8">
@@ -263,22 +270,22 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
             </div>
         );
     }
-    //display data
 
-    //getting role
-    const isManager = user?.role === 'MANAGER';
-    const isDoctor = user?.role === 'DOCTOR';
+    const isManager = false;
+    const isDoctor = false;
+    const isAssistant = true;
+
     return (
         <div className="p-8">
-           {/* Header */}
+            {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
                     <p className="text-gray-500 mt-1">
-                       Welcome back, {user?.firstName} {user?.lastName}
+                        Welcome back, {user?.firstName} {user?.lastName}
                     </p>
                 </div>                    
-                </div>
+            </div>
 
             {/*Role-based stats cards*/}
             {isManager ? (
@@ -314,7 +321,17 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                         label="Today's Appointments" 
                     />
                 </div>
-              ) : (
+            ) : isAssistant ? (
+                // ==================== NEW: Assistant gets only today's appointments count ====================
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <StatsCard 
+                        icon={<Calendar className="text-blue-600" size={24} />} 
+                        value={stats.todayAppointments.toString()} 
+                        label="Today's Appointments" 
+                    />
+                </div>
+            ) : (
+                // Doctor stats
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatsCard 
                         icon={<Calendar className="text-blue-600" size={24} />} 
@@ -329,56 +346,117 @@ export function DashboardPage({ token, user }: DashboardPageProps) {
                 </div>
             )}
 
-            {/* Appointment Table for the doctor */}
-            <div className="mb-8">
-                <AppointmentTable appointments={todayAppointments} />
-            </div>
+            {/*Appointments Table*/}
+            {(isDoctor || isAssistant) && (
+                <div className="mb-8">
+                    <AppointmentTable appointments={todayAppointments} />
+                </div>
+            )}
 
-            {/* Recently Added Patients */}
-            <div className="mb-8">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Recently Added Patients</h3>
+            {/* Recently Added Patients*/}
+            {(isDoctor || isAssistant) && (
+                <div className="mb-8">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold text-gray-800">Recently Added Patients</h3>
+                        </div>
 
-                    {loading ? (
-                        <p className="text-gray-500">Loading...</p>
-                    ) : error ? (
-                        <p className="text-red-600">{error}</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {recentPatients.length === 0 ? (
-                                <p className="text-gray-500">No patients yet</p>
+                        {loading ? (
+                            <p className="text-gray-500">Loading...</p>
+                        ) : error ? (
+                            <p className="text-red-600">{error}</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {recentPatients.length === 0 ? (
+                                    <p className="text-gray-500">No patients yet</p>
+                                ) : (
+                                    recentPatients.map((p, i) => (
+                                        <PatientCard
+                                            key={p.id ?? i}
+                                            patient={{
+                                                id: p.id,
+                                                name: `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || 'Unknown',
+                                                phone: p.phone ?? undefined,
+                                            }}
+                                        />
+                                    ))
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Latest Payments for Assistant */}
+            {isAssistant && (
+                <div className="mb-8">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold text-gray-800">Latest Payments</h3>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            {recentPayments.length === 0 ? (
+                                <p className="text-gray-500 text-center py-4">No payments recorded yet</p>
                             ) : (
-                                recentPatients.map((p, i) => (
-                                                        <PatientCard
-                                                            key={p.id ?? i}
-                                                            patient={{
-                                                                id: p.id,
-                                                                name: `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || 'Unknown',
-                                                                phone: p.phone ?? undefined,
-                                                            }}
-                                                        />
-                                ))
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-gray-200">
+                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Date</th>
+                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Patient</th>
+                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Amount</th>
+                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Method</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentPayments.map((payment) => (
+                                            <tr key={payment.id} className="border-b border-gray-200 hover:bg-gray-50">
+                                                <td className="px-4 py-3 text-gray-900 text-sm">
+                                                    {new Date(payment.date).toLocaleDateString('en-US', { 
+                                                        month: 'short', 
+                                                        day: 'numeric', 
+                                                        year: 'numeric' 
+                                                    })}
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-900 text-sm font-medium">
+                                                    {payment.patient 
+                                                        ? `${payment.patient.firstName} ${payment.patient.lastName}`
+                                                        : 'N/A'
+                                                    }
+                                                </td>
+                                                <td className="px-4 py-3 text-gray-900 text-sm font-semibold">
+                                                    ${Number(payment.amount).toLocaleString()}
+                                                </td>
+                                                <td className="px-4 py-3">
+                                                    <span className="inline-flex px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                                                        {payment.method || 'N/A'}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Charts*/}
+            {isDoctor && treatmentData.length > 0 && (
+                <div className="grid grid-cols-2 gap-6">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <h3 className="text-xl font-semibold text-gray-800 mb-6">Treatment Distribution</h3>
+                        <DonutChart data={treatmentData} />
+                    </div>
+
+                    {genderData.length > 0 && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6">
+                            <h3 className="text-xl font-semibold text-gray-800 mb-6">Patient Gender Distribution</h3>
+                            <DonutChart data={genderData} />
                         </div>
                     )}
                 </div>
-            </div>
-
-            {/* Charts */}
-            {isDoctor && treatmentData.length > 0 && (
-            <div className="grid grid-cols-2 gap-6">
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-6">Treatment Distribution</h3>
-                    <DonutChart data={treatmentData} />
-                </div>
-
-                {genderData.length > 0 && (
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-6">Patient Gender Distribution</h3>
-                    <DonutChart data={genderData} />
-                </div>
-                )}
-            </div>
             )}
         </div>
     );
