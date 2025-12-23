@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { getExpenses, deleteExpense, searchExpenses, approveExpense } from '../../services/expense.service';
 import { Expense } from '../../types/expense.types';
 import { ExpenseFormModal } from './ExpenseFormModal';
+import { ExpenseDetailModal } from './ExpenseDetailModal';
 import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Filter } from 'lucide-react';
 
 interface ExpenseTableProps {
@@ -39,9 +40,13 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Modal state
+  // Modal state (for create/edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+
+  // Detail modal state (NEW)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
 
   // Toast state
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -186,6 +191,18 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
     handleModalClose();
     showToast(message, 'success');
     fetchExpenses();
+  };
+
+  // Open detail modal (NEW)
+  const handleViewDetail = (expense: Expense) => {
+    setDetailExpense(expense);
+    setIsDetailModalOpen(true);
+  };
+
+  // Close detail modal (NEW)
+  const handleDetailModalClose = () => {
+    setIsDetailModalOpen(false);
+    setDetailExpense(null);
   };
 
   // Pagination calculations
@@ -356,7 +373,11 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
               </thead>
               <tbody>
                 {currentExpenses.map((expense) => (
-                  <tr key={expense.id} className="border-b border-gray-200 hover:bg-gray-50">
+                  <tr 
+                    key={expense.id} 
+                    className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => handleViewDetail(expense)}
+                  >
                     <td className="p-3">{expense.category}</td>
                     <td className="p-3">{expense.paidTo || 'N/A'}</td>
                     <td className="p-3 font-medium">{formatCurrency(Number(expense.amount))}</td>
@@ -373,7 +394,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
                         {expense.approved ? 'Approved' : 'Pending'}
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
                       <div className="flex gap-2">
                         {/* Approve button - only show for pending expenses */}
                         {!expense.approved && (
@@ -454,6 +475,13 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
         onSave={handleSaveSuccess}
         expense={selectedExpense}
         token={token}
+      />
+
+      {/* Modal for viewing details */}
+      <ExpenseDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={handleDetailModalClose}
+        expense={detailExpense}
       />
     </div>
   );
