@@ -40,9 +40,6 @@ export const AppointmentTable: React.FC<AppointmentTableProps> = ({ appointments
   };
   return (
     <div className="bg-white rounded-xl border border-[#E5E7EB] mb-8">
-      <div className="p-6 border-b border-[#E5E7EB]">
-        <h2 className="text-[#0F172A] text-[18px] font-[600]">Today's Appointments</h2>
-      </div>
       <div className="overflow-x-auto">
         {appointments.length === 0 ? (
           <div className="p-8 text-center text-gray-500">

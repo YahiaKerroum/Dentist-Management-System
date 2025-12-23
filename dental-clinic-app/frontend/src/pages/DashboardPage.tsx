@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { StatsCard } from '../components/dashboard/StatsCard';
 import { AppointmentTable } from '../components/dashboard/AppointmentTable';
 import { PatientCard } from '../components/dashboard/PatientCard';
@@ -71,7 +72,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        const fetchDashboardData = async () => {
+        const fetch = async () => {
             if (!token) {
                 setLoading(false);
                 return;
@@ -246,14 +247,15 @@ export function DashboardPage({ token }: DashboardPageProps) {
             }
         };
 
-        fetchDashboardData();
+        fetch();
     }, [token]);
 
     if (loading) {
         return (
             <div className="p-8 flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <Activity className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+                    <p className="text-gray-600">Loading dashboard...</p>
                 </div>
             </div>
         );
@@ -284,7 +286,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h3 className="text-2xl text-gray-900"> Welcome back, {user?.firstName} {user?.lastName}</h3>
+                    <h1 className="text-2xl text-gray-900">Welcome back, {user?.firstName} {user?.lastName}</h1>
                 </div>                    
             </div>
 
@@ -345,89 +347,115 @@ export function DashboardPage({ token }: DashboardPageProps) {
                 </div>
             )}
 
-            {/* Appointments Table with navigation link */}
+            {/* Appointments Table */}
             {(isDoctor || isAssistant) && (
                 <div className="mb-8">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800">Today's Appointments</h2>
+                    </div>
                     <AppointmentTable appointments={todayAppointments} />
                 </div>
             )}
 
-            {/* Recently Added Patients with navigation link */}
+            {/* Recently Added Patients*/}
             {(isDoctor || isAssistant) && (
                 <div className="mb-8">
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold text-gray-800">Recently Added Patients</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800">Recently Added Patients</h2>
+                    </div>
+                    <div className="bg-white rounded-xl border border-[#E5E7EB]">
+                        <div className="overflow-x-auto">
+                            {loading ? (
+                                <div className="p-8 text-center text-gray-500">Loading...</div>
+                            ) : error ? (
+                                <div className="p-8 text-center text-red-600">{error}</div>
+                            ) : recentPatients.length === 0 ? (
+                                <div className="p-8 text-center text-gray-500">No patients yet</div>
+                            ) : (
+                                <table className="w-full">
+                                    <thead>
+                                        <tr className="border-b border-[#E5E7EB]">
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Name</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Phone Number</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Email</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Last Updated</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentPatients.map((p, i) => (
+                                            <tr key={p.id ?? i} className="border-b border-[#E5E7EB] hover:bg-[#F8FAFC]">
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                                                    {`${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || 'Unknown'}
+                                                </td>
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                                                    {p.phone || 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                                                    {p.email || 'N/A'}
+                                                </td>
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                                                    {p.updatedAt 
+                                                        ? new Date(p.updatedAt).toLocaleDateString('en-US', { 
+                                                            month: 'short', 
+                                                            day: 'numeric', 
+                                                            year: 'numeric' 
+                                                        })
+                                                        : 'N/A'
+                                                    }
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
                         </div>
-
-                        {loading ? (
-                            <p className="text-gray-500">Loading...</p>
-                        ) : error ? (
-                            <p className="text-red-600">{error}</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {recentPatients.length === 0 ? (
-                                    <p className="text-gray-500">No patients yet</p>
-                                ) : (
-                                    recentPatients.map((p, i) => (
-                                        <PatientCard
-                                            key={p.id ?? i}
-                                            patient={{
-                                                id: p.id,
-                                                name: `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim() || 'Unknown',
-                                                phone: p.phone ?? undefined,
-                                            }}
-                                        />
-                                    ))
-                                )}
-                            </div>
-                        )}
                     </div>
                 </div>
             )}
 
-            {/* Latest Payments for Assistants */}
+            {/* Latest Payments for Assistants*/}
             {isAssistant && (
                 <div className="mb-8">
-                    <div className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold text-gray-800">Latest Payments</h3>
-                        </div>
-
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-semibold text-gray-800">Latest Payments</h2>
+                    </div>
+                    <div className="bg-white rounded-xl border border-[#E5E7EB]">
                         <div className="overflow-x-auto">
                             {recentPayments.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">No payments recorded yet</p>
+                                <div className="p-8 text-center text-gray-500">
+                                    No payments recorded yet
+                                </div>
                             ) : (
                                 <table className="w-full">
                                     <thead>
-                                        <tr className="border-b border-gray-200">
-                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Date</th>
-                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Patient</th>
-                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Amount</th>
-                                            <th className="text-left px-4 py-3 text-gray-600 text-xs font-semibold uppercase tracking-wide">Method</th>
+                                        <tr className="border-b border-[#E5E7EB]">
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Date</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Patient</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Amount</th>
+                                            <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Method</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {recentPayments.map((payment) => (
-                                            <tr key={payment.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                <td className="px-4 py-3 text-gray-900 text-sm">
+                                            <tr key={payment.id} className="border-b border-[#E5E7EB] hover:bg-[#F8FAFC]">
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
                                                     {new Date(payment.date).toLocaleDateString('en-US', { 
                                                         month: 'short', 
                                                         day: 'numeric', 
                                                         year: 'numeric' 
                                                     })}
                                                 </td>
-                                                <td className="px-4 py-3 text-gray-900 text-sm font-medium">
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
                                                     {payment.patient 
                                                         ? `${payment.patient.firstName} ${payment.patient.lastName}`
                                                         : 'N/A'
                                                     }
                                                 </td>
-                                                <td className="px-4 py-3 text-gray-900 text-sm font-semibold">
+                                                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[600]">
                                                     ${Number(payment.amount).toLocaleString()}
                                                 </td>
-                                                <td className="px-4 py-3">
-                                                    <span className="inline-flex px-3 py-1 bg-green-50 text-green-700 text-xs font-medium rounded-full">
+                                                <td className="px-6 py-4">
+                                                    <span className="inline-flex px-3 py-1 bg-[#EEF4FF] text-[#1D4ED8] text-[13px] font-[500] rounded-full">
                                                         {payment.method || 'N/A'}
                                                     </span>
                                                 </td>
@@ -441,7 +469,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
                 </div>
             )}
 
-            {/* Charts - Doctor only */}
+            {/* Charts for doctor*/}
             {isDoctor && treatmentData.length > 0 && (
                 <div className="grid grid-cols-2 gap-6">
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
