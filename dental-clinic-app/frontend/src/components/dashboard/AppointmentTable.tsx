@@ -1,29 +1,54 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { Appointment } from '../../types/appointment';
 
-interface Appointment {
-  id: number;
-  date: string;
-  time: string;
-  patientName: string;
-  treatment: string;
+
+interface AppointmentTableProps {
+  appointments: Appointment[];
 }
 
-const APPTS: Appointment[] = [
-  { id: 1, date: 'Nov 25, 2024', time: '9:00 AM', patientName: 'Sarah Johnson', treatment: 'Routine Checkup' },
-  { id: 2, date: 'Nov 25, 2024', time: '10:30 AM', patientName: 'Michael Chen', treatment: 'Teeth Cleaning' },
-  { id: 3, date: 'Nov 25, 2024', time: '2:00 PM', patientName: 'Emma Davis', treatment: 'Root Canal' },
-  { id: 4, date: 'Nov 25, 2024', time: '3:45 PM', patientName: 'James Wilson', treatment: 'Dental Implant Consultation' },
-  { id: 5, date: 'Nov 25, 2024', time: '5:00 PM', patientName: 'Lisa Anderson', treatment: 'Cavity Filling' },
-];
+export const AppointmentTable: React.FC<AppointmentTableProps> = ({ appointments }) => {
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit', 
+      hour12: true 
+    });
+  };
 
-export const AppointmentTable: React.FC = () => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SCHEDULED':
+        return 'bg-yellow-50 text-yellow-700';
+      case 'COMPLETED':
+        return 'bg-green-50 text-green-700';
+      case 'CANCELLED':
+        return 'bg-red-50 text-red-700';
+      default:
+        return 'bg-gray-50 text-gray-700';
+    }
+  };
   return (
     <div className="bg-white rounded-xl border border-[#E5E7EB] mb-8">
       <div className="p-6 border-b border-[#E5E7EB]">
         <h2 className="text-[#0F172A] text-[18px] font-[600]">Today's Appointments</h2>
       </div>
       <div className="overflow-x-auto">
+        {appointments.length === 0 ? (
+          <div className="p-8 text-center text-gray-500">
+            No appointments scheduled for today
+          </div>
+        ) : (
         <table className="w-full">
           <thead>
             <tr className="border-b border-[#E5E7EB]">
@@ -31,24 +56,43 @@ export const AppointmentTable: React.FC = () => {
               <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Time</th>
               <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Patient Name</th>
               <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Treatment</th>
+              <th className="text-left px-6 py-4 text-[#64748B] text-[13px] font-[600] uppercase tracking-wide">Status</th>
             </tr>
           </thead>
           <tbody>
-            {APPTS.map((a) => (
-              <tr key={a.id} className="border-b border-[#E5E7EB] hover:bg-[#F8FAFC]">
-                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">{a.date}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-[#64748B]">
-                    <Clock size={16} strokeWidth={2} />
-                    <span className="text-[14px] font-[500]">{a.time}</span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">{a.patientName}</td>
-                <td className="px-6 py-4"><span className="inline-flex px-3 py-1 bg-[#EEF4FF] text-[#1D4ED8] text-[13px] font-[500] rounded-full">{a.treatment}</span></td>
-              </tr>
-            ))}
+              {appointments.map((a) => (
+                <tr key={a.id} className="border-b border-[#E5E7EB] hover:bg-[#F8FAFC]">
+                  {/* date */}
+                  <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                    {formatDate(a.dateOfTreatment)}
+                  </td>
+                  {/* time */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-[#64748B]">
+                      <Clock size={16} strokeWidth={2} />
+                      <span className="text-[14px] font-[500]">{formatTime(a.dateOfTreatment)}</span>
+                    </div>
+                  </td>
+                  {/* patient data*/}
+                  <td className="px-6 py-4 text-[#0F172A] text-[14px] font-[500]">
+                    {a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : 'N/A'}
+                  </td>
+                  {/*Handling null treatment types ==================== */}
+                  <td className="px-6 py-4">
+                    <span className="inline-flex px-3 py-1 bg-[#EEF4FF] text-[#1D4ED8] text-[13px] font-[500] rounded-full">
+                      {a.typeOfTreatment || 'Not specified'}
+                    </span>
+                  </td>
+                  {/*Status badge */}
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex px-3 py-1 text-[13px] font-[500] rounded-full ${getStatusColor(a.status)}`}>
+                      {a.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
           </tbody>
-        </table>
+        </table> )}
       </div>
     </div>
   );
