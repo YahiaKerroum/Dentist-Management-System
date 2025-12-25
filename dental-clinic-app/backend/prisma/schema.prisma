@@ -66,6 +66,7 @@ model User {
   expensesApproved Expense[]     @relation("ExpenseApprovedBy")
   expensesRecorded Expense[]     @relation("ExpenseRecordedBy")
   auditLogs        AuditLog[]
+  documentsUploaded Document[]
 
   registeredPatients Patient[] @relation("PatientRegistrations")
 
@@ -125,9 +126,23 @@ model Patient {
   appointments Appointment[]
   treatments   Treatment[]
   payments     Payment[]
+  documents    Document[]
 
   registeredBy   User?   @relation("PatientRegistrations", fields: [registeredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
   registeredById String?
+}
+
+model Document {
+  id         String   @id @default(uuid())
+  patient    Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId  String
+  name       String
+  type       String
+  filePath   String
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  uploadedById String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model Appointment {
