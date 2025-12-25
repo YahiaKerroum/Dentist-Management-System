@@ -248,7 +248,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     onClick={handleAddNew}
                     style={{
                         padding: '10px 20px',
-                        backgroundColor: '#007bff',
+                        backgroundColor: '#3DBEA3',
                         color: 'white',
                         border: 'none',
                         borderRadius: '8px',
@@ -260,8 +260,8 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                         gap: '8px',
                         transition: 'background-color 0.2s'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2FA88E'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3DBEA3'}
                 >
                     <UserPlus size={18} />
                     Add Staff Member

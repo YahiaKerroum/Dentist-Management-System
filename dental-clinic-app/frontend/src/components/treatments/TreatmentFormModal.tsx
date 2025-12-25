@@ -176,7 +176,7 @@ export function TreatmentFormModal({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-teal-500 to-emerald-600 px-6 py-4 flex items-center justify-between">
+                <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                             <Stethoscope className="w-5 h-5 text-white" />
@@ -185,7 +185,7 @@ export function TreatmentFormModal({
                             <h2 className="text-xl font-semibold text-white">
                                 {treatment ? 'Edit Treatment' : 'New Treatment Record'}
                             </h2>
-                            <p className="text-teal-100 text-sm">
+                            <p className="text-white/80 text-sm">
                                 {treatment ? 'Update treatment details' : 'Create a new dental procedure record'}
                             </p>
                         </div>
@@ -491,7 +491,8 @@ export function TreatmentFormModal({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="px-6 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-medium shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}
                         >
                             {loading ? (
                                 <>

@@ -29,7 +29,7 @@ export const StatsCard: React.FC<{ icon: React.ReactNode; value: string; label: 
   <div className="grid grid-cols-1 mx-4">
     <div className="bg-white border border-gray-200 rounded-lg p-6">
       <div className="flex items-start justify-between mb-4">
-        <div className="p-3 bg-blue-50 rounded-lg">
+        <div className="p-3 rounded-lg" style={{ backgroundColor: '#E8F5F0' }}>
           {icon}
         </div>
       </div>
