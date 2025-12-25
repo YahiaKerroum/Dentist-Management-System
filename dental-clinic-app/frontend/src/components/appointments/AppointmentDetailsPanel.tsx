@@ -106,7 +106,7 @@ export function AppointmentDetailsPanel({
     const getStatusColor = (status: AppointmentStatus) => {
         switch (status) {
             case AppointmentStatus.SCHEDULED:
-                return 'bg-blue-100 text-blue-800';
+                return 'bg-[#E8F5F0] text-[#3DBEA3]';
             case AppointmentStatus.COMPLETED:
                 return 'bg-green-100 text-green-800';
             case AppointmentStatus.CANCELLED:
@@ -304,7 +304,8 @@ export function AppointmentDetailsPanel({
                     <div className="p-6 border-t border-gray-200 space-y-2">
                         <button 
                             onClick={() => onEdit && onEdit(appointment)}
-                            className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium"
+                            className="w-full py-2 px-4 text-white rounded-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 font-medium"
+                            style={{ backgroundColor: '#3DBEA3' }}
                         >
                             <Edit className="w-4 h-4" />
                             Edit Appointment

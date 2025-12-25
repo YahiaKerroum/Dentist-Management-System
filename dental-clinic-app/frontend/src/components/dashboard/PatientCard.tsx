@@ -13,8 +13,8 @@ export const PatientCard: React.FC<{ patient: PatientSmall }> = ({ patient }) =>
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-shadow">
       <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <User className="text-blue-600" size={24} />
+        <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+          <User style={{ color: '#3DBEA3' }} size={24} />
         </div>
         <div>
           <h3 className="font-semibold text-gray-800">{patient.name}</h3>
