@@ -7,6 +7,7 @@ import treatmentRoutes from "./treatment.routes";
 import paymentRoutes from "./payment.routes";
 import expenseRoutes from "./expense.routes";
 import reportRoutes from "./report.routes";
+import documentRoutes from "./document.routes";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/treatments", treatmentRoutes);
 router.use("/payments", paymentRoutes);
 router.use("/expenses", expenseRoutes);
 router.use("/reports", reportRoutes);
+router.use("/documents", documentRoutes);
 
 export default router;
