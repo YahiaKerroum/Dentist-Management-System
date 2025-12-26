@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Patient } from '../types/patient';
+import { Appointment } from '../types/appointment';
+import { Treatment } from '../types/treatment';
 import { OdontogramDisplay } from '../components/patients/OdontogramDisplay';
 import { getDocumentsByPatientId, deleteDocument, Document, uploadDocument } from '../services/document.service';
+import { getTreatments } from '../services/treatment.service';
 import {
   Calendar,
   Phone,
@@ -26,59 +29,6 @@ interface PatientDetailPanelProps {
   onDelete?: (patient: Patient) => void;
 }
 
-// Mock treatment data (hardcoded - to be replaced with real data)
-const mockTreatments = [
-  {
-    id: '1',
-    type: 'FILLING',
-    date: '2025-11-20',
-    teethInvolved: [14, 15],
-    notes: 'Upper right molars filled with composite',
-    doctor: 'Dr. Smith',
-    status: 'completed',
-  },
-  {
-    id: '2',
-    type: 'CLEANING',
-    date: '2025-10-15',
-    teethInvolved: [],
-    notes: 'Professional cleaning and scaling',
-    doctor: 'Dr. Smith',
-    status: 'completed',
-  },
-  {
-    id: '3',
-    type: 'CONSULTATION',
-    date: '2025-09-10',
-    teethInvolved: [2, 3],
-    notes: 'Initial consultation for root canal assessment',
-    doctor: 'Dr. Johnson',
-    status: 'completed',
-  },
-];
-
-// Mock appointment data (hardcoded - to be replaced with real data)
-const mockAppointments = [
-  {
-    id: '1',
-    type: 'ROOT_CANAL',
-    date: '2025-12-15',
-    time: '10:00 AM',
-    doctor: 'Dr. Smith',
-    status: 'SCHEDULED',
-    notes: 'Root canal treatment on tooth #2',
-  },
-  {
-    id: '2',
-    type: 'CHECKUP',
-    date: '2026-01-20',
-    time: '2:00 PM',
-    doctor: 'Dr. Johnson',
-    status: 'SCHEDULED',
-    notes: 'Follow-up checkup',
-  },
-];
-
 export function PatientDetailPanel({
   patient,
   token,
@@ -99,6 +49,16 @@ export function PatientDetailPanel({
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [deleteConfirmDocId, setDeleteConfirmDocId] = useState<string | null>(null);
+  
+  // State for appointments
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loadingAppointments, setLoadingAppointments] = useState(false);
+  const [appointmentsError, setAppointmentsError] = useState('');
+
+  // State for treatments
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
+  const [loadingTreatments, setLoadingTreatments] = useState(false);
+  const [treatmentsError, setTreatmentsError] = useState('');
 
   // Permission checks
   const canEditPatient = userPermissions.includes('patients.update');
@@ -204,6 +164,98 @@ export function PatientDetailPanel({
     30: 'healthy',
     31: 'healthy',
     32: 'healthy',
+  };
+
+  // Check if current user is the primary dentist (for medical documents access)
+  const isPrimaryDentist = userRole === 'DOCTOR' && patient.primaryDentistId === currentUserId;
+  const canViewMedicalDocs = isPrimaryDentist;
+
+  // Fetch appointments when the appointments tab is active
+  useEffect(() => {
+    if (activeTab === 'appointments') {
+      fetchAppointments();
+    }
+  }, [activeTab, patient.id]);
+
+  // Fetch treatments when the treatments tab is active
+  useEffect(() => {
+    if (activeTab === 'treatments') {
+      fetchTreatments();
+    }
+  }, [activeTab, patient.id]);
+
+  const fetchAppointments = async () => {
+    setLoadingAppointments(true);
+    setAppointmentsError('');
+    
+    try {
+      const response = await fetch('http://localhost:4000/api/appointments', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+
+      const data = await response.json();
+      const allAppointments = data.data || data;
+      
+      // Filter appointments for this specific patient
+      const patientAppointments = allAppointments.filter(
+        (apt: Appointment) => apt.patientId === patient.id
+      );
+
+      // Sort appointments by date (upcoming first, then past)
+      const sortedAppointments = patientAppointments.sort((a: Appointment, b: Appointment) => {
+        return new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime();
+      });
+
+      setAppointments(sortedAppointments);
+    } catch (error: any) {
+      console.error('Error fetching appointments:', error);
+      setAppointmentsError(error.message || 'Failed to load appointments');
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  const fetchTreatments = async () => {
+    setLoadingTreatments(true);
+    setTreatmentsError('');
+    
+    try {
+      const response = await getTreatments(token, { patientId: patient.id });
+      
+      // Sort treatments by date (most recent first)
+      const sortedTreatments = response.data.sort((a: Treatment, b: Treatment) => {
+        return new Date(b.dateOfTreatment).getTime() - new Date(a.dateOfTreatment).getTime();
+      });
+
+      setTreatments(sortedTreatments);
+    } catch (error: any) {
+      console.error('Error fetching treatments:', error);
+      setTreatmentsError(error.message || 'Failed to load treatments');
+    } finally {
+      setLoadingTreatments(false);
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'SCHEDULED':
+        return 'bg-blue-100 text-blue-800';
+      case 'COMPLETED':
+        return 'bg-green-100 text-green-800';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800';
+      case 'NO_SHOW':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -381,76 +433,130 @@ export function PatientDetailPanel({
 
           {activeTab === 'treatments' && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded flex gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-yellow-900">Under Development</p>
-                  <p className="text-xs text-yellow-800">
-                    Treatment records are currently hardcoded for demonstration. Real integration coming soon.
-                  </p>
+              {loadingTreatments ? (
+                <div className="flex flex-col justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
+                  <p className="text-sm text-gray-500">Loading treatments...</p>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                {mockTreatments.map((treatment) => (
-                  <div key={treatment.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-semibold text-sm">{treatment.type}</p>
-                        <p className="text-xs text-gray-600 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(treatment.date).toLocaleDateString()}
-                        </p>
+              ) : treatmentsError ? (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                  {treatmentsError}
+                </div>
+              ) : treatments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No treatment records found for this patient</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {treatments.map((treatment) => (
+                    <div key={treatment.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">
+                            {treatment.typeOfTreatment.replace(/_/g, ' ')}
+                          </p>
+                          <p className="text-xs text-gray-600 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {new Date(treatment.dateOfTreatment).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 text-xs rounded font-medium ${
+                          treatment.completed 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                          {treatment.completed ? 'Completed' : 'In Progress'}
+                        </span>
                       </div>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded font-medium">
-                        {treatment.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{treatment.notes}</p>
-                    <div className="flex justify-between text-xs text-gray-600">
-                      <span>Dr: {treatment.doctor}</span>
-                      {treatment.teethInvolved.length > 0 && (
-                        <span>Teeth: {treatment.teethInvolved.join(', ')}</span>
+                      {treatment.notes && (
+                        <p className="text-sm text-gray-700 mb-2">{treatment.notes}</p>
+                      )}
+                      {treatment.procedure && (
+                        <p className="text-xs text-gray-600 mb-2">
+                          <span className="font-semibold">Procedure:</span> {treatment.procedure}
+                        </p>
+                      )}
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>
+                          Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
+                        </span>
+                        {treatment.teethInvolved && treatment.teethInvolved.length > 0 && (
+                          <span>Teeth: {treatment.teethInvolved.join(', ')}</span>
+                        )}
+                      </div>
+                      {treatment.followUpRequired && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-blue-600">
+                          <AlertCircle className="w-3 h-3" />
+                          <span>Follow-up required</span>
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
           {activeTab === 'appointments' && (
             <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded flex gap-2">
-                <AlertCircle className="w-5 h-5 text-yellow-700 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-semibold text-yellow-900">Under Development</p>
-                  <p className="text-xs text-yellow-800">
-                    Appointment records are currently hardcoded for demonstration. Real integration coming soon.
-                  </p>
+              {loadingAppointments ? (
+                <div className="flex flex-col justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
+                  <p className="text-sm text-gray-500">Loading appointments...</p>
                 </div>
-              </div>
-
-              <div className="space-y-3">
-                {mockAppointments.map((appt) => (
-                  <div key={appt.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <p className="font-semibold text-sm">{appt.type}</p>
-                        <p className="text-xs text-gray-600 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(appt.date).toLocaleDateString()} at {appt.time}
-                        </p>
+              ) : appointmentsError ? (
+                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                  {appointmentsError}
+                </div>
+              ) : appointments.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No appointments found for this patient</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {appointments.map((appt) => {
+                    const isPast = new Date(appt.dateOfTreatment) < new Date();
+                    return (
+                      <div key={appt.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <p className="font-semibold text-sm">
+                              {appt.typeOfTreatment ? appt.typeOfTreatment.replace(/_/g, ' ') : 'Appointment'}
+                            </p>
+                            <p className="text-xs text-gray-600 flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(appt.dateOfTreatment).toLocaleDateString()} at{' '}
+                              {new Date(appt.dateOfTreatment).toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                              {isPast && <span className="ml-2 text-gray-500">(Past)</span>}
+                            </p>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded font-medium ${getStatusColor(appt.status)}`}>
+                            {appt.status.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        {appt.notes && (
+                          <p className="text-sm text-gray-700 mb-2">{appt.notes}</p>
+                        )}
+                        <div className="flex justify-between text-xs text-gray-600">
+                          {appt.doctor && (
+                            <span>
+                              Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}
+                            </span>
+                          )}
+                          {appt.teethInvolved && appt.teethInvolved.length > 0 && (
+                            <span>Teeth: {appt.teethInvolved.join(', ')}</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium">
-                        {appt.status}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 mb-2">{appt.notes}</p>
-                    <p className="text-xs text-gray-600">Dr: {appt.doctor}</p>
-                  </div>
-                ))}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 

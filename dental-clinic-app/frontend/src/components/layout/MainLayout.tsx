@@ -8,7 +8,7 @@ import { AppointmentsPage } from '../../pages/AppointmentsPage';
 import { TreatmentsPage } from '../../pages/TreatmentsPage';
 import { ReportsPage } from '../../pages/ReportsPage';
 import { StaffPage } from '../../pages/StaffPage';
-import FinancesPage from '../../pages/FinancesPage'; // ← ADD THIS IMPORT
+import FinancesPage from '../../pages/FinancesPage'; 
 
 interface MainLayoutProps {
   token: string;
@@ -82,7 +82,7 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
       case 'staff':
         return <StaffPage token={token} />;
       case 'reports':
-        return <ReportsPage />;
+  return <ReportsPage token={token} userRole={getUserRole()} />;
       case 'finances': // ← ADD THIS CASE
         return <FinancesPage />;
       default:
