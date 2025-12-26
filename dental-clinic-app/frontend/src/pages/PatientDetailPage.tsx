@@ -32,6 +32,7 @@ interface PatientDetailPanelProps {
 export function PatientDetailPanel({
   patient,
   token,
+  userRole = '',
   currentUserId = '',
   userPermissions = [],
   onClose,
