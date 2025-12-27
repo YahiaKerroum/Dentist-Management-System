@@ -163,3 +163,150 @@ export interface AppointmentHeatmapResponse {
 
 // TODO: 9. Staff Performance - MANAGER
 // export interface StaffPerformanceResponse { }
+// ============================================
+// FRIEND'S REPORT TYPES (9 items)
+// ============================================
+
+// 1. Upcoming Appointments (7 days) - ASSISTANT
+export interface UpcomingAppointment {
+  id: string;
+  dateOfTreatment: string;
+  status: string;
+  patient: {
+    firstName: string;
+    lastName: string;
+  };
+  doctor: {
+    user: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+}
+
+export interface UpcomingAppointmentsResponse {
+  success: boolean;
+  data: {
+    appointments: UpcomingAppointment[];
+    count: number;
+  };
+}
+
+// 2. New Patients This Month - ASSISTANT
+export interface NewPatient {
+  id: string;
+  firstName: string;
+  lastName: string;
+  createdAt: string;
+}
+
+export interface NewPatientsResponse {
+  success: boolean;
+  data: {
+    patients: NewPatient[];
+    count: number;
+  };
+}
+
+// 3. Today's Appointments - ASSISTANT
+export interface TodayAppointment {
+  id: string;
+  dateOfTreatment: string;
+  status: string;
+  patient: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string | null;
+  };
+  doctor: {
+    user: {
+      firstName: string;
+      lastName: string;
+    };
+  };
+}
+
+export interface TodaysAppointmentsResponse {
+  success: boolean;
+  data: {
+    appointments: TodayAppointment[];
+    count: number;
+  };
+}
+
+// 4. Treatments Performed - DOCTOR
+export interface TreatmentPerformed {
+  type: string;
+  count: number;
+}
+
+export interface TreatmentsPerformedResponse {
+  success: boolean;
+  data: {
+    treatments: TreatmentPerformed[];
+    total: number;
+  };
+}
+
+// 5. Payment Status - MANAGER
+export interface PaymentStatusResponse {
+  success: boolean;
+  data: {
+    counts: {
+      paid: number;
+      pending: number;
+      overdue: number;
+      total: number;
+    };
+    amounts: {
+      paid: number;
+      pending: number;
+      overdue: number;
+    };
+  };
+}
+
+// 6. Patient Demographics - MANAGER
+export interface PatientDemographicsResponse {
+  success: boolean;
+  data: {
+    totalPatients: number;
+    byGender: { gender: string; count: number }[];
+    byAge: { range: string; count: number }[];
+  };
+}
+
+// 7. Revenue Generated - DOCTOR/MANAGER
+export interface RevenueGeneratedResponse {
+  success: boolean;
+  data: {
+    trends: { month: string; revenue: number }[];
+    totalRevenue: number;
+  };
+}
+
+// 8. Total Revenue Trend - MANAGER
+export interface RevenueTrendResponse {
+  success: boolean;
+  data: {
+    trends: { month: string; revenue: number; expenses: number; profit: number }[];
+  };
+}
+
+// 9. Staff Performance - MANAGER
+export interface StaffMember {
+  doctorId: string;
+  name: string;
+  appointments: number;
+  completedAppointments: number;
+  treatments: number;
+  revenue: number;
+}
+
+export interface StaffPerformanceResponse {
+  success: boolean;
+  data: {
+    performance: StaffMember[];
+  };
+}
