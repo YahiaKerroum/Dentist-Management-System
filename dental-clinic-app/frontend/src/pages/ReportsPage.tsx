@@ -12,16 +12,16 @@ import { ExpensesByCategoryChart } from '../components/reports/analytics/Expense
 import { ExpenseTrendsChart } from '../components/reports/analytics/ExpenseTrendsChart';
 import { AppointmentHeatmap } from '../components/reports/analytics/AppointmentHeatmap';
 
-// TODO: Friend's Components (uncomment when ready)
-// import { UpcomingAppointments } from '../components/reports/analytics/UpcomingAppointments';
-// import { NewPatientsThisMonth } from '../components/reports/analytics/NewPatientsThisMonth';
-// import { TodaysAppointments } from '../components/reports/analytics/TodaysAppointments';
-// import { TreatmentsPerformed } from '../components/reports/analytics/TreatmentsPerformed';
-// import { PaymentStatusChart } from '../components/reports/analytics/PaymentStatusChart';
-// import { PatientDemographics } from '../components/reports/analytics/PatientDemographics';
-// import { RevenueGenerated } from '../components/reports/analytics/RevenueGenerated';
-// import { RevenueTrendChart } from '../components/reports/analytics/RevenueTrendChart';
-// import { StaffPerformance } from '../components/reports/analytics/StaffPerformance';
+// Friend's Components
+import { UpcomingAppointments } from '../components/reports/analytics/UpcomingAppointments';
+import { NewPatientsThisMonth } from '../components/reports/analytics/NewPatientsThisMonth';
+import { TodaysAppointmentsTable } from '../components/reports/analytics/TodaysAppointmentsTable';
+import { TreatmentsPerformedChart } from '../components/reports/analytics/TreatmentsPerformedChart';
+import { PaymentStatusChart } from '../components/reports/analytics/PaymentStatusChart';
+import { PatientDemographics } from '../components/reports/analytics/PatientDemographics';
+import { RevenueGeneratedChart } from '../components/reports/analytics/RevenueGeneratedChart';
+import { RevenueTrendChart } from '../components/reports/analytics/RevenueTrendChart';
+import { StaffPerformanceChart } from '../components/reports/analytics/StaffPerformanceChart';
 
 interface ReportsPageProps {
   token: string;
@@ -44,25 +44,19 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
         </p>
       </div>
 
-      {/* ============================================ */}
       {/* DOCTOR REPORTS */}
-      {/* ============================================ */}
       {userRole === 'DOCTOR' && (
         <>
-          {/* Stat Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <MyPatientsCount token={token} />
-            {/* TODO: Friend's Component */}
-            {/* <TreatmentsPerformed token={token} /> */}
-            {/* <RevenueGenerated token={token} /> */}
+            <TreatmentsPerformedChart token={token} />
+            <RevenueGeneratedChart token={token} />
           </div>
 
-          {/* My Appointments Table */}
           <div className="mb-6">
             <MyAppointmentsTable token={token} />
           </div>
 
-          {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CommonTreatmentsChart token={token} />
             <AppointmentHeatmap token={token} />
@@ -70,69 +64,51 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
         </>
       )}
 
-      {/* ============================================ */}
       {/* MANAGER REPORTS */}
-      {/* ============================================ */}
       {userRole === 'MANAGER' && (
         <>
-          {/* Stat Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <TotalPatients token={token} />
-            {/* TODO: Friend's Components */}
-            {/* <NewPatientsThisMonth token={token} /> */}
-            {/* <PaymentStatusChart token={token} /> */}
-            {/* <RevenueGenerated token={token} /> */}
+            <NewPatientsThisMonth token={token} />
+            <PaymentStatusChart token={token} />
+            <RevenueGeneratedChart token={token} />
           </div>
 
-          {/* Charts Row 1 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <AppointmentsOverviewChart token={token} />
             <CommonTreatmentsChart token={token} />
           </div>
 
-          {/* Charts Row 2 - Expenses */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <ExpensesByCategoryChart token={token} />
             <ExpenseTrendsChart token={token} />
           </div>
 
-          {/* Full Width Charts */}
-          <div className="mb-6">
-            <AppointmentHeatmap token={token} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <RevenueTrendChart token={token} />
+            <StaffPerformanceChart token={token} />
           </div>
 
-          {/* TODO: Friend's Components */}
-          {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <RevenueTrendChart token={token} />
-            <StaffPerformance token={token} />
-          </div> */}
-
-          {/* TODO: Friend's Component */}
-          {/* <div className="mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <PatientDemographics token={token} />
-          </div> */}
+            <AppointmentHeatmap token={token} />
+          </div>
         </>
       )}
 
-      {/* ============================================ */}
       {/* ASSISTANT REPORTS */}
-      {/* ============================================ */}
       {userRole === 'ASSISTANT' && (
         <>
-          {/* Stat Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <CancellationsReport token={token} />
-            {/* TODO: Friend's Components */}
-            {/* <UpcomingAppointments token={token} /> */}
-            {/* <NewPatientsThisMonth token={token} /> */}
+            <UpcomingAppointments token={token} />
+            <NewPatientsThisMonth token={token} />
           </div>
 
-          {/* TODO: Friend's Component */}
-          {/* <div className="mb-6">
-            <TodaysAppointments token={token} />
-          </div> */}
+          <div className="mb-6">
+            <TodaysAppointmentsTable token={token} />
+          </div>
 
-          {/* Charts Row */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CommonTreatmentsChart token={token} />
             <AppointmentHeatmap token={token} />
