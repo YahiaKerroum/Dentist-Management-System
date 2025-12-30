@@ -268,7 +268,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
             </div>
         );
     }
@@ -335,7 +335,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                     <input
                         type="text"
                         placeholder="Search by name or email..."
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out sm:text-sm"
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
+                        style={{ '--tw-ring-color': '#3DBEA3' } as React.CSSProperties}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -431,7 +432,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10">
-                                                    <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                                                    <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: '#E8F5F0', color: '#3DBEA3' }}>
                                                                                                 {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
                                                     </div>
                                                 </div>
@@ -468,7 +469,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             <div className="flex justify-end gap-3">
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
-                                                    className="text-blue-600 hover:text-blue-900 transition-colors"
+                                                    className="transition-colors"
+                                                    style={{ color: '#3DBEA3' }}
                                                     title="Edit"
                                                 >
                                                     <Edit className="w-4 h-4" />
@@ -530,9 +532,10 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             key={i}
                                             onClick={() => setCurrentPage(i + 1)}
                                             className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === i + 1
-                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                ? 'z-10 border-[#3DBEA3]'
                                                 : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
                                                 }`}
+                                            style={currentPage === i + 1 ? { backgroundColor: '#E8F5F0', color: '#3DBEA3' } : {}}
                                         >
                                             {i + 1}
                                         </button>

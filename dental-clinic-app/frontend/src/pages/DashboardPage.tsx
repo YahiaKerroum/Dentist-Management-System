@@ -254,7 +254,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
         return (
             <div className="p-8 flex items-center justify-center min-h-screen">
                 <div className="text-center">
-                    <Activity className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" />
+                    <Activity className="animate-spin h-12 w-12 mx-auto mb-4" style={{ color: '#3DBEA3' }} />
                     <p className="text-gray-600">Loading dashboard...</p>
                 </div>
             </div>
@@ -268,7 +268,8 @@ export function DashboardPage({ token }: DashboardPageProps) {
                     <p className="text-red-600 mb-4">{error}</p>
                     <button 
                         onClick={() => window.location.reload()} 
-                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        className="text-white px-4 py-2 rounded hover:opacity-90"
+                        style={{ backgroundColor: '#3DBEA3' }}
                     >
                         Retry
                     </button>
@@ -294,7 +295,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
             {isManager ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                     <StatsCard 
-                        icon={<Users className="text-blue-600" size={24} />} 
+                        icon={<Users style={{ color: '#3DBEA3' }} size={24} />} 
                         value={stats.totalPatients.toString()} 
                         label="Total Patients" 
                     />
@@ -309,7 +310,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
                         label="Monthly Expenses" 
                     />
                     <StatsCard 
-                        icon={<Stethoscope className="text-blue-600" size={24} />} 
+                        icon={<Stethoscope style={{ color: '#3DBEA3' }} size={24} />} 
                         value={stats.doctorCount.toString()} 
                         label="Doctors" 
                     />
@@ -327,7 +328,7 @@ export function DashboardPage({ token }: DashboardPageProps) {
             ) : isAssistant ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatsCard 
-                        icon={<Calendar className="text-blue-600" size={24} />} 
+                        icon={<Calendar style={{ color: '#3DBEA3' }} size={24} />} 
                         value={stats.todayAppointments.toString()} 
                         label="Today's Appointments" 
                     />
@@ -335,12 +336,12 @@ export function DashboardPage({ token }: DashboardPageProps) {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatsCard 
-                        icon={<Calendar className="text-blue-600" size={24} />} 
+                        icon={<Calendar style={{ color: '#3DBEA3' }} size={24} />} 
                         value={stats.todayAppointments.toString()} 
                         label="Today's Appointments" 
                     />
                     <StatsCard 
-                        icon={<Users className="text-blue-600" size={24} />} 
+                        icon={<Users style={{ color: '#3DBEA3' }} size={24} />} 
                         value={stats.totalPatients.toString()} 
                         label="Total Patients" 
                     />

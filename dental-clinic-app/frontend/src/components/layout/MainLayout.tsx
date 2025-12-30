@@ -100,7 +100,7 @@ export function MainLayout({ token, onLogout }: MainLayoutProps) {
       />
       
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title={getPageTitle()} userName={getUserName()} />
+        <Header title={getPageTitle()} userName={getUserName()} onLogout={onLogout} />
         
         <main className="flex-1 overflow-auto">
           {renderPage()}

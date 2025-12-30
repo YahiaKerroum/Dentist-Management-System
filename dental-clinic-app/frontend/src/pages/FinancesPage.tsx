@@ -29,7 +29,7 @@ const FinancesPage: React.FC = () => {
                   border-b-2 transition-colors duration-200
                   ${
                     activeTab === 'payments'
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-[#3DBEA3] text-[#3DBEA3]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                 `}
@@ -61,7 +61,7 @@ const FinancesPage: React.FC = () => {
                   border-b-2 transition-colors duration-200
                   ${
                     activeTab === 'expenses'
-                      ? 'border-blue-500 text-blue-600'
+                      ? 'border-[#3DBEA3] text-[#3DBEA3]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }
                 `}
@@ -92,8 +92,8 @@ const FinancesPage: React.FC = () => {
         <div className="relative overflow-hidden">
           {/* Animated Background Gradient */}
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+            <div className="absolute top-0 left-0 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" style={{ backgroundColor: '#D5EDE8' }}></div>
+            <div className="absolute top-0 right-0 w-96 h-96 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000" style={{ backgroundColor: '#E8F5F0' }}></div>
             <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
           </div>
 

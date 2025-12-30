@@ -6,14 +6,15 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { 
     Camera, 
-    User as UserIcon, 
     Edit2, 
     Award, 
     Phone, 
     Mail, 
     MapPin, 
     Calendar, 
-    Clock 
+    Clock,
+    TrendingUp,
+    Users
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -143,7 +144,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
             </div>
         );
     }
@@ -162,167 +163,245 @@ export function ProfilePage({ token }: ProfilePageProps) {
 
     return (
         <div className="bg-gray-50 min-h-full pb-10">
-            {/* Header Section with Blue Background */}
-            <div className="relative h-56 bg-gradient-to-r from-blue-600 to-indigo-700">
-                {/* Edit Profile Button */}
-                <div className="absolute top-6 right-8">
-                    <Button onClick={handleEditClick} className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-sm shadow-lg">
-                        <Edit2 className="w-4 h-4 mr-2" />
-                        Edit Profile
-                    </Button>
+            {/* Modern Cover Section with Pattern */}
+            <div className="relative h-64 overflow-visible" style={{ 
+                background: 'linear-gradient(135deg, #1C6B5A 0%, #3DBEA3 50%, #2FA88E 100%)'
+            }}>
+                {/* Decorative Pattern */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-10 left-10 w-32 h-32 rounded-full border-4 border-white"></div>
+                    <div className="absolute bottom-10 right-20 w-48 h-48 rounded-full border-4 border-white"></div>
+                    <div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full border-4 border-white"></div>
+                </div>
+
+                {/* Edit Button */}
+                <div className="absolute top-6 right-8 z-10">
+                    <button
+                        onClick={handleEditClick}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white rounded-lg transition-all shadow-lg border border-white/20"
+                    >
+                        <Edit2 className="w-4 h-4" />
+                        <span className="font-medium">Edit Profile</span>
+                    </button>
                 </div>
             </div>
 
-            {/* Profile Info Section - Overlapping the blue header */}
-            <div className="relative -mt-20 px-8">
-                <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center gap-6">
-                        {/* Profile Picture */}
-                        <div className="relative flex-shrink-0">
-                            <div className="w-32 h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full p-1 shadow-md">
-                                <div className="w-full h-full bg-white rounded-full flex items-center justify-center overflow-hidden">
-                                    <UserIcon className="w-16 h-16 text-blue-500" />
-                                </div>
-                            </div>
-                            <button className="absolute bottom-0 right-0 p-2.5 bg-blue-600 rounded-full text-white hover:bg-blue-700 transition shadow-lg border-4 border-white">
-                                <Camera className="w-4 h-4" />
-                            </button>
+            {/* Profile Picture - Below the header */}
+            <div className="px-8 -mt-20">
+                <div className="relative inline-block">
+                    <div 
+                        className="w-40 h-40 rounded-2xl p-1.5 shadow-2xl"
+                        style={{ background: 'linear-gradient(135deg, #3DBEA3 0%, #2FA88E 100%)' }}
+                    >
+                        <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
+                            <span className="text-6xl font-bold" style={{ color: '#3DBEA3' }}>
+                                {user.firstName.charAt(0).toUpperCase()}
+                            </span>
                         </div>
+                    </div>
+                    <button 
+                        className="absolute -bottom-2 -right-2 p-3 rounded-xl text-white shadow-lg border-4 border-white hover:scale-105 transition-transform"
+                        style={{ backgroundColor: '#3DBEA3' }}
+                    >
+                        <Camera className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
 
-                        {/* User Info */}
-                        <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-gray-900 mb-1">
+            {/* Profile Info Section */}
+            <div className="px-8 pt-6 pb-6">
+                <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+                    <div className="flex items-start justify-between mb-6">
+                        <div>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
                                 {user.firstName} {user.lastName}
                             </h1>
-                            <p className="text-gray-600 font-medium text-lg mb-3">
-                                {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
-                                {user.doctorProfile?.specialization && ` • ${user.doctorProfile.specialization}`}
-                            </p>
-                            <div className="flex items-center gap-4 text-sm text-gray-500">
-                                <div className="flex items-center gap-1.5">
-                                    <Mail className="w-4 h-4" />
-                                    <span>{user.email}</span>
+                            <div className="flex items-center gap-3 mb-4">
+                                <span 
+                                    className="px-4 py-1.5 rounded-full text-sm font-semibold text-white"
+                                    style={{ backgroundColor: '#3DBEA3' }}
+                                >
+                                    {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
+                                </span>
+                                {user.doctorProfile?.specialization && (
+                                    <span className="px-4 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium">
+                                        {user.doctorProfile.specialization}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="flex items-center gap-6 text-gray-600">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                        <Mail className="w-4 h-4" style={{ color: '#3DBEA3' }} />
+                                    </div>
+                                    <span className="text-sm">{user.email}</span>
                                 </div>
                                 {user.phone && (
-                                    <div className="flex items-center gap-1.5">
-                                        <Phone className="w-4 h-4" />
-                                        <span>{user.phone}</span>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                            <Phone className="w-4 h-4" style={{ color: '#3DBEA3' }} />
+                                        </div>
+                                        <span className="text-sm">{user.phone}</span>
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        {/* Quick Stats */}
+                        {user.role === 'DOCTOR' && (
+                            <div className="flex gap-4">
+                                <div className="text-center px-6 py-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
+                                    <p className="text-3xl font-bold text-blue-700">{calculateYearsExperience()}</p>
+                                    <p className="text-xs text-blue-600 font-medium mt-1">Years Exp.</p>
+                                </div>
+                                <div className="text-center px-6 py-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #E8F5F0 0%, #D5EDE8 100%)' }}>
+                                    <p className="text-3xl font-bold" style={{ color: '#3DBEA3' }}>{user.doctorProfile?.patientCount || 0}</p>
+                                    <p className="text-xs font-medium mt-1" style={{ color: '#2FA88E' }}>Patients</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="mt-8 px-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content Grid */}
+            <div className="px-8 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* Left Column: Stats & Contact */}
+                {/* Left Sidebar */}
                 <div className="space-y-6">
-                    {/* Stats Card */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-gray-800">Overview</h3>
-                            <Award className="w-5 h-5 text-blue-500" />
+                    {/* About Card */}
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                <Award className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            </div>
+                            <h3 className="font-semibold text-gray-800">About</h3>
                         </div>
-                        {user.role === 'DOCTOR' ? (
-                            <div className="flex gap-4">
-                                <div className="flex-1 bg-blue-50 rounded-lg p-3 text-center">
-                                    <p className="text-2xl font-bold text-blue-700">{calculateYearsExperience()}</p>
-                                    <p className="text-xs text-blue-600 font-medium">Years Exp.</p>
-                                </div>
-                                <div className="flex-1 bg-indigo-50 rounded-lg p-3 text-center">
-                                    <p className="text-2xl font-bold text-indigo-700">{user.doctorProfile?.patientCount || 0}</p>
-                                    <p className="text-xs text-indigo-600 font-medium">Patients</p>
-                                </div>
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Member Since</p>
+                                <p className="text-sm font-semibold text-gray-700">{formatMemberSince()}</p>
                             </div>
-                        ) : user.role === 'ASSISTANT' ? (
-                            <div className="flex gap-4">
-                                <div className="flex-1 bg-blue-50 rounded-lg p-3 text-center">
-                                    <p className="text-sm font-medium text-blue-700">Member Since</p>
-                                    <p className="text-xs text-blue-600 mt-1">{formatMemberSince()}</p>
+                            {user.role === 'ASSISTANT' && (
+                                <div>
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Appointments Managed</p>
+                                    <p className="text-sm font-semibold text-gray-700">150+</p>
                                 </div>
-                                <div className="flex-1 bg-indigo-50 rounded-lg p-3 text-center">
-                                    <p className="text-2xl font-bold text-indigo-700">150+</p>
-                                    <p className="text-xs text-indigo-600 font-medium">Appointments</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="bg-blue-50 rounded-lg p-3 text-center">
-                                <p className="text-sm font-medium text-blue-700">Member Since</p>
-                                <p className="text-xs text-blue-600 mt-1">{formatMemberSince()}</p>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
-                    {/* Contact Information */}
-                    <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                        <h3 className="font-semibold text-gray-800 mb-4">Contact Information</h3>
+                    {/* Contact Information Card */}
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                <Phone className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            </div>
+                            <h3 className="font-semibold text-gray-800">Contact Details</h3>
+                        </div>
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
                                     <Phone className="w-4 h-4 text-gray-500" />
                                 </div>
-                                <div>
-                                    <p className="text-xs text-gray-400">Phone</p>
-                                    <p className="text-sm font-medium">{user.phone || 'Not provided'}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Phone Number</p>
+                                    <p className="text-sm font-medium text-gray-700 truncate">{user.phone || 'Not provided'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
                                     <Mail className="w-4 h-4 text-gray-500" />
                                 </div>
-                                <div>
-                                    <p className="text-xs text-gray-400">Email</p>
-                                    <p className="text-sm font-medium">{user.email}</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Email Address</p>
+                                    <p className="text-sm font-medium text-gray-700 truncate">{user.email}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3 text-gray-600">
-                                <div className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center">
+                            <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
                                     <MapPin className="w-4 h-4 text-gray-500" />
                                 </div>
-                                <div>
-                                    <p className="text-xs text-gray-400">Clinic Address</p>
-                                    <p className="text-sm font-medium">789 Dental Avenue, Medical Center</p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Clinic Location</p>
+                                    <p className="text-sm font-medium text-gray-700">789 Dental Avenue, Medical Center</p>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Activity Statistics */}
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                        <div className="flex items-center gap-2 mb-5">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                <TrendingUp className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            </div>
+                            <h3 className="font-semibold text-gray-800">Statistics</h3>
+                        </div>
+                        <div className="space-y-3">
+                            {user.role === 'DOCTOR' && user.doctorProfile && (
+                                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-transparent rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm text-gray-700">Total Patients</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-blue-700">{user.doctorProfile.patientCount || 0}</span>
+                                </div>
+                            )}
+                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-transparent rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-purple-600" />
+                                    <span className="text-sm text-gray-700">Member Since</span>
+                                </div>
+                                <span className="text-sm font-bold text-purple-700">{formatMemberSince()}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Right Column: Schedule & Details */}
+                {/* Right Content - Schedule */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Working Schedule - Only for Doctors */}
                     {user.role === 'DOCTOR' && (
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
                             <div className="flex items-center gap-2 mb-6">
-                                <Calendar className="w-5 h-5 text-blue-600" />
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
+                                    <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                                </div>
                                 <h3 className="font-semibold text-gray-800">Working Schedule</h3>
                             </div>
 
-                            <div className="grid gap-4">
+                            <div className="grid gap-3">
                                 {user.doctorProfile?.workingTime && Array.isArray(user.doctorProfile.workingTime) && user.doctorProfile.workingTime.length > 0 ? (
                                     user.doctorProfile.workingTime.map((schedule: any, index: number) => (
-                                        <div key={index} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition">
+                                        <div 
+                                            key={index} 
+                                            className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                                        >
                                             <div className="flex items-center gap-3">
-                                                <Clock className="w-4 h-4 text-gray-400" />
-                                                <span className="text-sm font-medium text-gray-700">{schedule.day || schedule.days}</span>
+                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: schedule.time && schedule.time !== 'Closed' ? '#E8F5F0' : '#FEE2E2' }}>
+                                                    <Clock className="w-4 h-4" style={{ color: schedule.time && schedule.time !== 'Closed' ? '#3DBEA3' : '#DC2626' }} />
+                                                </div>
+                                                <span className="text-sm font-semibold text-gray-700">{schedule.day || schedule.days}</span>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <span className="text-sm text-gray-500">{schedule.time || schedule.hours || 'Not set'}</span>
-                                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                                <span className="text-sm text-gray-600 font-medium">{schedule.time || schedule.hours || 'Not set'}</span>
+                                                <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
                                                     schedule.time && schedule.time !== 'Closed'
-                                                        ? 'bg-green-100 text-green-700'
+                                                        ? 'text-white'
                                                         : 'bg-red-100 text-red-700'
-                                                }`}>
+                                                }`} style={schedule.time && schedule.time !== 'Closed' ? { backgroundColor: '#3DBEA3' } : {}}>
                                                     {schedule.time && schedule.time !== 'Closed' ? 'Open' : 'Closed'}
                                                 </span>
                                             </div>
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-gray-500 text-center py-4">No working hours set. Click Edit Profile to add your schedule.</p>
+                                    <div className="text-center py-12">
+                                        <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                                        <p className="text-sm text-gray-500">No working hours set.</p>
+                                        <p className="text-xs text-gray-400 mt-1">Click Edit Profile to add your schedule.</p>
+                                    </div>
                                 )}
                             </div>
                         </div>

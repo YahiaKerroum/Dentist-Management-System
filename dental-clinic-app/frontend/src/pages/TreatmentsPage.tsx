@@ -283,7 +283,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-teal-200 border-t-teal-600 rounded-full animate-spin" />
+                    <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: '#D5EDE8', borderTopColor: '#3DBEA3' }} />
                     <p className="text-gray-500">Loading treatments...</p>
                 </div>
             </div>
@@ -291,12 +291,12 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
     }
 
     return (
-        <div className="h-full bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
+        <div className="h-full bg-gradient-to-br from-slate-50 via-white to-[#E8F5F0]">
             {/* Header Section */}
             <div className="bg-white border-b border-gray-100 px-6 py-5">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
                             <Stethoscope className="w-6 h-6 text-white" />
                         </div>
                         <div>
@@ -306,7 +306,8 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                     </div>
                     <button
                         onClick={handleAddTreatment}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 text-white rounded-xl font-medium shadow-lg shadow-teal-500/25 hover:shadow-xl hover:shadow-teal-500/30 transition-all duration-200 hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5"
+                        style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}
                     >
                         <Plus className="w-5 h-5" />
                         New Treatment
@@ -348,14 +349,14 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             </div>
                         </div>
                     </div>
-                    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200/50">
+                    <div className="rounded-xl p-4 border" style={{ background: 'linear-gradient(to bottom right, #E8F5F0, #D5EDE8)', borderColor: '#D5EDE8' }}>
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center">
-                                <Calendar className="w-5 h-5 text-blue-600" />
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D5EDE8' }}>
+                                <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold text-blue-800">{stats.thisMonth}</p>
-                                <p className="text-xs text-blue-600">This Month</p>
+                                <p className="text-2xl font-bold" style={{ color: '#1C6B5A' }}>{stats.thisMonth}</p>
+                                <p className="text-xs" style={{ color: '#3DBEA3' }}>This Month</p>
                             </div>
                         </div>
                     </div>
@@ -395,21 +396,22 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                 placeholder="Search by patient, doctor, treatment type, or notes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3] transition-all"
                             />
                         </div>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
                                 showFilters || hasActiveFilters
-                                    ? 'bg-teal-50 border-teal-200 text-teal-700'
+                                    ? 'border-[#3DBEA3] text-[#3DBEA3]'
                                     : 'border-gray-200 text-gray-600 hover:bg-gray-50'
                             }`}
+                            style={showFilters || hasActiveFilters ? { backgroundColor: '#E8F5F0' } : {}}
                         >
                             <Filter className="w-4 h-4" />
                             Filters
                             {hasActiveFilters && (
-                                <span className="w-5 h-5 bg-teal-500 text-white text-xs rounded-full flex items-center justify-center">
+                                <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#3DBEA3' }}>
                                     !
                                 </span>
                             )}
@@ -425,7 +427,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     <select
                                         value={typeFilter}
                                         onChange={(e) => setTypeFilter(e.target.value as TreatmentType | 'all')}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
                                     >
                                         <option value="all">All Types</option>
                                         {Object.entries(TREATMENT_TYPE_CONFIG).map(([key, config]) => (
