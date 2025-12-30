@@ -158,4 +158,80 @@ export class ReportController {
 
   // TODO: 9. Staff Performance - MANAGER
   // static getStaffPerformance = asyncHandler(async (req: Request, res: Response) => { });
+// ============================================
+    // FRIEND'S ENDPOINTS (9 items)
+    // ============================================
+
+    // 1. Upcoming Appointments (7 days) - ASSISTANT
+    static getUpcomingAppointments = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getUpcomingAppointments();
+        sendSuccess(res, data);
+    });
+
+    // 2. New Patients This Month - ASSISTANT
+    static getNewPatientsThisMonth = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getNewPatientsThisMonth();
+        sendSuccess(res, data);
+    });
+
+    // 3. Today's Appointments - ASSISTANT
+    static getTodaysAppointments = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getTodaysAppointments();
+        sendSuccess(res, data);
+    });
+
+    // 4. Treatments Performed - DOCTOR
+    static getTreatmentsPerformed = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const userId = req.user?.userId;
+        const { dateFrom, dateTo } = req.query;
+
+        if (!userId) {
+            throw new Error("User not authenticated");
+        }
+
+        const data = await ReportService.getTreatmentsPerformed(
+            userId,
+            dateFrom ? new Date(dateFrom as string) : undefined,
+            dateTo ? new Date(dateTo as string) : undefined
+        );
+        sendSuccess(res, data);
+    });
+
+    // 5. Payment Status - MANAGER
+    static getPaymentStatus = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getPaymentStatus();
+        sendSuccess(res, data);
+    });
+
+    // 6. Patient Demographics - MANAGER
+    static getPatientDemographics = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getPatientDemographics();
+        sendSuccess(res, data);
+    });
+
+    // 7. Revenue Generated - DOCTOR/MANAGER
+    static getRevenueGenerated = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const userId = req.user?.userId;
+        const userRole = req.user?.role;
+        const months = parseInt(req.query.months as string) || 6;
+
+        // If DOCTOR, get their own revenue; if MANAGER, get all revenue
+        const doctorUserId = userRole === 'DOCTOR' ? userId : undefined;
+
+        const data = await ReportService.getRevenueGenerated(doctorUserId, months);
+        sendSuccess(res, data);
+    });
+
+    // 8. Total Revenue Trend - MANAGER
+    static getTotalRevenueTrend = asyncHandler(async (req: Request, res: Response) => {
+        const months = parseInt(req.query.months as string) || 12;
+        const data = await ReportService.getTotalRevenueTrend(months);
+        sendSuccess(res, data);
+    });
+
+    // 9. Staff Performance - MANAGER
+    static getStaffPerformance = asyncHandler(async (req: Request, res: Response) => {
+        const data = await ReportService.getStaffPerformance();
+        sendSuccess(res, data);
+    });
 }

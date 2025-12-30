@@ -37,3 +37,5 @@ docker-compose.override.yml
 
 # Local documentation (not to be committed)
 PERMISSIONS_CHANGES_DOC.md
+DOCUMENTS_FEATURE.md
+dental-clinic-drive-f3c5683a26a1.json

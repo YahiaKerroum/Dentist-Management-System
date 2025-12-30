@@ -70,5 +70,34 @@ router.get("/appointment-heatmap", authorize(Role.MANAGER, Role.DOCTOR, Role.ASS
 
 // TODO: 9. Staff Performance - MANAGER
 // router.get("/staff-performance", authorize(Role.MANAGER), ReportController.getStaffPerformance);
+// ============================================
+// FRIEND'S ROUTES (9 items)
+// ============================================
 
+// 1. Upcoming Appointments (7 days) - ASSISTANT
+router.get("/upcoming-appointments", authorize(Role.ASSISTANT), ReportController.getUpcomingAppointments);
+
+// 2. New Patients This Month - ASSISTANT
+// Allow ASSISTANT, MANAGER, or whoever needs access
+router.get("/new-patients", authorize(Role.ASSISTANT, Role.MANAGER, Role.DOCTOR), ReportController.getNewPatientsThisMonth);
+// 3. Today's Appointments - ASSISTANT
+router.get("/todays-appointments", authorize(Role.ASSISTANT), ReportController.getTodaysAppointments);
+
+// 4. Treatments Performed - DOCTOR
+router.get("/treatments-performed", authorize(Role.DOCTOR), ReportController.getTreatmentsPerformed);
+
+// 5. Payment Status - MANAGER
+router.get("/payment-status", authorize(Role.MANAGER), ReportController.getPaymentStatus);
+
+// 6. Patient Demographics - MANAGER
+router.get("/patient-demographics", authorize(Role.MANAGER), ReportController.getPatientDemographics);
+
+// 7. Revenue Generated - DOCTOR/MANAGER
+router.get("/revenue-generated", authorize(Role.MANAGER, Role.DOCTOR), ReportController.getRevenueGenerated);
+
+// 8. Total Revenue Trend - MANAGER
+router.get("/revenue-trend", authorize(Role.MANAGER), ReportController.getTotalRevenueTrend);
+
+// 9. Staff Performance - MANAGER
+router.get("/staff-performance", authorize(Role.MANAGER), ReportController.getStaffPerformance);
 export default router;
