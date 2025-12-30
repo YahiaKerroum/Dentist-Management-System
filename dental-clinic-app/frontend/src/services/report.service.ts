@@ -8,6 +8,15 @@ import {
   ExpensesByCategoryResponse,
   ExpenseTrendsResponse,
   AppointmentHeatmapResponse,
+  UpcomingAppointmentsResponse,
+  NewPatientsResponse,
+  TodaysAppointmentsResponse,
+  TreatmentsPerformedResponse,
+  PaymentStatusResponse,
+  PatientDemographicsResponse,
+  RevenueGeneratedResponse,
+  RevenueTrendResponse,
+  StaffPerformanceResponse,
 } from '../types/report.types';
 
 const API_URL = 'http://localhost:4000/api/reports';
@@ -234,3 +243,179 @@ export const getAppointmentHeatmap = async (token: string): Promise<AppointmentH
 
 // TODO: 9. Staff Performance - MANAGER
 // export const getStaffPerformance = async (token: string) => { };
+// ============================================
+// FRIEND'S REPORT API CALLS (9 items)
+// ============================================
+
+// 1. Upcoming Appointments (7 days) - ASSISTANT
+export const getUpcomingAppointments = async (token: string): Promise<UpcomingAppointmentsResponse> => {
+  const response = await fetch(`${API_URL}/upcoming-appointments`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch upcoming appointments');
+  }
+
+  return response.json();
+};
+
+// 2. New Patients This Month - ASSISTANT
+export const getNewPatientsThisMonth = async (token: string): Promise<NewPatientsResponse> => {
+  const response = await fetch(`${API_URL}/new-patients`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch new patients');
+  }
+
+  return response.json();
+};
+
+// 3. Today's Appointments - ASSISTANT
+export const getTodaysAppointments = async (token: string): Promise<TodaysAppointmentsResponse> => {
+  const response = await fetch(`${API_URL}/todays-appointments`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch todays appointments');
+  }
+
+  return response.json();
+};
+
+// 4. Treatments Performed - DOCTOR
+export const getTreatmentsPerformed = async (
+  token: string,
+  dateFrom?: string,
+  dateTo?: string
+): Promise<TreatmentsPerformedResponse> => {
+  let url = `${API_URL}/treatments-performed`;
+  const params = new URLSearchParams();
+
+  if (dateFrom) params.append('dateFrom', dateFrom);
+  if (dateTo) params.append('dateTo', dateTo);
+
+  if (params.toString()) {
+    url += `?${params.toString()}`;
+  }
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch treatments performed');
+  }
+
+  return response.json();
+};
+
+// 5. Payment Status - MANAGER
+export const getPaymentStatus = async (token: string): Promise<PaymentStatusResponse> => {
+  const response = await fetch(`${API_URL}/payment-status`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch payment status');
+  }
+
+  return response.json();
+};
+
+// 6. Patient Demographics - MANAGER
+export const getPatientDemographics = async (token: string): Promise<PatientDemographicsResponse> => {
+  const response = await fetch(`${API_URL}/patient-demographics`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch patient demographics');
+  }
+
+  return response.json();
+};
+
+// 7. Revenue Generated - DOCTOR/MANAGER
+export const getRevenueGenerated = async (
+  token: string,
+  months: number = 6
+): Promise<RevenueGeneratedResponse> => {
+  const response = await fetch(`${API_URL}/revenue-generated?months=${months}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch revenue generated');
+  }
+
+  return response.json();
+};
+
+// 8. Total Revenue Trend - MANAGER
+export const getTotalRevenueTrend = async (
+  token: string,
+  months: number = 12
+): Promise<RevenueTrendResponse> => {
+  const response = await fetch(`${API_URL}/revenue-trend?months=${months}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch revenue trend');
+  }
+
+  return response.json();
+};
+
+// 9. Staff Performance - MANAGER
+export const getStaffPerformance = async (token: string): Promise<StaffPerformanceResponse> => {
+  const response = await fetch(`${API_URL}/staff-performance`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch staff performance');
+  }
+
+  return response.json();
+};

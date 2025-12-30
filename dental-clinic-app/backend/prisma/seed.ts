@@ -346,6 +346,40 @@ async function main() {
     console.log(`✅ Created ${paymentCount} payments`);
 
     // -----------------------
+    // Create Documents for Patients
+    // -----------------------
+    const documentTypes = ["X-RAY", "PRESCRIPTION", "REPORT", "INVOICE", "OTHER"];
+    const documentNames = [
+        "Panoramic X-Ray",
+        "Follow-up Prescription",
+        "Treatment Summary",
+        "Insurance Invoice",
+        "Lab Report"
+    ];
+
+    let documentCount = 0;
+    const uploaderId = doctorUsers[0]?.id || managerUser.id;
+
+    for (const patient of patients.slice(0, 10)) { // seed docs for first 10 patients
+        const numDocs = Math.floor(Math.random() * 2) + 1; // 1-2 docs per patient
+        for (let i = 0; i < numDocs; i++) {
+            const name = getRandomItem(documentNames);
+            const type = getRandomItem(documentTypes);
+            await prisma.document.create({
+                data: {
+                    patientId: patient.id,
+                    uploadedById: uploaderId,
+                    name,
+                    type,
+                    filePath: `/uploads/documents/${patient.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${name.replace(/\s+/g, '-')}.pdf`
+                }
+            });
+            documentCount++;
+        }
+    }
+    console.log(`✅ Created ${documentCount} documents`);
+
+    // -----------------------
     // Create 25+ Expenses
     // -----------------------
     const expenseCategories = [
@@ -416,6 +450,7 @@ async function main() {
     console.log(`✅ ${appointmentCount} Appointments scheduled`);
     console.log(`✅ ${treatmentCount} Treatments recorded`);
     console.log(`✅ ${paymentCount} Payments processed`);
+    console.log(`✅ ${documentCount} Documents uploaded`);
     console.log(`✅ ${expenseCount} Expenses recorded`);
     console.log("================================================\n");
 
