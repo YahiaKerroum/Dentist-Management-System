@@ -156,7 +156,7 @@ export function TreatmentDetailPanel({
                     {/* Date & Time */}
                     <div className="mb-6">
                         <div className="flex items-center gap-3 mb-2">
-                            <Calendar className="w-5 h-5 text-teal-500" />
+                            <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
                             <span className="text-lg font-semibold text-gray-900">
                                 {formatDate(treatment.dateOfTreatment)}
                             </span>
@@ -174,13 +174,14 @@ export function TreatmentDetailPanel({
                         </h3>
                         <div
                             onClick={handlePatientClick}
-                            className={`bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-4 border border-teal-100 ${
+                            className={`rounded-xl p-4 border ${
                                 onNavigateToPatient ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
                             }`}
+                            style={{ background: 'linear-gradient(to bottom right, #E8F5F0, #D5EDE8)', borderColor: '#D5EDE8' }}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
                                         {treatment.patient.firstName[0]}{treatment.patient.lastName[0]}
                                     </div>
                                     <div>
@@ -204,7 +205,7 @@ export function TreatmentDetailPanel({
                                     </div>
                                 </div>
                                 {onNavigateToPatient && (
-                                    <ExternalLink className="w-5 h-5 text-teal-500" />
+                                    <ExternalLink className="w-5 h-5" style={{ color: '#3DBEA3' }} />
                                 )}
                             </div>
                         </div>
@@ -216,9 +217,9 @@ export function TreatmentDetailPanel({
                             <Stethoscope className="w-4 h-4" />
                             Attending Doctor
                         </h3>
-                        <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                        <div className="rounded-xl p-4 border" style={{ backgroundColor: '#E8F5F0', borderColor: '#D5EDE8' }}>
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
                                     {treatment.doctor.user.firstName[0]}{treatment.doctor.user.lastName[0]}
                                 </div>
                                 <div>
@@ -226,7 +227,7 @@ export function TreatmentDetailPanel({
                                         Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
                                     </h4>
                                     {treatment.doctor.specialization && (
-                                        <p className="text-sm text-blue-600">{treatment.doctor.specialization}</p>
+                                        <p className="text-sm" style={{ color: '#3DBEA3' }}>{treatment.doctor.specialization}</p>
                                     )}
                                 </div>
                             </div>

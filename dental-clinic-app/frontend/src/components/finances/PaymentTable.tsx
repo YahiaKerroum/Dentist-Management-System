@@ -136,7 +136,7 @@ const PaymentTable: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#3DBEA3' }} />
       </div>
     );
   }
@@ -156,13 +156,14 @@ const PaymentTable: React.FC = () => {
               placeholder="Search payments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3DBEA3] focus:border-transparent"
             />
           </div>
           
           <button
             onClick={handleCreatePayment}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+            style={{ backgroundColor: '#3DBEA3' }}
           >
             <Plus className="w-5 h-5" />
             Create Payment
@@ -232,7 +233,8 @@ const PaymentTable: React.FC = () => {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEditPayment(payment)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-2 rounded-lg transition-colors hover:bg-[#E8F5F0]"
+                            style={{ color: '#3DBEA3' }}
                             title="Edit payment"
                           >
                             <Edit className="w-4 h-4" />
@@ -288,9 +290,10 @@ const PaymentTable: React.FC = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
+                            ? 'text-white'
                             : 'border border-gray-300 hover:bg-gray-50'
                         }`}
+                        style={currentPage === pageNum ? { backgroundColor: '#3DBEA3' } : {}}
                       >
                         {pageNum}
                       </button>

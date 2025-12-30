@@ -267,7 +267,8 @@ export function PatientDetailPanel({
           <div>
             <button 
               onClick={onClose}
-              className="mb-4 text-blue-600 hover:text-blue-900 font-medium flex items-center gap-2 text-sm"
+              className="mb-4 font-medium flex items-center gap-2 text-sm"
+              style={{ color: '#3DBEA3' }}
             >
               ← Back to Patients
             </button>
@@ -280,7 +281,8 @@ export function PatientDetailPanel({
             {canEditPatient && onEdit && (
               <button
                 onClick={() => onEdit(patient)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
+                style={{ backgroundColor: '#3DBEA3' }}
               >
                 <Edit className="w-4 h-4" />
                 Edit Patient
@@ -387,7 +389,7 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('info')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'info'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -397,7 +399,7 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('treatments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'treatments'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
@@ -407,7 +409,7 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('appointments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'appointments'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
