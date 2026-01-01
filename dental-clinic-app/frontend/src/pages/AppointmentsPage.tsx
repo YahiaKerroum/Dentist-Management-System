@@ -81,7 +81,6 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             
             // If user is DOCTOR, filter by their doctor profile ID
             if (userRole === 'DOCTOR') {
-                // Fetch user data to get doctor profile ID
                 const userResponse = await fetch('http://localhost:4000/api/users/me', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -97,10 +96,17 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                     }
                 }
             }
-
-            // Fetch appointments with filters
-            const data = await getAllAppointments(filters);
-            setAppointments(data.reverse());
+        
+            // Fetch appointments, patients, and doctors in parallel
+            const [appointmentsData, patientsData, doctorsData] = await Promise.all([
+                getAllAppointments(filters),
+                getPatients(token),
+                getAllStaff(token, { role: 'DOCTOR' }),
+            ]);
+            
+            setAppointments(appointmentsData.reverse());
+            setPatients(patientsData.data);
+            setDoctors(doctorsData.data);
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to load appointments');
