@@ -1,4 +1,7 @@
 import { PrismaClient, PaymentMethod, Prisma } from "@prisma/client";
+import { ForbiddenError, ValidationError } from "../errors/app.errors";
+import { userHasPermission } from "../utils/permission.utils";
+import { Permission } from "../types/permission.types";
 
 const prisma = new PrismaClient();
 
@@ -154,6 +157,20 @@ export class PaymentService {
    * Create a new payment record
    */
   static async createPayment(data: CreatePaymentData) {
+    // check if the user trying to create payment has the permission to create payment
+    if (!data.recordedById) {
+      throw new ValidationError("recordedById is required to create a payment");
+    }
+
+    const hasCreatePermission = await userHasPermission(
+      data.recordedById,
+      Permission.PAYMENT_CREATE
+    );
+
+    if (!hasCreatePermission) {
+      throw new ForbiddenError("You do not have permission to create payments");
+    }
+
     // Validate patient exists
     const patient = await prisma.patient.findUnique({
       where: { id: data.patientId },
@@ -219,7 +236,20 @@ export class PaymentService {
   /**
    * Update an existing payment
    */
-  static async updatePayment(id: string, data: UpdatePaymentData) {
+  static async updatePayment(id: string, data: UpdatePaymentData, actorUserId?: string) {
+    if (!actorUserId) {
+      throw new ValidationError("actorUserId is required to update a payment");
+    }
+
+    const hasUpdatePermission = await userHasPermission(
+      actorUserId,
+      Permission.PAYMENT_UPDATE
+    );
+
+    if (!hasUpdatePermission) {
+      throw new ForbiddenError("You do not have permission to update payments");
+    }
+
     // Verify payment exists
     const existingPayment = await prisma.payment.findUnique({
       where: { id },
@@ -291,7 +321,20 @@ export class PaymentService {
   /**
    * Delete a payment record
    */
-  static async deletePayment(id: string) {
+  static async deletePayment(id: string, actorUserId?: string) {
+    if (!actorUserId) {
+      throw new ValidationError("actorUserId is required to delete a payment");
+    }
+
+    const hasDeletePermission = await userHasPermission(
+      actorUserId,
+      Permission.PAYMENT_DELETE
+    );
+
+    if (!hasDeletePermission) {
+      throw new ForbiddenError("You do not have permission to delete payments");
+    }
+
     // Verify payment exists
     const existingPayment = await prisma.payment.findUnique({
       where: { id },
