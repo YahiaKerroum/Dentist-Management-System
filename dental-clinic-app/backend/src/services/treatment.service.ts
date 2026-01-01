@@ -1,6 +1,8 @@
 import { TreatmentType } from "../types/prisma.types";
-import { NotFoundError } from "../errors/app.errors";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
 import prisma from "../config/prisma";
+import { userHasPermission } from "../utils/permission.utils";
+import { Permission } from "../types/permission.types";
 
 
 
@@ -15,7 +17,22 @@ export class TreatmentService {
         teethInvolved?: number[];
         followUpRequired?: boolean;
         appointmentId?: string;
+        createdByUserId?: string;
     }) {
+        // check if the user trying to create treatment has the permission to create treatment
+        if (!data.createdByUserId) {
+            throw new ValidationError("createdByUserId is required to create a treatment");
+        }
+
+        const hasCreatePermission = await userHasPermission(
+            data.createdByUserId,
+            Permission.TREATMENTS_CREATE
+        );
+
+        if (!hasCreatePermission) {
+            throw new ForbiddenError("You do not have permission to create treatments");
+        }
+
         const treatment = await prisma.treatment.create({
             data: {
                 doctorId: data.doctorId,
@@ -134,8 +151,22 @@ export class TreatmentService {
             procedure?: string;
             teethInvolved?: number[];
             followUpRequired?: boolean;
-        }
+        },
+        actorUserId?: string
     ) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to update a treatment");
+        }
+
+        const hasUpdatePermission = await userHasPermission(
+            actorUserId,
+            Permission.TREATMENTS_UPDATE
+        );
+
+        if (!hasUpdatePermission) {
+            throw new ForbiddenError("You do not have permission to update treatments");
+        }
+
         await this.getTreatmentById(id);
 
         const treatment = await prisma.treatment.update({
@@ -159,7 +190,20 @@ export class TreatmentService {
         return treatment;
     }
 
-    static async markAsCompleted(id: string) {
+    static async markAsCompleted(id: string, actorUserId?: string) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to mark a treatment as completed");
+        }
+
+        const hasUpdatePermission = await userHasPermission(
+            actorUserId,
+            Permission.TREATMENTS_UPDATE
+        );
+
+        if (!hasUpdatePermission) {
+            throw new ForbiddenError("You do not have permission to update treatments");
+        }
+
         await this.getTreatmentById(id);
 
         const treatment = await prisma.treatment.update({
@@ -183,7 +227,20 @@ export class TreatmentService {
         return treatment;
     }
 
-    static async deleteTreatment(id: string) {
+    static async deleteTreatment(id: string, actorUserId?: string) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to delete a treatment");
+        }
+
+        const hasDeletePermission = await userHasPermission(
+            actorUserId,
+            Permission.TREATMENTS_DELETE
+        );
+
+        if (!hasDeletePermission) {
+            throw new ForbiddenError("You do not have permission to delete treatments");
+        }
+
         await this.getTreatmentById(id);
 
         await prisma.treatment.delete({
