@@ -78,7 +78,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
         try {
             setLoading(true);
             let filters: any = {};
-            
+
             // If user is DOCTOR, filter by their doctor profile ID
             if (userRole === 'DOCTOR') {
                 const userResponse = await fetch('http://localhost:4000/api/users/me', {
@@ -87,7 +87,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                         'Content-Type': 'application/json',
                     },
                 });
-                
+
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     const doctorId = userData.data?.doctorProfile?.id;
@@ -96,14 +96,14 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                     }
                 }
             }
-        
+
             // Fetch appointments, patients, and doctors in parallel
             const [appointmentsData, patientsData, doctorsData] = await Promise.all([
                 getAllAppointments(filters),
                 getPatients(token),
                 getAllStaff(token, { role: 'DOCTOR' }),
             ]);
-            
+
             setAppointments(appointmentsData.reverse());
             setPatients(patientsData.data);
             setDoctors(doctorsData.data);
@@ -222,11 +222,13 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
         }
 
         // Search term filter
-        const matchesSearch = 
-            appointment.patient?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.patient?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.doctor?.user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.doctor?.user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = () => {
+            if (!searchTerm.trim()) return true;
+            const search = searchTerm.toLowerCase().trim();
+            const patientFullName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`.toLowerCase();
+            const doctorFullName = `${appointment.doctor?.user.firstName} ${appointment.doctor?.user.lastName}`.toLowerCase();
+            return patientFullName.includes(search) || doctorFullName.includes(search);
+        };
 
         // Status filter (now includes NO_SHOW as an option)
         const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
@@ -243,8 +245,8 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
         const matchesDateTo = !dateRange.to || 
             new Date(appointment.dateOfTreatment) <= new Date(dateRange.to);
 
-        return matchesSearch && matchesStatus && matchesPatient && matchesDoctor && 
-               matchesDateFrom && matchesDateTo;
+        return matchesSearch() && matchesStatus && matchesPatient && matchesDoctor && 
+        matchesDateFrom && matchesDateTo;
     }
 
 
