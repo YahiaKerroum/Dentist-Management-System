@@ -26,7 +26,15 @@ export class DocumentService {
       throw new NotFoundError("Patient not found");
     }
 
-    // TODO: check user permission at service layer 
+    // check if the user trying to create document has the permission to create document
+    const hasCreatePermission = await userHasPermission(
+      data.uploadedById,
+      Permission.DOCUMENTS_CREATE
+    );
+
+    if (!hasCreatePermission) {
+      throw new ForbiddenError("You do not have permission to create documents");
+    }
 
     // Create document in the database
     const document = await prisma.document.create({
@@ -127,7 +135,15 @@ export class DocumentService {
       throw new NotFoundError("Document not found");
     }
 
-    // permission checks are handled later in the service layer (here)
+    // check if the user trying to update document has the permission to update document
+    const hasUpdatePermission = await userHasPermission(
+      userId,
+      Permission.DOCUMENTS_UPDATE
+    );
+
+    if (!hasUpdatePermission) {
+      throw new ForbiddenError("You do not have permission to update documents");
+    }
 
     const updatedDocument = await prisma.document.update({
       where: { id: documentId },
@@ -159,7 +175,15 @@ export class DocumentService {
       throw new NotFoundError("Document not found");
     }
 
-    // permission checks are handled later in the service layer (here)
+    // check if the user trying to delete document has the permission to delete document
+    const hasDeletePermission = await userHasPermission(
+      userId,
+      Permission.DOCUMENTS_DELETE
+    );
+
+    if (!hasDeletePermission) {
+      throw new ForbiddenError("You do not have permission to delete documents");
+    }
 
     // Best-effort: also remove the file from Google Drive
     // Try to extract the Drive fileId from stored webViewLink/filePath
