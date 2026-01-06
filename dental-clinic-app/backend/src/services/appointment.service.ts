@@ -1,6 +1,8 @@
-import { AppointmentStatus, TreatmentType } from "../../types/prisma.types";
-import { NotFoundError } from "../../errors/app.errors";
-import prisma from "../../config/prisma";
+import { AppointmentStatus, TreatmentType } from "../types/prisma.types";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
+import prisma from "../config/prisma";
+import { userHasPermission } from "../utils/permission.utils";
+import { Permission } from "../types/permission.types";
 
 
 
@@ -17,6 +19,19 @@ export class AppointmentService {
         followUpRequired?: boolean;
         createdByUserId?: string;
     }) {
+        if (!data.createdByUserId) {
+            throw new ValidationError("createdByUserId is required to create an appointment");
+        }
+
+        const hasCreatePermission = await userHasPermission(
+            data.createdByUserId,
+            Permission.APPOINTMENTS_CREATE
+        );
+
+        if (!hasCreatePermission) {
+            throw new ForbiddenError("You do not have permission to create appointments");
+        }
+
         const appointment = await prisma.appointment.create({
             data: {
                 doctorId: data.doctorId,
@@ -48,13 +63,26 @@ export class AppointmentService {
         return appointment;
     }
 
-    static async getAllAppointments(filters?: {
-        doctorId?: string;
-        patientId?: string;
-        status?: AppointmentStatus;
-        dateFrom?: Date;
-        dateTo?: Date;
-    }) {
+    static async getAllAppointments(
+        filters: {
+            doctorId?: string;
+            patientId?: string;
+            status?: AppointmentStatus;
+            dateFrom?: Date;
+            dateTo?: Date;
+        } = {},
+        actorUserId?: string
+    ) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to list appointments");
+        }
+
+        const hasViewPermission = await userHasPermission(actorUserId, Permission.APPOINTMENTS_VIEW);
+
+        if (!hasViewPermission) {
+            throw new ForbiddenError("You do not have permission to view appointments");
+        }
+
         const where: any = {};
 
         if (filters?.doctorId) {
@@ -102,7 +130,17 @@ export class AppointmentService {
         return appointments;
     }
 
-    static async getAppointmentById(id: string) {
+    static async getAppointmentById(id: string, actorUserId?: string) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to view an appointment");
+        }
+
+        const hasViewPermission = await userHasPermission(actorUserId, Permission.APPOINTMENTS_VIEW);
+
+        if (!hasViewPermission) {
+            throw new ForbiddenError("You do not have permission to view appointments");
+        }
+
         const appointment = await prisma.appointment.findUnique({
             where: { id },
             include: {
@@ -142,9 +180,23 @@ export class AppointmentService {
             procedure?: string;
             teethInvolved?: number[];
             followUpRequired?: boolean;
-        }
+        },
+        actorUserId?: string
     ) {
-        await this.getAppointmentById(id);
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to update an appointment");
+        }
+
+        const hasUpdatePermission = await userHasPermission(
+            actorUserId,
+            Permission.APPOINTMENTS_UPDATE
+        );
+
+        if (!hasUpdatePermission) {
+            throw new ForbiddenError("You do not have permission to update appointments");
+        }
+
+        await this.getAppointmentById(id, actorUserId);
 
         const appointment = await prisma.appointment.update({
             where: { id },
@@ -167,8 +219,25 @@ export class AppointmentService {
         return appointment;
     }
 
-    static async updateAppointmentStatus(id: string, status: AppointmentStatus) {
-        await this.getAppointmentById(id);
+    static async updateAppointmentStatus(id: string, status: AppointmentStatus, actorUserId?: string) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to update appointment status");
+        }
+
+        const requiredPermission = status === AppointmentStatus.CANCELLED
+            ? Permission.APPOINTMENTS_CANCEL
+            : Permission.APPOINTMENTS_UPDATE;
+
+        const hasPermission = await userHasPermission(
+            actorUserId,
+            requiredPermission
+        );
+
+        if (!hasPermission) {
+            throw new ForbiddenError(`You do not have permission to ${status === AppointmentStatus.CANCELLED ? 'cancel' : 'update'} appointments`);
+        }
+
+        await this.getAppointmentById(id, actorUserId);
 
         const appointment = await prisma.appointment.update({
             where: { id },
@@ -191,8 +260,21 @@ export class AppointmentService {
         return appointment;
     }
 
-    static async deleteAppointment(id: string) {
-        await this.getAppointmentById(id);
+    static async deleteAppointment(id: string, actorUserId?: string) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to delete an appointment");
+        }
+
+        const hasDeletePermission = await userHasPermission(
+            actorUserId,
+            Permission.APPOINTMENTS_CANCEL
+        );
+
+        if (!hasDeletePermission) {
+            throw new ForbiddenError("You do not have permission to delete appointments");
+        }
+
+        await this.getAppointmentById(id, actorUserId);
 
         await prisma.appointment.delete({
             where: { id },

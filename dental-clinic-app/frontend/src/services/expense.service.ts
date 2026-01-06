@@ -2,38 +2,40 @@ import { Expense, CreateExpenseData, UpdateExpenseData } from '../types/expense.
 
 const API_URL = 'http://localhost:4000/api/expenses';
 
+const buildHeaders = (token: string) => ({
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json',
+});
+
+const handleResponse = async <T>(response: Response, fallback: string): Promise<T> => {
+  const data = await response.json().catch(() => null);
+  const message = (data as any)?.message || (data as any)?.error?.message || fallback;
+
+  if (!response.ok) {
+    throw new Error(message);
+  }
+
+  return data as T;
+};
+
 // Get all expenses
 export const getExpenses = async (token: string): Promise<{ success: boolean; data: Expense[] }> => {
   const response = await fetch(API_URL, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch expenses');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to fetch expenses');
 };
 
 // Get single expense by ID
 export const getExpenseById = async (id: string, token: string): Promise<{ success: boolean; data: Expense }> => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch expense');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to fetch expense');
 };
 
 // Create new expense
@@ -51,19 +53,11 @@ export const createExpense = async (
 
   const response = await fetch(API_URL, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create expense');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to create expense');
 };
 
 // Update expense
@@ -82,35 +76,21 @@ export const updateExpense = async (
 
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
     body: JSON.stringify(payload),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to update expense');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to update expense');
 };
 
 // Delete expense
 export const deleteExpense = async (id: string, token: string): Promise<void> => {
   const response = await fetch(`${API_URL}/${id}`, {
     method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to delete expense');
-  }
+  await handleResponse(response, 'Failed to delete expense');
 };
 
 // Search expenses
@@ -120,17 +100,10 @@ export const searchExpenses = async (
 ): Promise<{ success: boolean; data: Expense[] }> => {
   const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to search expenses');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to search expenses');
 };
 
 // Approve expense (Manager only)
@@ -140,16 +113,8 @@ export const approveExpense = async (
 ): Promise<{ success: boolean; data: Expense }> => {
   const response = await fetch(`${API_URL}/${id}/approve`, {
     method: 'PATCH',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: buildHeaders(token),
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to approve expense');
-  }
-
-  return response.json();
+  return handleResponse(response, 'Failed to approve expense');
 };

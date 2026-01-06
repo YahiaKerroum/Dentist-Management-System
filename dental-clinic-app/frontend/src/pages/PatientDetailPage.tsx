@@ -168,8 +168,7 @@ export function PatientDetailPanel({
   };
 
   // Check if current user is the primary dentist (for medical documents access)
-  const isPrimaryDentist = userRole === 'DOCTOR' && patient.primaryDentistId === currentUserId;
-  const canViewMedicalDocs = isPrimaryDentist;
+  const canViewMedicalDocs = true;
 
   // Fetch appointments when the appointments tab is active
   useEffect(() => {

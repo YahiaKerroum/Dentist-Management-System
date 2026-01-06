@@ -29,6 +29,13 @@ export enum Permission {
   PAYMENT_CREATE = "payment.create",
   PAYMENT_UPDATE = "payment.update",
   PAYMENT_DELETE = "payment.delete",
+
+  // Expenses
+  EXPENSES_VIEW = "expenses.view",
+  EXPENSES_CREATE = "expenses.create",
+  EXPENSES_UPDATE = "expenses.update",
+  EXPENSES_DELETE = "expenses.delete",
+  EXPENSES_APPROVE = "expenses.approve",
 }
 
 export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
@@ -56,4 +63,10 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   [Permission.PAYMENT_CREATE]: "Create payment records",
   [Permission.PAYMENT_UPDATE]: "Update payment records",
   [Permission.PAYMENT_DELETE]: "Delete payment records",
+
+  [Permission.EXPENSES_VIEW]: "View expense records",
+  [Permission.EXPENSES_CREATE]: "Create expense records",
+  [Permission.EXPENSES_UPDATE]: "Update expense records",
+  [Permission.EXPENSES_DELETE]: "Delete expense records",
+  [Permission.EXPENSES_APPROVE]: "Approve expense records",
 };

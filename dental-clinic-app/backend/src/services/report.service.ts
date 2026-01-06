@@ -1,4 +1,4 @@
-import prisma from "../../config/prisma";
+import prisma from "../config/prisma";
 import { PaymentService } from "./payment.service";
 import { ExpenseService } from "./expense.service";
 
@@ -7,7 +7,7 @@ export class ReportService {
     // ============================
     // DASHBOARD STATS (Existing)
     // ============================
-    static async getDashboardStats() {
+    static async getDashboardStats(actorUserId?: string) {
         const [
             totalPatients,
             totalAppointments,
@@ -18,8 +18,8 @@ export class ReportService {
             prisma.patient.count(),
             prisma.appointment.count(),
             prisma.treatment.count(),
-            PaymentService.getTotalRevenue(),
-            ExpenseService.getTotalExpenses({ approved: true }),
+            PaymentService.getTotalRevenue({}, actorUserId),
+            ExpenseService.getTotalExpenses({ approved: true }, actorUserId),
         ]);
 
         const profit = totalRevenue - totalExpenses;
@@ -103,12 +103,12 @@ export class ReportService {
     // ============================
     // FINANCIAL REPORT (Existing)
     // ============================
-    static async getFinancialReport(dateFrom?: Date, dateTo?: Date) {
+    static async getFinancialReport(dateFrom?: Date, dateTo?: Date, actorUserId?: string) {
         const filters = { dateFrom, dateTo };
 
         const [revenue, expenses] = await Promise.all([
-            PaymentService.getTotalRevenue(filters),
-            ExpenseService.getTotalExpenses({ approved: true, ...filters }),
+            PaymentService.getTotalRevenue(filters, actorUserId),
+            ExpenseService.getTotalExpenses({ approved: true, ...filters }, actorUserId),
         ]);
 
         return {

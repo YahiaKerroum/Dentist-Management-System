@@ -10,7 +10,7 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "src/services/tobecontinued/app.ts",
-    "src/services/tobecontinued/server.ts"
+    "src/app.ts",
+    "src/server.ts"
   ]
 }

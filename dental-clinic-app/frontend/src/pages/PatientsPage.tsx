@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { getPatients, createPatient, updatePatient, deletePatient } from '../services/patient.service';
 import { getUserPermissions } from '../services/user.service';
