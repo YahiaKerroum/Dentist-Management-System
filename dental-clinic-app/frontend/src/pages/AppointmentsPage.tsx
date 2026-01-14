@@ -77,15 +77,9 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const fetchAppointments = async () => {
         try {
             setLoading(true);
-<<<<<<< HEAD
             let doctorProfileId: string | undefined;
 
             // If user is DOCTOR, fetch their doctor profile ID for sorting (not filtering)
-=======
-            let filters: any = {};
-
-            // If user is DOCTOR, filter by their doctor profile ID
->>>>>>> develop
             if (userRole === 'DOCTOR') {
                 const userResponse = await fetch('http://localhost:4000/api/users/me', {
                     headers: {
@@ -100,7 +94,6 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                 }
             }
 
-<<<<<<< HEAD
             // Fetch all appointments
             const data = await getAllAppointments();
 
@@ -118,18 +111,6 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             });
 
             setAppointments(sortedAppointments);
-=======
-            // Fetch appointments, patients, and doctors in parallel
-            const [appointmentsData, patientsData, doctorsData] = await Promise.all([
-                getAllAppointments(filters),
-                getPatients(token),
-                getAllStaff(token, { role: 'DOCTOR' }),
-            ]);
-
-            setAppointments(appointmentsData.reverse());
-            setPatients(patientsData.data);
-            setDoctors(doctorsData.data);
->>>>>>> develop
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to load appointments');
