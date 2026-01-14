@@ -8,6 +8,14 @@ import {
 
 const API_URL = 'http://localhost:4000/api/treatments';
 
+const buildHeaders = (token: string) => ({
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+});
+
+const extractMessage = (data: any, fallback: string) =>
+    data?.message || data?.error?.message || fallback;
+
 export const getTreatments = async (
     token: string,
     filters?: TreatmentFilters
@@ -25,18 +33,12 @@ export const getTreatments = async (
 
     const response = await fetch(url, {
         method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
     });
 
     if (!response.ok) {
-        let message = 'Failed to fetch treatments';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to fetch treatments');
         if (response.status === 403) {
             message = 'You do not have permission to view treatments';
         }
@@ -52,18 +54,12 @@ export const getTreatmentById = async (
 ): Promise<SingleTreatmentResponse> => {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'GET',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
     });
 
     if (!response.ok) {
-        let message = 'Failed to fetch treatment';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to fetch treatment');
         if (response.status === 403) {
             message = 'You do not have permission to view this treatment';
         }
@@ -84,19 +80,13 @@ export const createTreatment = async (
 
     const response = await fetch(API_URL, {
         method: 'POST',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
         body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
-        let message = 'Failed to create treatment';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to create treatment');
         if (response.status === 403) {
             message = 'You do not have permission to create treatments';
         }
@@ -113,19 +103,13 @@ export const updateTreatment = async (
 ): Promise<SingleTreatmentResponse> => {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
         body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-        let message = 'Failed to update treatment';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to update treatment');
         if (response.status === 403) {
             message = 'You do not have permission to update treatments';
         }
@@ -141,18 +125,12 @@ export const markTreatmentCompleted = async (
 ): Promise<SingleTreatmentResponse> => {
     const response = await fetch(`${API_URL}/${id}/complete`, {
         method: 'PATCH',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
     });
 
     if (!response.ok) {
-        let message = 'Failed to mark treatment as completed';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to mark treatment as completed');
         if (response.status === 403) {
             message = 'You do not have permission to complete treatments';
         }
@@ -165,18 +143,12 @@ export const markTreatmentCompleted = async (
 export const deleteTreatment = async (id: string, token: string): Promise<void> => {
     const response = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE',
-        headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-        },
+        headers: buildHeaders(token),
     });
 
     if (!response.ok) {
-        let message = 'Failed to delete treatment';
-        try {
-            const errorData = await response.json();
-            message = errorData.message || message;
-        } catch (_) {}
+        const errorData = await response.json().catch(() => ({}));
+        let message = extractMessage(errorData, 'Failed to delete treatment');
         if (response.status === 403) {
             message = 'You do not have permission to delete treatments';
         }

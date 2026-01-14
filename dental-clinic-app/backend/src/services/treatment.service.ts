@@ -192,7 +192,7 @@ export class TreatmentService {
 
     static async markAsCompleted(id: string, actorUserId?: string) {
         if (!actorUserId) {
-            throw new ValidationError("actorUserId is required to mark a treatment as completed");
+            throw new ValidationError("actorUserId is required to mark treatment as completed");
         }
 
         const hasUpdatePermission = await userHasPermission(

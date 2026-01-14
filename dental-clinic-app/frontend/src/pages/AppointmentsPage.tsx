@@ -77,9 +77,9 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const fetchAppointments = async () => {
         try {
             setLoading(true);
-            let filters: any = {};
+            let doctorProfileId: string | undefined;
 
-            // If user is DOCTOR, filter by their doctor profile ID
+            // If user is DOCTOR, fetch their doctor profile ID for sorting (not filtering)
             if (userRole === 'DOCTOR') {
                 const userResponse = await fetch('http://localhost:4000/api/users/me', {
                     headers: {
@@ -90,23 +90,27 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
 
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
-                    const doctorId = userData.data?.doctorProfile?.id;
-                    if (doctorId) {
-                        filters.doctorId = doctorId;
-                    }
+                    doctorProfileId = userData.data?.doctorProfile?.id;
                 }
             }
 
-            // Fetch appointments, patients, and doctors in parallel
-            const [appointmentsData, patientsData, doctorsData] = await Promise.all([
-                getAllAppointments(filters),
-                getPatients(token),
-                getAllStaff(token, { role: 'DOCTOR' }),
-            ]);
+            // Fetch all appointments
+            const data = await getAllAppointments();
 
-            setAppointments(appointmentsData.reverse());
-            setPatients(patientsData.data);
-            setDoctors(doctorsData.data);
+            // Sort: doctor's own appointments first, then others by date (newest first)
+            const sortedAppointments = [...data].sort((a, b) => {
+                const aOwn = doctorProfileId ? a.doctorId === doctorProfileId : false;
+                const bOwn = doctorProfileId ? b.doctorId === doctorProfileId : false;
+
+                if (aOwn && !bOwn) return -1;
+                if (!aOwn && bOwn) return 1;
+
+                const aDate = new Date(a.dateOfTreatment).getTime();
+                const bDate = new Date(b.dateOfTreatment).getTime();
+                return bDate - aDate;
+            });
+
+            setAppointments(sortedAppointments);
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to load appointments');
@@ -287,13 +291,11 @@ const hasActiveFilters =
                     </p>
                 </div>
                 
-                {/* Only Assistants and Managers can create appointments */}
-                {(userRole === 'ASSISTANT' || userRole === 'MANAGER') && (
-                    <Button onClick={handleAddAppointment} className="shadow-sm">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create Appointment
-                    </Button>
-                )}
+                {/* Create appointment button */}
+                <Button onClick={handleAddAppointment} className="shadow-sm">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Appointment
+                </Button>
             </div>
 
             {/* Error Message */}

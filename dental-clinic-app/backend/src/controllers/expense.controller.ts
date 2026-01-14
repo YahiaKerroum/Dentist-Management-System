@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { ExpenseService } from "../services/tobecontinued/expense.service";
+import { Response } from "express";
+import { ExpenseService } from "../services/expense.service";
 import { sendSuccess } from "../utils/response.utils";
 import { asyncHandler } from "../utils/async.handler";
 import { AuthenticatedRequest } from "../types/auth.types";
@@ -14,7 +14,7 @@ export class ExpenseController {
     sendSuccess(res, expense, "Expense created successfully", 201);
   });
 
-  static getAll = asyncHandler(async (req: Request, res: Response) => {
+  static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { approved, category, dateFrom, dateTo } = req.query;
 
     const expenses = await ExpenseService.getAllExpenses({
@@ -22,13 +22,13 @@ export class ExpenseController {
       category: category as string | undefined,
       dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
       dateTo: dateTo ? new Date(dateTo as string) : undefined,
-    });
+    }, req.user?.userId);
 
     sendSuccess(res, expenses);
   });
 
-  static getById = asyncHandler(async (req: Request, res: Response) => {
-    const expense = await ExpenseService.getExpenseById(req.params.id);
+  static getById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const expense = await ExpenseService.getExpenseById(req.params.id, req.user?.userId);
     sendSuccess(res, expense);
   });
 
@@ -41,7 +41,7 @@ export class ExpenseController {
   });
 
   // additional controller methods
-  static update = asyncHandler(async (req: Request, res: Response) => {
+  static update = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
   const { category, paidTo, amount, date, notes } = req.body;
 
@@ -51,20 +51,20 @@ export class ExpenseController {
     amount: amount ? Number(amount) : undefined,
     date: date ? new Date(date) : undefined,
     notes,
-  });
+  }, req.user?.userId);
 
   sendSuccess(res, expense, "Expense updated successfully");
 });
 
-static delete = asyncHandler(async (req: Request, res: Response) => {
+static delete = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { id } = req.params;
 
-  const result = await ExpenseService.deleteExpense(id);
+  const result = await ExpenseService.deleteExpense(id, req.user?.userId);
 
   sendSuccess(res, result, "Expense deleted successfully");
 });
 
-static search = asyncHandler(async (req: Request, res: Response) => {
+static search = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { query } = req.query;
 
   if (!query || typeof query !== "string") {
@@ -72,7 +72,7 @@ static search = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const expenses = await ExpenseService.searchExpenses(query);
+  const expenses = await ExpenseService.searchExpenses(query, req.user?.userId);
 
   sendSuccess(res, expenses);
 });

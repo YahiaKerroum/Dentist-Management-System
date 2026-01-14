@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ReportService } from "../services/tobecontinued/report.service";
+import { ReportService } from "../services/report.service";
 import { sendSuccess } from "../utils/response.utils";
 import { asyncHandler } from "../utils/async.handler";
 import { AuthenticatedRequest } from "../types/auth.types";
@@ -9,17 +9,18 @@ export class ReportController {
   // EXISTING ENDPOINTS
   // ============================
 
-  static getDashboard = asyncHandler(async (req: Request, res: Response) => {
-    const stats = await ReportService.getDashboardStats();
+  static getDashboard = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const stats = await ReportService.getDashboardStats(req.user?.userId);
     sendSuccess(res, stats);
   });
 
-  static getFinancial = asyncHandler(async (req: Request, res: Response) => {
+  static getFinancial = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { dateFrom, dateTo } = req.query;
 
     const report = await ReportService.getFinancialReport(
       dateFrom ? new Date(dateFrom as string) : undefined,
-      dateTo ? new Date(dateTo as string) : undefined
+      dateTo ? new Date(dateTo as string) : undefined,
+      req.user?.userId
     );
 
     sendSuccess(res, report);

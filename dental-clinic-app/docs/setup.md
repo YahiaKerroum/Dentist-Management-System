@@ -109,9 +109,6 @@ Fallback (if the package script fails because of missing global binaries or path
 ```pwsh
 # Use npx to run the binary directly
 npx ts-node-dev --respawn --transpile-only src/server.ts
-
-# Or, if server entry point differs, run the actual file the repo contains (example)
-npx ts-node-dev --respawn --transpile-only src/services/tobecontinued/server.ts
 ```
 
 Note: the repository may point to `src/server.ts` in package.json — if that file is not present, inspect `backend/src/` to find the actual startup file (look for `startServer()` or a `Health` log). Running `npx ts-node-dev` against the file that contains `startServer()` will start the server.

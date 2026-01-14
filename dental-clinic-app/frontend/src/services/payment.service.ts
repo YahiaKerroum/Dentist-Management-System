@@ -18,11 +18,14 @@ const getHeaders = (): HeadersInit => {
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {
+  const data = await response.json().catch(() => ({}));
+  const message = (data as any)?.message || (data as any)?.error?.message || `HTTP error! status: ${response.status}`;
+
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    throw new Error(message);
   }
-  return response.json();
+
+  return data;
 };
 
 /**

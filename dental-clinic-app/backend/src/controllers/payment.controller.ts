@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { PaymentService } from "../services/payment.service";
 import { sendSuccess } from "../utils/response.utils";
 import { asyncHandler } from "../utils/async.handler";
@@ -10,7 +10,7 @@ export class PaymentController {
    * Get all payments with optional filtering
    * GET /api/payments?patientId=...&method=...&dateFrom=...&dateTo=...
    */
-  static getAll = asyncHandler(async (req: Request, res: Response) => {
+  static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { patientId, method, dateFrom, dateTo } = req.query;
 
     const payments = await PaymentService.getAllPayments({
@@ -18,7 +18,7 @@ export class PaymentController {
       method: method as PaymentMethod | undefined,
       dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
       dateTo: dateTo ? new Date(dateTo as string) : undefined,
-    });
+    }, req.user?.userId);
 
     sendSuccess(res, {
       payments,
@@ -30,9 +30,9 @@ export class PaymentController {
    * Get a single payment by ID
    * GET /api/payments/:id
    */
-  static getById = asyncHandler(async (req: Request, res: Response) => {
+  static getById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const payment = await PaymentService.getPaymentById(id);
+    const payment = await PaymentService.getPaymentById(id, req.user?.userId);
     sendSuccess(res, payment, "Payment retrieved successfully");
   });
 
@@ -40,9 +40,9 @@ export class PaymentController {
    * Get all payments for a specific patient
    * GET /api/payments/patient/:patientId
    */
-  static getByPatient = asyncHandler(async (req: Request, res: Response) => {
+  static getByPatient = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { patientId } = req.params;
-    const payments = await PaymentService.getPaymentsByPatient(patientId);
+    const payments = await PaymentService.getPaymentsByPatient(patientId, req.user?.userId);
     
     sendSuccess(res, {
       payments,
@@ -103,7 +103,7 @@ export class PaymentController {
    * Update an existing payment
    * PUT /api/payments/:id
    */
-  static update = asyncHandler(async (req: Request, res: Response) => {
+  static update = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { patientId, date, amount, method, notes } = req.body;
 
@@ -122,7 +122,7 @@ export class PaymentController {
     if (method) updateData.method = method;
     if (notes !== undefined) updateData.notes = notes;
 
-    const payment = await PaymentService.updatePayment(id, updateData);
+    const payment = await PaymentService.updatePayment(id, updateData, req.user?.userId);
     sendSuccess(res, payment, "Payment updated successfully");
   });
 
@@ -130,9 +130,9 @@ export class PaymentController {
    * Delete a payment
    * DELETE /api/payments/:id
    */
-  static delete = asyncHandler(async (req: Request, res: Response) => {
+  static delete = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
-    const result = await PaymentService.deletePayment(id);
+    const result = await PaymentService.deletePayment(id, req.user?.userId);
     sendSuccess(res, result, "Payment deleted successfully");
   });
 
@@ -140,7 +140,7 @@ export class PaymentController {
    * Search payments by keyword
    * GET /api/payments/search?q=...
    */
-  static search = asyncHandler(async (req: Request, res: Response) => {
+  static search = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { q } = req.query;
 
     if (!q || typeof q !== "string") {
@@ -150,7 +150,7 @@ export class PaymentController {
       });
     }
 
-    const payments = await PaymentService.searchPayments(q);
+    const payments = await PaymentService.searchPayments(q, req.user?.userId);
     
     sendSuccess(res, {
       payments,
@@ -163,9 +163,9 @@ export class PaymentController {
    * Get payment statistics for a patient
    * GET /api/payments/stats/:patientId
    */
-  static getStats = asyncHandler(async (req: Request, res: Response) => {
+  static getStats = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { patientId } = req.params;
-    const stats = await PaymentService.getPaymentStats(patientId);
+    const stats = await PaymentService.getPaymentStats(patientId, req.user?.userId);
     sendSuccess(res, stats, "Payment statistics retrieved successfully");
   });
 }

@@ -1,5 +1,7 @@
-import { NotFoundError, ForbiddenError } from "../../errors/app.errors";
-import prisma from "../../config/prisma";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
+import prisma from "../config/prisma";
+import { userHasPermission } from "../utils/permission.utils";
+import { Permission } from "../types/permission.types";
 
 
 export class ExpenseService {
@@ -11,6 +13,19 @@ export class ExpenseService {
         notes?: string;
         recordedById?: string;
     }) {
+        if (!data.recordedById) {
+            throw new ValidationError("recordedById is required to create an expense");
+        }
+
+        const hasCreatePermission = await userHasPermission(
+            data.recordedById,
+            Permission.EXPENSES_CREATE
+        );
+
+        if (!hasCreatePermission) {
+            throw new ForbiddenError("You do not have permission to create expenses");
+        }
+
         const expense = await prisma.expense.create({
             data: {
                 category: data.category,
@@ -33,12 +48,28 @@ export class ExpenseService {
         return expense;
     }
 
-    static async getAllExpenses(filters?: {
+    static async getAllExpenses(
+      filters: {
         approved?: boolean;
         category?: string;
         dateFrom?: Date;
         dateTo?: Date;
-    }) {
+      } = {},
+      actorUserId?: string
+    ) {
+      if (!actorUserId) {
+        throw new ValidationError("actorUserId is required to view expenses");
+      }
+
+      const hasViewPermission = await userHasPermission(
+        actorUserId,
+        Permission.EXPENSES_VIEW
+      );
+
+      if (!hasViewPermission) {
+        throw new ForbiddenError("You do not have permission to view expenses");
+      }
+
         const where: any = {};
 
         if (filters?.approved !== undefined) {
@@ -83,7 +114,20 @@ export class ExpenseService {
         return expenses;
     }
 
-    static async getExpenseById(id: string) {
+    static async getExpenseById(id: string, actorUserId?: string) {
+      if (!actorUserId) {
+        throw new ValidationError("actorUserId is required to view an expense");
+      }
+
+      const hasViewPermission = await userHasPermission(
+        actorUserId,
+        Permission.EXPENSES_VIEW
+      );
+
+      if (!hasViewPermission) {
+        throw new ForbiddenError("You do not have permission to view expenses");
+      }
+
         const expense = await prisma.expense.findUnique({
             where: { id },
             include: {
@@ -110,7 +154,20 @@ export class ExpenseService {
     }
 
     static async approveExpense(id: string, approvedById: string) {
-        const expense = await this.getExpenseById(id);
+        if (!approvedById) {
+            throw new ValidationError("approvedById is required to approve an expense");
+        }
+
+        const hasApprovePermission = await userHasPermission(
+            approvedById,
+            Permission.EXPENSES_APPROVE
+        );
+
+        if (!hasApprovePermission) {
+            throw new ForbiddenError("You do not have permission to approve expenses");
+        }
+
+        const expense = await this.getExpenseById(id, approvedById);
 
         if (expense.approved) {
             throw new ForbiddenError("Expense is already approved");
@@ -141,7 +198,23 @@ export class ExpenseService {
         return updatedExpense;
     }
 
-    static async getTotalExpenses(filters?: { approved?: boolean; dateFrom?: Date; dateTo?: Date }) {
+    static async getTotalExpenses(
+      filters: { approved?: boolean; dateFrom?: Date; dateTo?: Date } = {},
+      actorUserId?: string
+    ) {
+      if (!actorUserId) {
+        throw new ValidationError("actorUserId is required to view expenses totals");
+      }
+
+      const hasViewPermission = await userHasPermission(
+        actorUserId,
+        Permission.EXPENSES_VIEW
+      );
+
+      if (!hasViewPermission) {
+        throw new ForbiddenError("You do not have permission to view expenses");
+      }
+
         const where: any = {};
 
         if (filters?.approved !== undefined) {
@@ -178,10 +251,24 @@ static async updateExpense(
     amount?: number;
     date?: Date;
     notes?: string;
-  }
+  },
+  actorUserId?: string
 ) {
+  if (!actorUserId) {
+    throw new ValidationError("actorUserId is required to update an expense");
+  }
+
+  const hasUpdatePermission = await userHasPermission(
+    actorUserId,
+    Permission.EXPENSES_UPDATE
+  );
+
+  if (!hasUpdatePermission) {
+    throw new ForbiddenError("You do not have permission to update expenses");
+  }
+
   // First check if expense exists
-  await this.getExpenseById(id);
+  await this.getExpenseById(id, actorUserId);
 
   const updatedExpense = await prisma.expense.update({
     where: { id },
@@ -211,9 +298,22 @@ static async updateExpense(
   return updatedExpense;
 }
 
-static async deleteExpense(id: string) {
+static async deleteExpense(id: string, actorUserId?: string) {
+  if (!actorUserId) {
+    throw new ValidationError("actorUserId is required to delete an expense");
+  }
+
+  const hasDeletePermission = await userHasPermission(
+    actorUserId,
+    Permission.EXPENSES_DELETE
+  );
+
+  if (!hasDeletePermission) {
+    throw new ForbiddenError("You do not have permission to delete expenses");
+  }
+
   // First check if expense exists
-  await this.getExpenseById(id);
+  await this.getExpenseById(id, actorUserId);
 
   await prisma.expense.delete({
     where: { id },
@@ -222,7 +322,20 @@ static async deleteExpense(id: string) {
   return { message: "Expense deleted successfully" };
 }
 
-static async searchExpenses(query: string) {
+static async searchExpenses(query: string, actorUserId?: string) {
+  if (!actorUserId) {
+    throw new ValidationError("actorUserId is required to search expenses");
+  }
+
+  const hasViewPermission = await userHasPermission(
+    actorUserId,
+    Permission.EXPENSES_VIEW
+  );
+
+  if (!hasViewPermission) {
+    throw new ForbiddenError("You do not have permission to view expenses");
+  }
+
   const expenses = await prisma.expense.findMany({
     where: {
       OR: [
