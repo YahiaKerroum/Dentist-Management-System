@@ -19,6 +19,17 @@ function getAuthHeaders() {
     };
 }
 
+async function handleResponse<T>(response: Response, fallbackMessage: string): Promise<T> {
+    const data = await response.json().catch(() => null);
+    const message = (data as any)?.message || (data as any)?.error?.message || fallbackMessage;
+
+    if (!response.ok) {
+        throw new Error(message);
+    }
+
+    return (data as any)?.data as T;
+}
+
 // GET ALL APPOINTMENTS
 export async function getAllAppointments(filters?: {
     doctorId?: string;
@@ -45,13 +56,7 @@ export async function getAllAppointments(filters?: {
         headers: getAuthHeaders(),
     });
 
-    const data: AppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch appointments");
-    }
-
-    return data.data;
+    return handleResponse<Appointment[]>(response, "Failed to fetch appointments");
 }
 
 // GET APPOINTMENT BY ID
@@ -60,13 +65,7 @@ export async function getAppointmentById(id: string): Promise<Appointment> {
         headers: getAuthHeaders(),
     });
 
-    const data: SingleAppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch appointment");
-    }
-
-    return data.data;
+    return handleResponse<Appointment>(response, "Failed to fetch appointment");
 }
 
 // SEARCH APPOINTMENTS
@@ -75,13 +74,7 @@ export async function searchAppointments(query: string): Promise<Appointment[]> 
         headers: getAuthHeaders(),
     });
 
-    const data: AppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Search failed");
-    }
-
-    return data.data;
+    return handleResponse<Appointment[]>(response, "Search failed");
 }
 
 // CREATE NEW APPOINTMENT
@@ -94,13 +87,7 @@ export async function createAppointment(
         body: JSON.stringify(payload),
     });
 
-    const data: SingleAppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to create appointment");
-    }
-
-    return data.data;
+    return handleResponse<Appointment>(response, "Failed to create appointment");
 }
 
 // UPDATE APPOINTMENT
@@ -114,13 +101,7 @@ export async function updateAppointment(
         body: JSON.stringify(payload),
     });
 
-    const data: SingleAppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to update appointment");
-    }
-
-    return data.data;
+    return handleResponse<Appointment>(response, "Failed to update appointment");
 }
 
 // UPDATE APPOINTMENT STATUS
@@ -134,13 +115,7 @@ export async function updateAppointmentStatus(
         body: JSON.stringify({ status }),
     });
 
-    const data: SingleAppointmentResponse = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to update appointment status");
-    }
-
-    return data.data;
+    return handleResponse<Appointment>(response, "Failed to update appointment status");
 }
 
 // DELETE APPOINTMENT
@@ -150,11 +125,6 @@ export async function deleteAppointment(id: string): Promise<boolean> {
         headers: getAuthHeaders(),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Failed to delete appointment");
-    }
-
+    await handleResponse(response, "Failed to delete appointment");
     return true;
 }

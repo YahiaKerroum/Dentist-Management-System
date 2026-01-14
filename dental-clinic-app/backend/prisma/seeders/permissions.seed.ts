@@ -20,7 +20,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.APPOINTMENTS_VIEW,
     Permission.APPOINTMENTS_CREATE,
     Permission.APPOINTMENTS_UPDATE,
-    Permission.APPOINTMENTS_CANCEL,
+    Permission.APPOINTMENTS_DELETE,
     Permission.PAYMENT_VIEW,
     Permission.PAYMENT_CREATE,
     Permission.PAYMENT_UPDATE,
@@ -38,7 +38,7 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.APPOINTMENTS_VIEW,
     Permission.APPOINTMENTS_CREATE,
     Permission.APPOINTMENTS_UPDATE,
-    Permission.APPOINTMENTS_CANCEL,
+    Permission.APPOINTMENTS_DELETE,
   ],
   [Role.ASSISTANT]: [
     Permission.PATIENTS_VIEW,

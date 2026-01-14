@@ -135,7 +135,8 @@ export class DocumentService {
       throw new NotFoundError("Document not found");
     }
 
-    // check if the user trying to update document has the permission to update document
+    // Check if user has permission to update documents
+
     const hasUpdatePermission = await userHasPermission(
       userId,
       Permission.DOCUMENTS_UPDATE
@@ -175,7 +176,7 @@ export class DocumentService {
       throw new NotFoundError("Document not found");
     }
 
-    // check if the user trying to delete document has the permission to delete document
+    // Check if user has permission to delete documents
     const hasDeletePermission = await userHasPermission(
       userId,
       Permission.DOCUMENTS_DELETE

@@ -197,24 +197,18 @@ export function AppointmentDetailsPanel({
                             <span className="text-sm">Status</span>
                         </div>
                         
-                        {userRole === 'DOCTOR' ? (
-                            <select
-                                value={pendingStatus || appointment.status}
-                                onChange={handleStatusChange}
-                                disabled={isUpdatingStatus}
-                                className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {Object.values(AppointmentStatus).map((status) => (
-                                    <option key={status} value={status}>
-                                        {status.replace(/_/g, ' ')}
-                                    </option>
-                                ))}
-                            </select>
-                        ) : (
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(appointment.status)}`}>
-                                {appointment.status.replace(/_/g, ' ')}
-                            </span>
-                        )}
+                        <select
+                            value={pendingStatus || appointment.status}
+                            onChange={handleStatusChange}
+                            disabled={isUpdatingStatus}
+                            className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {Object.values(AppointmentStatus).map((status) => (
+                                <option key={status} value={status}>
+                                    {status.replace(/_/g, ' ')}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
                     <div className="border-t border-gray-100"></div>
@@ -299,26 +293,24 @@ export function AppointmentDetailsPanel({
                     )}
                 </div>
 
-                {/* Action Buttons - Only for Assistants and Managers */}
-                {(userRole === 'ASSISTANT' || userRole === 'MANAGER') && (
-                    <div className="p-6 border-t border-gray-200 space-y-2">
-                        <button 
-                            onClick={() => onEdit && onEdit(appointment)}
-                            className="w-full py-2 px-4 text-white rounded-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 font-medium"
-                            style={{ backgroundColor: '#3DBEA3' }}
-                        >
-                            <Edit className="w-4 h-4" />
-                            Edit Appointment
-                        </button>
-                        <button 
-                            onClick={handleDelete}
-                            className="w-full py-2 px-4 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-medium"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                            Delete Appointment
-                        </button>
-                    </div>
-                )}
+                {/* Action Buttons - Available to all roles */}
+                <div className="p-6 border-t border-gray-200 space-y-2">
+                    <button 
+                        onClick={() => onEdit && onEdit(appointment)}
+                        className="w-full py-2 px-4 text-white rounded-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 font-medium"
+                        style={{ backgroundColor: '#3DBEA3' }}
+                    >
+                        <Edit className="w-4 h-4" />
+                        Edit Appointment
+                    </button>
+                    <button 
+                        onClick={handleDelete}
+                        className="w-full py-2 px-4 bg-white text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Delete Appointment
+                    </button>
+                </div>
             </div>
 
             {/* Confirmation Dialog for Status Change */}

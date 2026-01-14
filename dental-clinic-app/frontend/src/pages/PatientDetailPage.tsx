@@ -138,8 +138,7 @@ export function PatientDetailPanel({
   // const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = { ... };
 
   // Check if current user is the primary dentist (for medical documents access)
-  const isPrimaryDentist = userRole === 'DOCTOR' && patient.primaryDentistId === currentUserId;
-  const canViewMedicalDocs = isPrimaryDentist;
+  const canViewMedicalDocs = true;
 
   // Fetch appointments and treatments when component loads (for overview tab)
   useEffect(() => {
