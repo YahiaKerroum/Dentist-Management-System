@@ -22,7 +22,7 @@ export enum Permission {
   APPOINTMENTS_VIEW = "appointments.view",
   APPOINTMENTS_CREATE = "appointments.create",
   APPOINTMENTS_UPDATE = "appointments.update",
-  APPOINTMENTS_CANCEL = "appointments.cancel",
+  APPOINTMENTS_DELETE = "appointments.delete",
 
   // Payments
   PAYMENT_VIEW = "payment.view",
@@ -57,7 +57,7 @@ export const PERMISSION_DESCRIPTIONS: Record<Permission, string> = {
   [Permission.APPOINTMENTS_VIEW]: "View appointments",
   [Permission.APPOINTMENTS_CREATE]: "Create appointments",
   [Permission.APPOINTMENTS_UPDATE]: "Update appointments",
-  [Permission.APPOINTMENTS_CANCEL]: "Cancel appointments",
+  [Permission.APPOINTMENTS_DELETE]: "Delete appointments",
 
   [Permission.PAYMENT_VIEW]: "View payment records",
   [Permission.PAYMENT_CREATE]: "Create payment records",

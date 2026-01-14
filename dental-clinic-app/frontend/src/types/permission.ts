@@ -22,7 +22,7 @@ export enum Permission {
   APPOINTMENTS_VIEW = "appointments.view",
   APPOINTMENTS_CREATE = "appointments.create",
   APPOINTMENTS_UPDATE = "appointments.update",
-  APPOINTMENTS_CANCEL = "appointments.cancel",
+  APPOINTMENTS_DELETE = "appointments.delete",
 
   // Payments
   PAYMENT_VIEW = "payment.view",

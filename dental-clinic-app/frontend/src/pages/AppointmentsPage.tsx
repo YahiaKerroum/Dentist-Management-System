@@ -17,6 +17,11 @@ import {
     Search,
 } from 'lucide-react';
 import { SuccessDialog, ErrorDialog } from '../components/appointments/Dialogs';
+import { Filter, ChevronDown, X } from 'lucide-react';
+import { getPatients } from '../services/patient.service';
+import { getAllStaff } from '../services/user.service';
+import { Patient } from '../types/patient';
+import { User } from '../types/user';
 
 interface AppointmentsPageProps {
     token: string;
@@ -28,6 +33,12 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
+    const [showFilters, setShowFilters] = useState(false);
+    const [patientFilter, setPatientFilter] = useState('all');
+    const [doctorFilter, setDoctorFilter] = useState('all');
+    const [dateRange, setDateRange] = useState({ from: '', to: '' });
+    const [patients, setPatients] = useState<Patient[]>([]);
+    const [doctors, setDoctors] = useState<User[]>([]);
     
     const [showSuccess, setShowSuccess] = useState(false);  
     const [successMessage, setSuccessMessage] = useState(''); 
@@ -66,9 +77,15 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const fetchAppointments = async () => {
         try {
             setLoading(true);
+<<<<<<< HEAD
             let doctorProfileId: string | undefined;
 
             // If user is DOCTOR, fetch their doctor profile ID for sorting (not filtering)
+=======
+            let filters: any = {};
+
+            // If user is DOCTOR, filter by their doctor profile ID
+>>>>>>> develop
             if (userRole === 'DOCTOR') {
                 const userResponse = await fetch('http://localhost:4000/api/users/me', {
                     headers: {
@@ -76,13 +93,14 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
                         'Content-Type': 'application/json',
                     },
                 });
-                
+
                 if (userResponse.ok) {
                     const userData = await userResponse.json();
                     doctorProfileId = userData.data?.doctorProfile?.id;
                 }
             }
 
+<<<<<<< HEAD
             // Fetch all appointments
             const data = await getAllAppointments();
 
@@ -100,6 +118,18 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             });
 
             setAppointments(sortedAppointments);
+=======
+            // Fetch appointments, patients, and doctors in parallel
+            const [appointmentsData, patientsData, doctorsData] = await Promise.all([
+                getAllAppointments(filters),
+                getPatients(token),
+                getAllStaff(token, { role: 'DOCTOR' }),
+            ]);
+
+            setAppointments(appointmentsData.reverse());
+            setPatients(patientsData.data);
+            setDoctors(doctorsData.data);
+>>>>>>> develop
             setError('');
         } catch (err: any) {
             setError(err.message || 'Failed to load appointments');
@@ -194,16 +224,72 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
 
     // Filter appointments
     const filteredAppointments = appointments.filter(appointment => {
-        const matchesSearch = 
-            appointment.patient?.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.patient?.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.doctor?.user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.doctor?.user.lastName.toLowerCase().includes(searchTerm.toLowerCase());
+        // Calculate date 2 months ago
+        const twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
+        // When filters are active, show all matching appointments (not just last 2 months)
+        const hasActiveFilters = 
+            patientFilter !== 'all' || 
+            doctorFilter !== 'all' || 
+            statusFilter !== 'all' || 
+            dateRange.from || 
+            dateRange.to ||
+            searchTerm.trim() !== '';
+
+        // Default filtering: last 2 months and exclude NO_SHOW
+        if (!hasActiveFilters) {
+            const appointmentDate = new Date(appointment.dateOfTreatment);
+            if (appointmentDate < twoMonthsAgo) return false;
+            if (appointment.status === 'NO_SHOW') return false;
+        }
+
+        // Search term filter
+        const matchesSearch = () => {
+            if (!searchTerm.trim()) return true;
+            const search = searchTerm.toLowerCase().trim();
+            const patientFullName = `${appointment.patient?.firstName} ${appointment.patient?.lastName}`.toLowerCase();
+            const doctorFullName = `${appointment.doctor?.user.firstName} ${appointment.doctor?.user.lastName}`.toLowerCase();
+            return patientFullName.includes(search) || doctorFullName.includes(search);
+        };
+
+        // Status filter (now includes NO_SHOW as an option)
         const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
 
-        return matchesSearch && matchesStatus;
-    });
+        // Patient filter
+        const matchesPatient = patientFilter === 'all' || appointment.patientId === patientFilter;
+
+        // Doctor filter
+        const matchesDoctor = doctorFilter === 'all' || appointment.doctorId === doctorFilter;
+
+        // Date range filters
+        const matchesDateFrom = !dateRange.from || 
+            new Date(appointment.dateOfTreatment) >= new Date(dateRange.from);
+        const matchesDateTo = !dateRange.to || 
+            new Date(appointment.dateOfTreatment) <= new Date(dateRange.to);
+
+        return matchesSearch() && matchesStatus && matchesPatient && matchesDoctor && 
+        matchesDateFrom && matchesDateTo;
+    }
+
+
+);
+
+const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setPatientFilter('all');
+    setDoctorFilter('all');
+    setDateRange({ from: '', to: '' });
+};
+
+const hasActiveFilters = 
+    patientFilter !== 'all' || 
+    doctorFilter !== 'all' || 
+    statusFilter !== 'all' || 
+    dateRange.from || 
+    dateRange.to;
+
 
     if (loading) {
         return (
@@ -240,32 +326,125 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             )}
 
             {/* Search and Filter Bar */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                <div className="relative w-full sm:w-96">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div className="p-4 flex items-center gap-4">
+                    <div className="flex-1 relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search by patient or doctor name..."
+                            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3] transition duration-150 ease-in-out sm:text-sm"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search by patient or doctor name..."
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#3DBEA3] focus:border-[#3DBEA3] transition duration-150 ease-in-out sm:text-sm"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+
+                    <button
+                        onClick={() => setShowFilters(!showFilters)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
+                            showFilters || hasActiveFilters
+                                ? 'border-[#3DBEA3] text-[#3DBEA3]'
+                                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                        }`}
+                        style={showFilters || hasActiveFilters ? { backgroundColor: '#E8F5F0' } : {}}
+                    >
+                        <Filter className="w-4 h-4" />
+                        Filters
+                        {hasActiveFilters && (
+                            <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#3DBEA3' }}>
+                                !
+                            </span>
+                        )}
+                        <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                    </button>
                 </div>
-                
-                <select
-                    className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | 'all')}
-                >
-                    <option value="all">All Status</option>
-                    {Object.values(AppointmentStatus).map((status) => (
-                        <option key={status} value={status}>
-                            {status.replace(/_/g, ' ')}
-                        </option>
-                    ))}
-                </select>
+                    
+                {showFilters && (
+                    <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                        <div className="grid grid-cols-5 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                                <select
+                                    value={patientFilter}
+                                    onChange={(e) => setPatientFilter(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                >
+                                    <option value="all">All Patients</option>
+                                    {patients.map((patient) => (
+                                        <option key={patient.id} value={patient.id}>
+                                            {patient.firstName} {patient.lastName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                                
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                                <select
+                                    value={doctorFilter}
+                                    onChange={(e) => setDoctorFilter(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                >
+                                    <option value="all">All Doctors</option>
+                                    {doctors.map((doc) => (
+                                        <option key={doc.id} value={doc.doctorProfile?.id || ''}>
+                                            Dr. {doc.firstName} {doc.lastName}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                                
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <select
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | 'all')}
+                                >
+                                    <option value="all">All Status</option>
+                                    {Object.values(AppointmentStatus).map((status) => (
+                                        <option key={status} value={status}>
+                                            {status.replace(/_/g, ' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                                
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.from}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                />
+                            </div>
+                                
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                <input
+                                    type="date"
+                                    value={dateRange.to}
+                                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                />
+                            </div>
+                        </div>
+                        {hasActiveFilters && (
+                            <div className="mt-3 flex justify-end">
+                                <button
+                                    onClick={clearFilters}
+                                    className="text-sm font-medium hover:text-[#2FA88E]"
+                                    style={{ color: '#3DBEA3' }}
+                                >
+                                    Clear all filters
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Main Content: Table + Details Panel */}

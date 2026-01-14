@@ -6,7 +6,6 @@ import { Permission } from "../types/permission.types";
 
 
 
-
 export class AppointmentService {
     static async createAppointment(data: {
         doctorId: string;
@@ -19,6 +18,8 @@ export class AppointmentService {
         followUpRequired?: boolean;
         createdByUserId?: string;
     }) {
+
+        // check if the user trying to create appointment has the permission to create appointment
         if (!data.createdByUserId) {
             throw new ValidationError("createdByUserId is required to create an appointment");
         }
@@ -196,6 +197,7 @@ export class AppointmentService {
             throw new ForbiddenError("You do not have permission to update appointments");
         }
 
+
         await this.getAppointmentById(id, actorUserId);
 
         const appointment = await prisma.appointment.update({
@@ -224,17 +226,13 @@ export class AppointmentService {
             throw new ValidationError("actorUserId is required to update appointment status");
         }
 
-        const requiredPermission = status === AppointmentStatus.CANCELLED
-            ? Permission.APPOINTMENTS_CANCEL
-            : Permission.APPOINTMENTS_UPDATE;
-
-        const hasPermission = await userHasPermission(
+        const hasUpdatePermission = await userHasPermission(
             actorUserId,
-            requiredPermission
+            Permission.APPOINTMENTS_UPDATE
         );
 
-        if (!hasPermission) {
-            throw new ForbiddenError(`You do not have permission to ${status === AppointmentStatus.CANCELLED ? 'cancel' : 'update'} appointments`);
+        if (!hasUpdatePermission) {
+            throw new ForbiddenError("You do not have permission to update appointments");
         }
 
         await this.getAppointmentById(id, actorUserId);
@@ -267,7 +265,7 @@ export class AppointmentService {
 
         const hasDeletePermission = await userHasPermission(
             actorUserId,
-            Permission.APPOINTMENTS_CANCEL
+            Permission.APPOINTMENTS_DELETE
         );
 
         if (!hasDeletePermission) {

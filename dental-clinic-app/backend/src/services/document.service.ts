@@ -26,7 +26,7 @@ export class DocumentService {
       throw new NotFoundError("Patient not found");
     }
 
-    // Check if user has permission to create documents
+    // check if the user trying to create document has the permission to create document
     const hasCreatePermission = await userHasPermission(
       data.uploadedById,
       Permission.DOCUMENTS_CREATE
@@ -136,6 +136,7 @@ export class DocumentService {
     }
 
     // Check if user has permission to update documents
+
     const hasUpdatePermission = await userHasPermission(
       userId,
       Permission.DOCUMENTS_UPDATE

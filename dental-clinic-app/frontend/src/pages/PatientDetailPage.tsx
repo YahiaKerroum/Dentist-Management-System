@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Patient } from '../types/patient';
 import { Appointment } from '../types/appointment';
 import { Treatment } from '../types/treatment';
-import { OdontogramDisplay } from '../components/patients/OdontogramDisplay';
 import { getDocumentsByPatientId, deleteDocument, Document, uploadDocument } from '../services/document.service';
 import { getTreatments } from '../services/treatment.service';
 import {
@@ -15,8 +14,12 @@ import {
   Edit,
   Trash2,
   Upload,
-    ExternalLink,
-  } from 'lucide-react';
+  ExternalLink,
+  Activity,
+  Stethoscope,
+  Clock,
+  TrendingUp,
+} from 'lucide-react';
 
 interface PatientDetailPanelProps {
   patient: Patient;
@@ -131,44 +134,17 @@ export function PatientDetailPanel({
     }
   };
 
-  // Mock teeth states for odontogram
-  const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = {
-    1: 'healthy',
-    2: 'treated',
-    3: 'healthy',
-    4: 'healthy',
-    5: 'filled',
-    6: 'filled',
-    7: 'healthy',
-    8: 'healthy',
-    9: 'healthy',
-    10: 'healthy',
-    11: 'healthy',
-    12: 'healthy',
-    13: 'healthy',
-    14: 'filled',
-    15: 'filled',
-    16: 'healthy',
-    17: 'healthy',
-    18: 'missing',
-    19: 'healthy',
-    20: 'healthy',
-    21: 'healthy',
-    22: 'healthy',
-    23: 'healthy',
-    24: 'healthy',
-    25: 'healthy',
-    26: 'healthy',
-    27: 'healthy',
-    28: 'implant',
-    29: 'healthy',
-    30: 'healthy',
-    31: 'healthy',
-    32: 'healthy',
-  };
+  // Mock teeth states for odontogram - REMOVED
+  // const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = { ... };
 
   // Check if current user is the primary dentist (for medical documents access)
   const canViewMedicalDocs = true;
+
+  // Fetch appointments and treatments when component loads (for overview tab)
+  useEffect(() => {
+    fetchAppointments();
+    fetchTreatments();
+  }, [patient.id]);
 
   // Fetch appointments when the appointments tab is active
   useEffect(() => {
@@ -429,7 +405,179 @@ export function PatientDetailPanel({
           {/* Tab Content */}
           {activeTab === 'info' && (
             <div className="space-y-6">
-              <OdontogramDisplay teethStates={mockTeethStates} />
+              {/* Patient Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Total Treatments */}
+                <div className="bg-gradient-to-br from-[#3DBEA3]/10 to-[#3DBEA3]/5 rounded-xl p-5 border border-[#3DBEA3]/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 bg-[#3DBEA3]/20 rounded-lg flex items-center justify-center">
+                      <Stethoscope size={20} className="text-[#3DBEA3]" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Total</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    {treatments.length}
+                  </h3>
+                  <p className="text-sm text-gray-600">Treatments Completed</p>
+                </div>
+
+                {/* Upcoming Appointments */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-50/50 rounded-xl p-5 border border-blue-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Calendar size={20} className="text-blue-600" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Upcoming</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    {appointments.filter(a => a.status === 'SCHEDULED').length}
+                  </h3>
+                  <p className="text-sm text-gray-600">Appointments Scheduled</p>
+                </div>
+
+                {/* Last Visit */}
+                <div className="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-xl p-5 border border-purple-100">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Clock size={20} className="text-purple-600" />
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Recent</span>
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                    {appointments.filter(a => a.status === 'COMPLETED').length > 0
+                      ? new Date(
+                          Math.max(...appointments.filter(a => a.status === 'COMPLETED').map(a => new Date(a.dateOfTreatment).getTime()))
+                        ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                      : 'Never'}
+                  </h3>
+                  <p className="text-sm text-gray-600">Last Visit Date</p>
+                </div>
+              </div>
+
+              {/* Patient Information Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Contact Information */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <UserIcon size={16} className="text-gray-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Contact Information</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {patient.email && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <Mail size={16} className="text-gray-400" />
+                        <span className="text-gray-700">{patient.email}</span>
+                      </div>
+                    )}
+                    {patient.phone && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <Phone size={16} className="text-gray-400" />
+                        <span className="text-gray-700">{patient.phone}</span>
+                      </div>
+                    )}
+                    {patient.dateOfBirth && (
+                      <div className="flex items-center gap-3 text-sm">
+                        <Calendar size={16} className="text-gray-400" />
+                        <span className="text-gray-700">
+                          Born: {new Date(patient.dateOfBirth).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Activity */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <Activity size={16} className="text-gray-600" />
+                    </div>
+                    <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+                  </div>
+                  <div className="space-y-3">
+                    {treatments.length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 rounded-full bg-[#3DBEA3] mt-2"></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 font-medium">Latest Treatment</p>
+                          <p className="text-xs text-gray-500">
+                            {treatments[0]?.typeOfTreatment || 'N/A'} - {new Date(treatments[0]?.dateOfTreatment || Date.now()).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {appointments.filter(a => a.status === 'COMPLETED').length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 font-medium">Last Appointment</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(
+                              appointments.filter(a => a.status === 'COMPLETED')[0]?.dateOfTreatment || Date.now()
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {appointments.filter(a => a.status === 'SCHEDULED').length > 0 && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 font-medium">Next Scheduled</p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(
+                              appointments
+                                .filter(a => a.status === 'SCHEDULED')
+                                .sort((a, b) => new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime())[0]?.dateOfTreatment || Date.now()
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {treatments.length === 0 && appointments.length === 0 && (
+                      <p className="text-sm text-gray-500 italic">No recent activity</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={16} className="text-gray-600" />
+                  </div>
+                  <h3 className="font-semibold text-gray-900">Treatment Summary</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-900">{treatments.length}</p>
+                    <p className="text-xs text-gray-600 mt-1">Total Treatments</p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-900">{appointments.length}</p>
+                    <p className="text-xs text-gray-600 mt-1">All Appointments</p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {appointments.filter(a => a.status === 'COMPLETED').length}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">Completed Visits</p>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 rounded-lg">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {documents.length}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">Documents</p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
