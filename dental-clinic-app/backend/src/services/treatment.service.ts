@@ -19,6 +19,7 @@ export class TreatmentService {
         appointmentId?: string;
         createdByUserId?: string;
     }) {
+        // check if the user trying to create treatment has the permission to create treatment
         if (!data.createdByUserId) {
             throw new ValidationError("createdByUserId is required to create a treatment");
         }

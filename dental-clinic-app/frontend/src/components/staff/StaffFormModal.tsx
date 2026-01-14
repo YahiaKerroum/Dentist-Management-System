@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, CreateUserDTO, UpdateUserDTO, Role } from '../../types/user';
-import { X } from 'lucide-react';
+import { X, User as UserIcon, Mail, Lock, Phone, Stethoscope, Clock, Plus, Shield } from 'lucide-react';
 import { getUserPermissions, grantUserPermission, revokeUserPermission } from '../../services/user.service';
 
 interface StaffFormModalProps {
@@ -26,7 +26,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
         email: '',
         username: '',
         password: '',
-        role: 'DOCTOR' as Role,
+        role: 'ASSISTANT' as Role,
         phone: '',
         specialization: '',
         workingTime: [] as Array<{ day: string; hours: string }>
@@ -38,6 +38,15 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
 
     useEffect(() => {
         if (staff) {
+            // Safely parse workingTime - ensure it's always an array
+            let workingTimeArray: Array<{ day: string; hours: string }> = [];
+            if (staff.doctorProfile?.workingTime) {
+                // If it's already an array, use it; otherwise convert to array or default to empty
+                if (Array.isArray(staff.doctorProfile.workingTime)) {
+                    workingTimeArray = staff.doctorProfile.workingTime;
+                }
+            }
+
             setFormData({
                 firstName: staff.firstName,
                 lastName: staff.lastName,
@@ -47,7 +56,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 role: staff.role,
                 phone: staff.phone || '',
                 specialization: staff.doctorProfile?.specialization || '',
-                workingTime: staff.doctorProfile?.workingTime || []
+                workingTime: workingTimeArray
             });
             setShowWorkingHours(staff.role === 'DOCTOR');
             // Load permissions for existing staff
@@ -67,7 +76,7 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 email: '',
                 username: '',
                 password: '',
-                role: 'DOCTOR',
+                role: 'ASSISTANT',
                 phone: '',
                 specialization: '',
                 workingTime: []
@@ -203,327 +212,278 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
     if (!isOpen) return null;
 
     return (
-        <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-        }}>
-            <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                maxWidth: '600px',
-                width: '100%',
-                maxHeight: '90vh',
-                overflow: 'auto',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-            }}>
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[1000] p-5">
+            <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto shadow-2xl">
                 {/* Header */}
-                <div style={{
-                    padding: '24px',
-                    borderBottom: '1px solid #e5e7eb',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    position: 'sticky',
-                    top: 0,
-                    backgroundColor: 'white',
-                    zIndex: 1
-                }}>
-                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 600 }}>
-                        {staff ? 'Edit Staff Member' : 'Add New Staff Member'}
-                    </h2>
+                <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-[#3DBEA3]/10 flex items-center justify-center">
+                            <UserIcon size={20} className="text-[#3DBEA3]" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-gray-900">
+                            {staff ? 'Edit Staff Member' : 'Add New Staff Member'}
+                        </h2>
+                    </div>
                     <button
                         onClick={onClose}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            padding: '8px',
-                            borderRadius: '6px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            color: '#6b7280'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
                     >
                         <X size={20} />
                     </button>
                 </div>
 
                 {/* Form */}
-                <form onSubmit={handleSubmit} style={{ padding: '24px' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                <form onSubmit={handleSubmit} className="p-6">
+                    {/* Name Fields */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                         <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                                First Name <span style={{ color: '#dc3545' }}>*</span>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                First Name <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
-                                value={formData.firstName}
-                                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
-                                    border: '1px solid #d1d5db',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <UserIcon size={18} className="text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={formData.firstName}
+                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                    required
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                    placeholder="Enter first name"
+                                />
+                            </div>
                         </div>
                         <div>
-                            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                                Last Name <span style={{ color: '#dc3545' }}>*</span>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Last Name <span className="text-red-500">*</span>
                             </label>
-                            <input
-                                type="text"
-                                value={formData.lastName}
-                                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                required
-                                style={{
-                                    width: '100%',
-                                    padding: '10px 12px',
-                                    border: '1px solid #d1d5db',
-                                    borderRadius: '6px',
-                                    fontSize: '14px',
-                                    boxSizing: 'border-box'
-                                }}
-                            />
+                            <div className="relative">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <UserIcon size={18} className="text-gray-400" />
+                                </div>
+                                <input
+                                    type="text"
+                                    value={formData.lastName}
+                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                                    required
+                                    className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                    placeholder="Enter last name"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                            Email <span style={{ color: '#dc3545' }}>*</span>
+                    {/* Email */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email <span className="text-red-500">*</span>
                         </label>
-                        <input
-                            type="email"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            required
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                boxSizing: 'border-box'
-                            }}
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Mail size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="email"
+                                value={formData.email}
+                                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                required
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                placeholder="email@example.com"
+                            />
+                        </div>
                     </div>
 
                     {!staff && (
                         <>
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                                    Username <span style={{ color: '#dc3545' }}>*</span>
+                            {/* Username */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Username <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    type="text"
-                                    value={formData.username}
-                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <UserIcon size={18} className="text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.username}
+                                        onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                        placeholder="Choose a username"
+                                    />
+                                </div>
                             </div>
 
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                                    Password <span style={{ color: '#dc3545' }}>*</span>
+                            {/* Password */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Password <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                    type="password"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                    minLength={6}
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Lock size={18} className="text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="password"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                        minLength={6}
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                        placeholder="Minimum 6 characters"
+                                    />
+                                </div>
                             </div>
 
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                                    Role <span style={{ color: '#dc3545' }}>*</span>
+                            {/* Role */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Role <span className="text-red-500">*</span>
                                 </label>
-                                <select
-                                    value={formData.role}
-                                    onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        boxSizing: 'border-box'
-                                    }}
-                                >
-                                    <option value="DOCTOR">Doctor</option>
-                                    <option value="ASSISTANT">Assistant</option>
-                                    <option value="MANAGER">Manager</option>
-                                </select>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Shield size={18} className="text-gray-400" />
+                                    </div>
+                                    <select
+                                        value={formData.role}
+                                        onChange={(e) => setFormData({ ...formData, role: e.target.value as Role })}
+                                        required
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all appearance-none bg-white"
+                                    >
+                                        <option value="ASSISTANT">Assistant</option>
+                                        <option value="DOCTOR">Doctor</option>
+                                        <option value="MANAGER">Manager</option>
+                                    </select>
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </div>
+                                </div>
                             </div>
                         </>
                     )}
 
-                    <div style={{ marginBottom: '16px' }}>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
-                            Phone
+                    {/* Phone */}
+                    <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Phone Number
                         </label>
-                        <input
-                            type="tel"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            style={{
-                                width: '100%',
-                                padding: '10px 12px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                boxSizing: 'border-box'
-                            }}
-                        />
+                        <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Phone size={18} className="text-gray-400" />
+                            </div>
+                            <input
+                                type="tel"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                placeholder="+1 (555) 000-0000"
+                            />
+                        </div>
                     </div>
 
                     {showWorkingHours && (
                         <>
-                            <div style={{ marginBottom: '16px' }}>
-                                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500, fontSize: '14px' }}>
+                            {/* Specialization */}
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Specialization
                                 </label>
-                                <input
-                                    type="text"
-                                    value={formData.specialization}
-                                    onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                                    placeholder="e.g., General Dentistry, Orthodontics"
-                                    style={{
-                                        width: '100%',
-                                        padding: '10px 12px',
-                                        border: '1px solid #d1d5db',
-                                        borderRadius: '6px',
-                                        fontSize: '14px',
-                                        boxSizing: 'border-box'
-                                    }}
-                                />
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Stethoscope size={18} className="text-gray-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.specialization}
+                                        onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
+                                        placeholder="e.g., General Dentistry, Orthodontics"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                    />
+                                </div>
                             </div>
 
-                            <div style={{ marginBottom: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <label style={{ fontWeight: 500, fontSize: '14px' }}>
+                            {/* Working Hours */}
+                            <div className="mb-4">
+                                <div className="flex justify-between items-center mb-3">
+                                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                                        <Clock size={18} className="text-gray-600" />
                                         Working Hours
                                     </label>
                                     <button
                                         type="button"
                                         onClick={addWorkingHour}
-                                        style={{
-                                            padding: '6px 12px',
-                                            backgroundColor: '#007bff',
-                                            color: 'white',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            fontSize: '12px',
-                                            cursor: 'pointer'
-                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-[#3DBEA3] text-white rounded-lg text-xs font-medium hover:bg-[#35a892] transition-colors"
                                     >
-                                        + Add Day
+                                        <Plus size={14} />
+                                        Add Day
                                     </button>
                                 </div>
-                                {formData.workingTime.map((wh, index) => (
-                                    <div key={index} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-                                        <select
-                                            value={wh.day}
-                                            onChange={(e) => handleWorkingHourChange(index, 'day', e.target.value)}
-                                            style={{
-                                                flex: 1,
-                                                padding: '8px',
-                                                border: '1px solid #d1d5db',
-                                                borderRadius: '6px',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            <option value="Monday">Monday</option>
-                                            <option value="Tuesday">Tuesday</option>
-                                            <option value="Wednesday">Wednesday</option>
-                                            <option value="Thursday">Thursday</option>
-                                            <option value="Friday">Friday</option>
-                                            <option value="Saturday">Saturday</option>
-                                            <option value="Sunday">Sunday</option>
-                                        </select>
-                                        <input
-                                            type="text"
-                                            value={wh.hours}
-                                            onChange={(e) => handleWorkingHourChange(index, 'hours', e.target.value)}
-                                            placeholder="09:00-17:00"
-                                            style={{
-                                                flex: 1,
-                                                padding: '8px',
-                                                border: '1px solid #d1d5db',
-                                                borderRadius: '6px',
-                                                fontSize: '14px'
-                                            }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeWorkingHour(index)}
-                                            style={{
-                                                padding: '8px 12px',
-                                                backgroundColor: '#dc3545',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '6px',
-                                                cursor: 'pointer'
-                                            }}
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </div>
-                                ))}
+                                <div className="space-y-2">
+                                    {Array.isArray(formData.workingTime) && formData.workingTime.map((wh, index) => (
+                                        <div key={index} className="flex gap-2">
+                                            <select
+                                                value={wh.day}
+                                                onChange={(e) => handleWorkingHourChange(index, 'day', e.target.value)}
+                                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                            >
+                                                <option value="Monday">Monday</option>
+                                                <option value="Tuesday">Tuesday</option>
+                                                <option value="Wednesday">Wednesday</option>
+                                                <option value="Thursday">Thursday</option>
+                                                <option value="Friday">Friday</option>
+                                                <option value="Saturday">Saturday</option>
+                                                <option value="Sunday">Sunday</option>
+                                            </select>
+                                            <input
+                                                type="text"
+                                                value={wh.hours}
+                                                onChange={(e) => handleWorkingHourChange(index, 'hours', e.target.value)}
+                                                placeholder="09:00-17:00"
+                                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => removeWorkingHour(index)}
+                                                className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </>
                     )}
 
                     {/* Permissions (edit existing staff only) */}
                     {staff && (
-                        <div style={{ marginTop: '16px' }}>
-                            <h3 style={{ marginBottom: '8px', fontSize: '16px', fontWeight: 600 }}>Permissions</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div className="mt-6">
+                            <div className="flex items-center gap-2 mb-4">
+                                <Shield size={18} className="text-gray-600" />
+                                <h3 className="text-base font-semibold text-gray-900">Permissions</h3>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 {permissionGroups.map((group) => (
-                                    <div key={group.key} style={{ border: '1px solid #e5e7eb', borderRadius: '8px', padding: '12px' }}>
-                                        <div style={{ fontWeight: 600, marginBottom: '8px', color: '#111827' }}>{group.label}</div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+                                    <div key={group.key} className="border border-gray-200 rounded-xl p-4 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                        <div className="font-semibold text-sm text-gray-900 mb-3">{group.label}</div>
+                                        <div className="grid grid-cols-2 gap-2">
                                             {group.actions.map((action) => (
-                                                <label key={action.label} style={{ display: 'flex', alignItems: 'center', gap: '6px', color: action.value ? '#111827' : '#9ca3af' }}>
+                                                <label 
+                                                    key={action.label} 
+                                                    className={`flex items-center gap-2 text-sm cursor-pointer ${!action.value ? 'opacity-40 cursor-not-allowed' : ''}`}
+                                                >
                                                     <input
                                                         type="checkbox"
                                                         disabled={!action.value}
                                                         checked={action.value ? permissions.includes(action.value) : false}
                                                         onChange={() => togglePermission(action.value)}
+                                                        className="w-4 h-4 text-[#3DBEA3] border-gray-300 rounded focus:ring-[#3DBEA3] focus:ring-2 cursor-pointer disabled:cursor-not-allowed"
                                                     />
-                                                    <span>{action.label}</span>
+                                                    <span className="text-gray-700">{action.label}</span>
                                                 </label>
                                             ))}
                                         </div>
@@ -534,46 +494,19 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                     )}
 
                     {/* Footer */}
-                    <div style={{
-                        display: 'flex',
-                        gap: '12px',
-                        justifyContent: 'flex-end',
-                        marginTop: '24px',
-                        paddingTop: '24px',
-                        borderTop: '1px solid #e5e7eb'
-                    }}>
+                    <div className="flex gap-3 justify-end mt-6 pt-6 border-t border-gray-100">
                         <button
                             type="button"
                             onClick={onClose}
                             disabled={loading}
-                            style={{
-                                padding: '10px 20px',
-                                backgroundColor: '#f3f4f6',
-                                color: '#374151',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                opacity: loading ? 0.5 : 1
-                            }}
+                            className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            style={{
-                                padding: '10px 20px',
-                                backgroundColor: '#007bff',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                cursor: loading ? 'not-allowed' : 'pointer',
-                                opacity: loading ? 0.5 : 1
-                            }}
+                            className="px-5 py-2.5 bg-[#3DBEA3] text-white rounded-xl text-sm font-medium hover:bg-[#35a892] transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                         >
                             {loading ? 'Saving...' : staff ? 'Update Staff' : 'Create Staff'}
                         </button>

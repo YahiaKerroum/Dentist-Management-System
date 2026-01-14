@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Patient, CreatePatientDTO } from '../../types/patient';
 import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
+import { User, Mail, Phone, Calendar, Stethoscope, AlertCircle } from 'lucide-react';
 
 interface PatientFormProps {
   mode: 'add' | 'edit';
@@ -82,88 +82,155 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <h3 className="text-lg font-semibold mb-4">
-        {mode === 'add' ? 'Add New Patient' : 'Edit Patient'}
-      </h3>
-
+    <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-600 rounded text-sm">
+        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm">
+          <AlertCircle size={18} />
           {error}
         </div>
       )}
 
+      {/* Name Fields */}
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="First Name *"
-          name="firstName"
-          value={formData.firstName}
-          onChange={handleChange}
-          required
-        />
-        <Input
-          label="Last Name *"
-          name="lastName"
-          value={formData.lastName}
-          onChange={handleChange}
-          required
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            First Name <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User size={18} className="text-gray-400" />
+            </div>
+            <input
+              name="firstName"
+              type="text"
+              value={formData.firstName}
+              onChange={handleChange}
+              required
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              placeholder="Enter first name"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Last Name <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <User size={18} className="text-gray-400" />
+            </div>
+            <input
+              name="lastName"
+              type="text"
+              value={formData.lastName}
+              onChange={handleChange}
+              required
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              placeholder="Enter last name"
+            />
+          </div>
+        </div>
       </div>
 
+      {/* Contact Fields */}
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Email"
-          name="email"
-          type="email"
-          value={formData.email || ''}
-          onChange={handleChange}
-        />
-        <Input
-          label="Phone"
-          name="phone"
-          value={formData.phone || ''}
-          onChange={handleChange}
-        />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Mail size={18} className="text-gray-400" />
+            </div>
+            <input
+              name="email"
+              type="email"
+              value={formData.email || ''}
+              onChange={handleChange}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              placeholder="email@example.com"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Phone
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Phone size={18} className="text-gray-400" />
+            </div>
+            <input
+              name="phone"
+              type="tel"
+              value={formData.phone || ''}
+              onChange={handleChange}
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              placeholder="+1 (555) 000-0000"
+            />
+          </div>
+        </div>
       </div>
 
-      <Input
-        label="Date of Birth"
-        name="dateOfBirth"
-        type="date"
-        value={formData.dateOfBirth || ''}
-        onChange={handleChange}
-      />
+      {/* Date of Birth */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Date of Birth
+        </label>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Calendar size={18} className="text-gray-400" />
+          </div>
+          <input
+            name="dateOfBirth"
+            type="date"
+            value={formData.dateOfBirth || ''}
+            onChange={handleChange}
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+          />
+        </div>
+      </div>
 
       {/* Primary Doctor Selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           Primary Doctor
         </label>
-        <select
-          name="primaryDentistId"
-          value={formData.primaryDentistId || ''}
-          onChange={(e) => setFormData(prev => ({ ...prev, primaryDentistId: e.target.value }))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          disabled={loadingDoctors}
-        >
-          <option value="">Select a doctor (optional)</option>
-          {doctors.map((doctor) => (
-            <option key={doctor.id} value={doctor.doctorProfile?.id}>
-              Dr. {doctor.firstName} {doctor.lastName}
-              {doctor.doctorProfile?.specialization && ` - ${doctor.doctorProfile.specialization}`}
-            </option>
-          ))}
-        </select>
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <Stethoscope size={18} className="text-gray-400" />
+          </div>
+          <select
+            name="primaryDentistId"
+            value={formData.primaryDentistId || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, primaryDentistId: e.target.value }))}
+            disabled={loadingDoctors}
+            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all appearance-none bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+          >
+            <option value="">Select a doctor (optional)</option>
+            {doctors.map((doctor) => (
+              <option key={doctor.id} value={doctor.doctorProfile?.id}>
+                Dr. {doctor.firstName} {doctor.lastName}
+                {doctor.doctorProfile?.specialization && ` - ${doctor.doctorProfile.specialization}`}
+              </option>
+            ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </div>
         {loadingDoctors && (
-          <p className="text-xs text-gray-500 mt-1">Loading doctors...</p>
+          <p className="text-xs text-gray-500 mt-1 ml-1">Loading doctors...</p>
         )}
       </div>
 
-      <div className="flex gap-2 pt-4">
-        <Button type="submit">
+      <div className="flex gap-3 pt-4 border-t border-gray-100">
+        <Button type="submit" className="flex-1 bg-[#3DBEA3] hover:bg-[#35a892] text-white">
           {mode === 'add' ? 'Add Patient' : 'Save Changes'}
         </Button>
-        <Button type="button" variant="secondary" onClick={onCancel}>
+        <Button type="button" variant="secondary" onClick={onCancel} className="flex-1">
           Cancel
         </Button>
       </div>

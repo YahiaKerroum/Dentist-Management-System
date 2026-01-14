@@ -1,4 +1,5 @@
 import { PaymentMethod } from "../types/prisma.types";
+import { Prisma } from "@prisma/client";
 import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
 import prisma from "../config/prisma";
 import { userHasPermission } from "../utils/permission.utils";
@@ -28,21 +29,58 @@ export class PaymentService {
             throw new ForbiddenError("You do not have permission to create payments");
         }
 
+        // Validate patient exists
+        const patient = await prisma.patient.findUnique({
+            where: { id: data.patientId },
+        });
+
+        if (!patient) {
+            throw new NotFoundError("Patient not found");
+        }
+
+        // Validate amount is positive
+        const amount = typeof data.amount === "string" 
+            ? parseFloat(data.amount) 
+            : data.amount;
+
+        if (isNaN(amount) || amount <= 0) {
+            throw new ValidationError("Amount must be a positive number");
+        }
+
+        // Validate recorded by user exists
+        const user = await prisma.user.findUnique({
+            where: { id: data.recordedById },
+        });
+
+        if (!user) {
+            throw new NotFoundError("Recorded by user not found");
+        }
+
         const payment = await prisma.payment.create({
             data: {
                 patientId: data.patientId,
-                amount: data.amount,
+                amount: new Prisma.Decimal(amount),
                 method: data.method,
                 notes: data.notes,
-                date: data.date,
+                date: data.date || new Date(),
                 recordedById: data.recordedById,
             },
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
@@ -65,14 +103,33 @@ export class PaymentService {
             throw new ForbiddenError("You do not have permission to view payments");
         }
 
+        // Verify patient exists
+        const patient = await prisma.patient.findUnique({
+            where: { id: patientId },
+        });
+
+        if (!patient) {
+            throw new NotFoundError("Patient not found");
+        }
+
         const payments = await prisma.payment.findMany({
             where: { patientId },
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
@@ -106,17 +163,66 @@ export class PaymentService {
             throw new ForbiddenError("You do not have permission to update payments");
         }
 
-        await this.getPaymentById(id, actorUserId);
+        // Verify payment exists
+        const existingPayment = await prisma.payment.findUnique({
+            where: { id },
+        });
+
+        if (!existingPayment) {
+            throw new NotFoundError("Payment not found");
+        }
+
+        // Validate patient exists if patientId is being updated
+        if (data.patientId) {
+            const patient = await prisma.patient.findUnique({
+                where: { id: data.patientId },
+            });
+
+            if (!patient) {
+                throw new NotFoundError("Patient not found");
+            }
+        }
+
+        // Validate amount if provided
+        if (data.amount !== undefined) {
+            const amount = typeof data.amount === "string" 
+                ? parseFloat(data.amount) 
+                : data.amount;
+
+            if (isNaN(amount) || amount <= 0) {
+                throw new ValidationError("Amount must be a positive number");
+            }
+
+            data.amount = amount;
+        }
+
+        const updateData: any = {
+            ...(data.patientId && { patientId: data.patientId }),
+            ...(data.date && { date: data.date }),
+            ...(data.amount && { amount: new Prisma.Decimal(data.amount) }),
+            ...(data.method && { method: data.method }),
+            ...(data.notes !== undefined && { notes: data.notes }),
+        };
 
         const payment = await prisma.payment.update({
             where: { id },
-            data,
+            data: updateData,
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
@@ -139,13 +245,20 @@ export class PaymentService {
             throw new ForbiddenError("You do not have permission to delete payments");
         }
 
-        await this.getPaymentById(id, actorUserId);
+        // Verify payment exists
+        const existingPayment = await prisma.payment.findUnique({
+            where: { id },
+        });
+
+        if (!existingPayment) {
+            throw new NotFoundError("Payment not found");
+        }
 
         await prisma.payment.delete({
             where: { id },
         });
 
-        return { message: "Payment deleted successfully" };
+        return { message: "Payment deleted successfully", id };
     }
 
     static async searchPayments(query: string, actorUserId?: string) {
@@ -162,18 +275,49 @@ export class PaymentService {
             throw new ForbiddenError("You do not have permission to view payments");
         }
 
+        if (!query || query.trim().length === 0) {
+            return [];
+        }
+
+        const searchTerm = query.trim();
+
+        // Check if search term matches any PaymentMethod enum value
+        const matchingMethods = Object.values(PaymentMethod).filter(method =>
+            method.toUpperCase().includes(searchTerm.toUpperCase())
+        );
+
         const payments = await prisma.payment.findMany({
             where: {
                 OR: [
-                    { notes: { contains: query, mode: "insensitive" } },
+                    {
+                        patient: {
+                            OR: [
+                                { firstName: { contains: searchTerm, mode: "insensitive" } },
+                                { lastName: { contains: searchTerm, mode: "insensitive" } },
+                                { email: { contains: searchTerm, mode: "insensitive" } },
+                            ],
+                        },
+                    },
+                    { notes: { contains: searchTerm, mode: "insensitive" } },
+                    ...(matchingMethods.length > 0 ? [{ method: { in: matchingMethods } }] : []),
                 ],
             },
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
@@ -267,11 +411,21 @@ export class PaymentService {
         const payments = await prisma.payment.findMany({
             where,
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
@@ -300,11 +454,21 @@ export class PaymentService {
         const payment = await prisma.payment.findUnique({
             where: { id },
             include: {
-                patient: true,
-                recordedBy: {
+                patient: {
                     select: {
+                        id: true,
                         firstName: true,
                         lastName: true,
+                        email: true,
+                        phone: true,
+                    },
+                },
+                recordedBy: {
+                    select: {
+                        id: true,
+                        firstName: true,
+                        lastName: true,
+                        email: true,
                     },
                 },
             },
