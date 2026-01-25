@@ -1,0 +1,41 @@
+# Node deps
+node_modules/
+**/node_modules/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+*.log
+
+# TypeScript
+*.tsbuildinfo
+
+# IDEs / OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# PNPM store
+.pnpm-store/
+
+# Docker (optional)
+docker-compose.override.yml
+
+# Local documentation (not to be committed)
+PERMISSIONS_CHANGES_DOC.md
+DOCUMENTS_FEATURE.md
+dental-clinic-drive-f3c5683a26a1.json
