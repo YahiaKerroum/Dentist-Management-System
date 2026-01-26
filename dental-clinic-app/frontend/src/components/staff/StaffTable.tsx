@@ -1,6 +1,6 @@
 import React from 'react';
 import { User, Role } from '../../types/user';
-import { Users, Pencil, Trash2, Eye } from 'lucide-react';
+import { Users, Pencil, Trash2, Eye, Clock } from 'lucide-react';
 
 interface StaffTableProps {
     staff: User[];
@@ -54,6 +54,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                         <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Role</th>
                         <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Phone</th>
                         <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Specialization</th>
+                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Last Updated</th>
                         <th style={{ padding: '16px', textAlign: 'right', fontWeight: 600, color: '#495057' }}>Actions</th>
                     </tr>
                 </thead>
@@ -118,6 +119,17 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                             </td>
                             <td style={{ padding: '16px', color: '#495057' }}>
                                 {member.doctorProfile?.specialization || <span style={{ color: '#adb5bd' }}>N/A</span>}
+                            </td>
+                            <td style={{ padding: '16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6c757d', fontSize: '14px' }}>
+                                    <Clock size={16} style={{ opacity: 0.6 }} />
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span>{member.updatedAt ? new Date(member.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
+                                        <span style={{ fontSize: '12px', color: '#adb5bd' }}>
+                                            {member.updatedAt ? new Date(member.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                        </span>
+                                    </div>
+                                </div>
                             </td>
                             <td style={{ padding: '16px' }} onClick={(e) => e.stopPropagation()}>
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>

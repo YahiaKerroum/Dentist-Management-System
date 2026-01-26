@@ -1,5 +1,5 @@
-import React from 'react';
-import { BarChart3 } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, Download } from 'lucide-react';
 
 // Your Components
 import { MyPatientsCount } from '../components/reports/analytics/MyPatientsCount';
@@ -29,14 +29,152 @@ interface ReportsPageProps {
 }
 
 export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportReports = async () => {
+    setIsExporting(true);
+    try {
+      // Import report services
+      const {
+        getTotalPatients,
+        getNewPatientsThisMonth,
+        getRevenueGenerated,
+        getTotalRevenueTrend,
+        getStaffPerformance,
+        getCommonTreatments,
+        getAppointmentsOverview,
+        getExpensesByCategory,
+        getPaymentStatus,
+      } = await import('../services/report.service');
+
+      const { downloadCSV } = await import('../utils/export.utils');
+
+      // Fetch all report data with proper error handling
+      const results = await Promise.allSettled([
+        getTotalPatients(token),
+        getNewPatientsThisMonth(token),
+        getRevenueGenerated(token),
+        getTotalRevenueTrend(token),
+        getStaffPerformance(token),
+        getCommonTreatments(token),
+        getAppointmentsOverview(token),
+        getExpensesByCategory(token),
+        getPaymentStatus(token),
+      ]);
+
+      // Extract data safely
+      const totalPatients = results[0].status === 'fulfilled' ? results[0].value.data : null;
+      const newPatients = results[1].status === 'fulfilled' ? results[1].value.data : null;
+      const revenue = results[2].status === 'fulfilled' ? results[2].value.data : null;
+      const revenueTrend = results[3].status === 'fulfilled' ? results[3].value.data : null;
+      const staffPerformance = results[4].status === 'fulfilled' ? results[4].value.data : null;
+      const treatments = results[5].status === 'fulfilled' ? results[5].value.data : null;
+      const appointments = results[6].status === 'fulfilled' ? results[6].value.data : null;
+      const expenses = results[7].status === 'fulfilled' ? results[7].value.data : null;
+      const payments = results[8].status === 'fulfilled' ? results[8].value.data : null;
+
+      // Create comprehensive summary report
+      const summaryData = [{
+        'Report Generated': new Date().toLocaleString(),
+        'Report Period': new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        'Total Patients': totalPatients?.total || 0,
+        'New Patients This Month': totalPatients?.newThisMonth || 0,
+        'New Patient Records': newPatients?.count || 0,
+        'Total Revenue': revenue?.totalRevenue ? `$${revenue.totalRevenue.toFixed(2)}` : '$0.00',
+        'Total Expenses': expenses?.totalAmount ? `$${expenses.totalAmount.toFixed(2)}` : '$0.00',
+        'Net Profit': revenue?.totalRevenue && expenses?.totalAmount 
+          ? `$${(revenue.totalRevenue - expenses.totalAmount).toFixed(2)}` 
+          : '$0.00',
+        'Paid Amount': payments?.amounts?.paid ? `$${payments.amounts.paid.toFixed(2)}` : '$0.00',
+        'Pending Amount': payments?.amounts?.pending ? `$${payments.amounts.pending.toFixed(2)}` : '$0.00',
+        'Overdue Amount': payments?.amounts?.overdue ? `$${payments.amounts.overdue.toFixed(2)}` : '$0.00',
+        'Total Payments': payments?.counts?.total || 0,
+        'Paid Payments': payments?.counts?.paid || 0,
+        'Pending Payments': payments?.counts?.pending || 0,
+        'Overdue Payments': payments?.counts?.overdue || 0,
+        'Total Appointments': appointments?.total || 0,
+        'Scheduled Appointments': appointments?.scheduled || 0,
+        'Completed Appointments': appointments?.completed || 0,
+        'Cancelled Appointments': appointments?.cancelled || 0,
+        'No-Show Appointments': appointments?.noShow || 0,
+      }];
+      
+      downloadCSV(summaryData, 'clinic-reports-summary');
+
+      // Export revenue trend if available
+      if (revenueTrend && 'trends' in revenueTrend && Array.isArray(revenueTrend.trends)) {
+        const revenueData = revenueTrend.trends.map((item: any) => ({
+          'Month': item.month,
+          'Revenue': `$${item.revenue.toFixed(2)}`,
+          'Expenses': `$${item.expenses.toFixed(2)}`,
+          'Profit': `$${item.profit.toFixed(2)}`,
+        }));
+        downloadCSV(revenueData, 'revenue-trend');
+      }
+
+      // Export staff performance if available
+      if (staffPerformance && 'performance' in staffPerformance && Array.isArray(staffPerformance.performance)) {
+        const staffData = staffPerformance.performance.map((staff: any) => ({
+          'Staff Name': `${staff.firstName} ${staff.lastName}`,
+          'Role': staff.role,
+          'Appointments': staff.appointmentCount || 0,
+          'Patients': staff.patientCount || 0,
+          'Revenue': `$${(staff.revenue || 0).toFixed(2)}`,
+        }));
+        downloadCSV(staffData, 'staff-performance');
+      }
+
+      // Export treatment statistics if available
+      if (treatments && Array.isArray(treatments)) {
+        const treatmentData = treatments.map((treatment: any) => ({
+          'Treatment Type': treatment.type || treatment.typeOfTreatment,
+          'Count': treatment.count,
+        }));
+        downloadCSV(treatmentData, 'treatment-statistics');
+      }
+
+      // Export expense breakdown if available
+      if (expenses && 'byCategory' in expenses && Array.isArray(expenses.byCategory)) {
+        const expenseData = expenses.byCategory.map((expense: any) => ({
+          'Category': expense.category,
+          'Total Amount': `$${expense.total.toFixed(2)}`,
+          'Count': expense.count,
+          'Average': `$${(expense.total / expense.count).toFixed(2)}`,
+        }));
+        downloadCSV(expenseData, 'expenses-by-category');
+      }
+
+      alert('✅ Reports exported successfully! Check your downloads folder for CSV files.');
+    } catch (error) {
+      console.error('Error exporting reports:', error);
+      alert('❌ Failed to export reports. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="p-6 bg-gray-50 min-h-full">
       {/* Page Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <BarChart3 className="text-blue-600" size={28} />
-          <h1 className="text-2xl font-bold text-gray-800">Reports & Analytics</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="text-blue-600" size={28} />
+            <h1 className="text-2xl font-bold text-gray-800">Reports & Analytics</h1>
+          </div>
+          
+          {/* Export Button */}
+          <button
+            onClick={handleExportReports}
+            disabled={isExporting}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            title="Export all reports to CSV files"
+          >
+            <Download size={18} />
+            {isExporting ? 'Exporting...' : 'Export Reports'}
+          </button>
         </div>
+        
         <p className="text-gray-500">
           {userRole === 'DOCTOR' && 'View your appointments, patients, and performance metrics'}
           {userRole === 'MANAGER' && 'Monitor clinic performance, finances, and staff metrics'}
