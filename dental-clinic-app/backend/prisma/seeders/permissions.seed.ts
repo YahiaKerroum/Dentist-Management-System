@@ -25,6 +25,11 @@ const DEFAULT_ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     Permission.PAYMENT_CREATE,
     Permission.PAYMENT_UPDATE,
     Permission.PAYMENT_DELETE,
+    Permission.EXPENSES_VIEW,
+    Permission.EXPENSES_CREATE,
+    Permission.EXPENSES_UPDATE,
+    Permission.EXPENSES_DELETE,
+    Permission.EXPENSES_APPROVE,
   ],
   [Role.DOCTOR]: [
     Permission.PATIENTS_VIEW,

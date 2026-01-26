@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { getAllStaff, createStaff, updateStaff, deleteStaff } from '../services/user.service';
 import { User, Role, CreateUserDTO, UpdateUserDTO } from '../types/user';
 import { StaffTable } from '../components/staff/StaffTable';
 import { StaffFormModal } from '../components/staff/StaffFormModal';
 import { StaffProfileView } from '../components/staff/StaffProfileView';
-import { UserPlus, Search, Filter } from 'lucide-react';
+import { downloadCSV, formatStaffForExport } from '../utils/export.utils';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { UserPlus, Search, Filter, Download, X } from 'lucide-react';
 
 interface StaffPageProps {
     token: string;
@@ -23,6 +25,31 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
     const [isProfileViewOpen, setIsProfileViewOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
     const [formLoading, setFormLoading] = useState(false);
+
+    // Search input ref for keyboard shortcuts
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts([
+        {
+            key: 'k',
+            ctrl: true,
+            description: 'Focus search',
+            action: () => searchInputRef.current?.focus(),
+        },
+        {
+            key: 'n',
+            ctrl: true,
+            description: 'Add new staff',
+            action: () => handleAddNew(),
+        },
+        {
+            key: 'e',
+            ctrl: true,
+            description: 'Export to CSV',
+            action: () => handleExportCSV(),
+        },
+    ]);
 
     // Fetch all staff
     const fetchStaff = async () => {
@@ -131,6 +158,23 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
         setIsFormModalOpen(true);
     };
 
+    // Handle export to CSV
+    const handleExportCSV = () => {
+        const dataToExport = formatStaffForExport(filteredStaff);
+        downloadCSV(dataToExport, 'staff');
+    };
+
+    // Handle clear filters
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setRoleFilter('');
+    };
+
+    // Check if filters are active
+    const hasActiveFilters = () => {
+        return searchTerm !== '' || roleFilter !== '';
+    };
+
     if (loading) {
         return (
             <div style={{
@@ -193,8 +237,9 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                         }}
                     />
                     <input
+                        ref={searchInputRef}
                         type="text"
-                        placeholder="Search by name, email, or username..."
+                        placeholder="Search by name, email... (Ctrl+K)"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
@@ -243,6 +288,57 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     </select>
                 </div>
 
+                {/* Export Button */}
+                <button
+                    onClick={handleExportCSV}
+                    style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#6b7280',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '14px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
+                    title="Export to CSV (Ctrl+E)"
+                >
+                    <Download size={18} />
+                    Export
+                </button>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters() && (
+                    <button
+                        onClick={handleClearFilters}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#f3f4f6',
+                            color: '#374151',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: 500,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                    >
+                        <X size={18} />
+                        Clear Filters
+                    </button>
+                )}
+
                 {/* Add New Staff Button */}
                 <button
                     onClick={handleAddNew}
@@ -262,6 +358,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2FA88E'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3DBEA3'}
+                    title="Add new staff member (Ctrl+N)"
                 >
                     <UserPlus size={18} />
                     Add Staff Member

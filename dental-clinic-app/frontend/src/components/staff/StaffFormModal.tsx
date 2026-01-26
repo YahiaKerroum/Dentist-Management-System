@@ -182,6 +182,16 @@ export const StaffFormModal: React.FC<StaffFormModalProps> = ({
                 { label: 'Delete', value: 'documents.delete' },
             ],
         },
+        {
+            key: 'expenses',
+            label: 'Expenses',
+            actions: [
+                { label: 'View', value: 'expenses.view' },
+                { label: 'Create', value: 'expenses.create' },
+                { label: 'Update', value: 'expenses.update' },
+                { label: 'Delete', value: 'expenses.delete' },
+            ],
+        },
     ];
 
     const togglePermission = (perm?: string) => {
