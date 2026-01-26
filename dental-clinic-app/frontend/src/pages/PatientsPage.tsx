@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getPatients, createPatient, updatePatient, deletePatient } from '../services/patient.service';
 import { getUserPermissions } from '../services/user.service';
 import { Patient, CreatePatientDTO } from '../types/patient';
@@ -6,6 +6,8 @@ import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { PatientForm } from '../components/patients/PatientForm';
 import { PatientDetailPanel } from './PatientDetailPage';
+import { downloadCSV, formatPatientsForExport } from '../utils/export.utils';
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import {
     Plus,
     Search,
@@ -16,7 +18,10 @@ import {
     Edit,
     Trash2,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Download,
+    X,
+    Clock
 } from 'lucide-react';
 
 interface PatientsPageProps {
@@ -55,6 +60,31 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     // User permissions
     const [userPermissions, setUserPermissions] = useState<string[]>([]);
     const [currentUserId, setCurrentUserId] = useState<string>('');
+
+    // Search input ref for keyboard shortcuts
+    const searchInputRef = useRef<HTMLInputElement>(null);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts([
+        {
+            key: 'k',
+            ctrl: true,
+            description: 'Focus search',
+            action: () => searchInputRef.current?.focus(),
+        },
+        {
+            key: 'n',
+            ctrl: true,
+            description: 'Add new patient',
+            action: () => handleAddPatient(),
+        },
+        {
+            key: 'e',
+            ctrl: true,
+            description: 'Export to CSV',
+            action: () => handleExportCSV(),
+        },
+    ]);
 
     useEffect(() => {
         fetchPatients();
@@ -124,6 +154,28 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     const handleViewPatientDetails = (patient: Patient) => {
         setDetailPatient(patient);
         setViewingDetail(true);
+    };
+
+    const handleExportCSV = () => {
+        const dataToExport = formatPatientsForExport(filteredPatients);
+        downloadCSV(dataToExport, 'patients');
+    };
+
+    const handleClearFilters = () => {
+        setSearchTerm('');
+        setStatusFilter('all');
+        setAgeFilter('all');
+        setDateFilter('all');
+        setSortBy('name-asc');
+        setCurrentPage(1);
+    };
+
+    const hasActiveFilters = () => {
+        return searchTerm !== '' || 
+               statusFilter !== 'all' || 
+               ageFilter !== 'all' || 
+               dateFilter !== 'all' ||
+               sortBy !== 'name-asc';
     };
 
     const handleFormSubmit = async (data: CreatePatientDTO) => {
@@ -326,20 +378,36 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             )}
 
             {/* Controls */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col sm:flex-row gap-4 justify-between items-center">
-                <div className="relative w-full sm:w-96">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <Search className="h-4 w-4 text-gray-400" />
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-3">
+                    <div className="relative w-full sm:w-96">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <Search className="h-4 w-4 text-gray-400" />
+                        </div>
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Search by name or email... (Ctrl+K)"
+                            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
+                            style={{ '--tw-ring-color': '#3DBEA3' } as React.CSSProperties}
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Search by name or email..."
-                        className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
-                        style={{ '--tw-ring-color': '#3DBEA3' } as React.CSSProperties}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
+                    <div className="flex gap-2 flex-wrap">
+                        {/* Export Button */}
+                        <Button
+                            onClick={handleExportCSV}
+                            variant="secondary"
+                            className="text-sm"
+                            title="Export to CSV (Ctrl+E)"
+                        >
+                            <Download className="w-4 h-4 mr-2" />
+                            Export
+                        </Button>
+                    </div>
                 </div>
+                
                 <div className="flex gap-2 flex-wrap">
                     {/* Status Filter */}
                     <select
@@ -388,6 +456,18 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                         <option value="date-newest">Newest First</option>
                         <option value="date-oldest">Oldest First</option>
                     </select>
+
+                    {/* Clear Filters Button */}
+                    {hasActiveFilters() && (
+                        <Button
+                            onClick={handleClearFilters}
+                            variant="secondary"
+                            className="text-sm flex items-center gap-2"
+                        >
+                            <X className="w-4 h-4" />
+                            Clear Filters
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -407,6 +487,9 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                     Date of Birth
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Last Updated
+                                </th>
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Status
                                 </th>
                                 <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -417,7 +500,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                         <tbody className="bg-white divide-y divide-gray-200">
                             {paginatedPatients.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
                                         <div className="flex flex-col items-center justify-center">
                                             <UserIcon className="w-12 h-12 text-gray-300 mb-3" />
                                             <p className="text-lg font-medium">No patients found</p>
@@ -457,6 +540,17 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             <div className="flex items-center text-sm text-gray-600">
                                                 <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                                                 {patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A'}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center text-sm text-gray-600">
+                                                <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                                <div className="flex flex-col">
+                                                    <span>{patient.updatedAt ? formatDate(patient.updatedAt) : 'N/A'}</span>
+                                                    <span className="text-xs text-gray-400">
+                                                        {patient.updatedAt ? new Date(patient.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
