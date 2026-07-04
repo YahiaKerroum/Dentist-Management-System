@@ -6,14 +6,18 @@ export type {
   Patient,
   Appointment,
   Treatment,
+  TreatmentTooth,
+  PatientTooth,
   Payment,
   Expense,
   AuditLog,
 } from "@prisma/client";
 
-export { 
+export {
   Role,
   AppointmentStatus,
   TreatmentType,
+  TreatmentStatus,
+  ToothStatus,
   PaymentMethod,
 } from "@prisma/client";

@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { TreatmentStatus } from "../types/prisma.types";
 import { PaymentService } from "./payment.service";
 import { ExpenseService } from "./expense.service";
 
@@ -111,7 +112,7 @@ export class ReportService {
                 where: { followUpRequired: true, followUpDate: { lte: todayEnd } },
             }),
             prisma.treatment.findMany({
-                where: { completed: false, dateOfTreatment: { lt: todayStart } },
+                where: { status: { notIn: [TreatmentStatus.COMPLETED, TreatmentStatus.BILLED, TreatmentStatus.ARCHIVED] }, dateOfTreatment: { lt: todayStart } },
                 include: {
                     patient: { select: { id: true, firstName: true, lastName: true } },
                     doctor: { select: { user: { select: { firstName: true, lastName: true } } } },
@@ -120,7 +121,7 @@ export class ReportService {
                 take: 20,
             }),
             prisma.treatment.count({
-                where: { completed: false, dateOfTreatment: { lt: todayStart } },
+                where: { status: { notIn: [TreatmentStatus.COMPLETED, TreatmentStatus.BILLED, TreatmentStatus.ARCHIVED] }, dateOfTreatment: { lt: todayStart } },
             }),
             prisma.expense.count({ where: { approved: false } }),
         ]);

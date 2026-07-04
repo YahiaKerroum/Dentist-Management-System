@@ -1,10 +1,28 @@
-import { TreatmentType } from "../types/prisma.types";
+import { TreatmentType, TreatmentStatus } from "../types/prisma.types";
 import { NotFoundError, ForbiddenError, ValidationError } from "../errors/app.errors";
 import prisma from "../config/prisma";
 import { userHasPermission } from "../utils/permission.utils";
 import { Permission } from "../types/permission.types";
 
+interface ToothInput {
+    toothNumber: number;
+    notes?: string;
+}
 
+const TEETH_INCLUDE = {
+    doctor: {
+        include: {
+            user: {
+                select: {
+                    firstName: true,
+                    lastName: true,
+                },
+            },
+        },
+    },
+    patient: true,
+    teeth: true,
+} as const;
 
 export class TreatmentService {
     static async createTreatment(data: {
@@ -14,7 +32,7 @@ export class TreatmentService {
         typeOfTreatment: TreatmentType;
         notes?: string;
         procedure?: string;
-        teethInvolved?: number[];
+        teeth?: ToothInput[];
         followUpRequired?: boolean;
         appointmentId?: string;
         createdByUserId?: string;
@@ -41,36 +59,41 @@ export class TreatmentService {
                 typeOfTreatment: data.typeOfTreatment,
                 notes: data.notes,
                 procedure: data.procedure,
-                teethInvolved: data.teethInvolved || [],
+                teeth: {
+                    create: (data.teeth || []).map((t) => ({
+                        toothNumber: t.toothNumber,
+                        notes: t.notes,
+                    })),
+                },
                 followUpRequired: data.followUpRequired || false,
                 appointmentId: data.appointmentId,
-                completed: false,
+                status: TreatmentStatus.PLANNED,
             },
-            include: {
-                doctor: {
-                    include: {
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
-                    },
-                },
-                patient: true,
-            },
+            include: TEETH_INCLUDE,
         });
 
         return treatment;
     }
 
-    static async getAllTreatments(filters?: {
-        doctorId?: string;
-        patientId?: string;
-        completed?: boolean;
-        dateFrom?: Date;
-        dateTo?: Date;
-    }) {
+    static async getAllTreatments(
+        filters: {
+            doctorId?: string;
+            patientId?: string;
+            status?: TreatmentStatus;
+            dateFrom?: Date;
+            dateTo?: Date;
+        } | undefined,
+        actorUserId?: string
+    ) {
+        if (!actorUserId) {
+            throw new ValidationError("actorUserId is required to view treatments");
+        }
+
+        const hasViewPermission = await userHasPermission(actorUserId, Permission.TREATMENTS_VIEW);
+        if (!hasViewPermission) {
+            throw new ForbiddenError("You do not have permission to view treatments");
+        }
+
         const where: any = {};
 
         if (filters?.doctorId) {
@@ -81,8 +104,8 @@ export class TreatmentService {
             where.patientId = filters.patientId;
         }
 
-        if (filters?.completed !== undefined) {
-            where.completed = filters.completed;
+        if (filters?.status !== undefined) {
+            where.status = filters.status;
         }
 
         if (filters?.dateFrom || filters?.dateTo) {
@@ -97,19 +120,7 @@ export class TreatmentService {
 
         const treatments = await prisma.treatment.findMany({
             where,
-            include: {
-                doctor: {
-                    include: {
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
-                    },
-                },
-                patient: true,
-            },
+            include: TEETH_INCLUDE,
             orderBy: {
                 dateOfTreatment: "desc",
             },
@@ -118,21 +129,18 @@ export class TreatmentService {
         return treatments;
     }
 
-    static async getTreatmentById(id: string) {
+    static async getTreatmentById(id: string, actorUserId?: string) {
+        if (actorUserId) {
+            const hasViewPermission = await userHasPermission(actorUserId, Permission.TREATMENTS_VIEW);
+            if (!hasViewPermission) {
+                throw new ForbiddenError("You do not have permission to view treatments");
+            }
+        }
+
         const treatment = await prisma.treatment.findUnique({
             where: { id },
             include: {
-                doctor: {
-                    include: {
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
-                    },
-                },
-                patient: true,
+                ...TEETH_INCLUDE,
                 appointment: true,
             },
         });
@@ -149,7 +157,7 @@ export class TreatmentService {
         data: {
             notes?: string;
             procedure?: string;
-            teethInvolved?: number[];
+            teeth?: ToothInput[];
             followUpRequired?: boolean;
         },
         actorUserId?: string
@@ -169,30 +177,28 @@ export class TreatmentService {
 
         await this.getTreatmentById(id);
 
+        const { teeth, ...rest } = data;
+
         const treatment = await prisma.treatment.update({
             where: { id },
-            data,
-            include: {
-                doctor: {
-                    include: {
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
+            data: {
+                ...rest,
+                ...(teeth !== undefined && {
+                    teeth: {
+                        deleteMany: {},
+                        create: teeth.map((t) => ({ toothNumber: t.toothNumber, notes: t.notes })),
                     },
-                },
-                patient: true,
+                }),
             },
+            include: TEETH_INCLUDE,
         });
 
         return treatment;
     }
 
-    static async markAsCompleted(id: string, actorUserId?: string) {
+    static async updateTreatmentStatus(id: string, status: TreatmentStatus, actorUserId?: string) {
         if (!actorUserId) {
-            throw new ValidationError("actorUserId is required to mark treatment as completed");
+            throw new ValidationError("actorUserId is required to update treatment status");
         }
 
         const hasUpdatePermission = await userHasPermission(
@@ -208,20 +214,8 @@ export class TreatmentService {
 
         const treatment = await prisma.treatment.update({
             where: { id },
-            data: { completed: true },
-            include: {
-                doctor: {
-                    include: {
-                        user: {
-                            select: {
-                                firstName: true,
-                                lastName: true,
-                            },
-                        },
-                    },
-                },
-                patient: true,
-            },
+            data: { status },
+            include: TEETH_INCLUDE,
         });
 
         return treatment;

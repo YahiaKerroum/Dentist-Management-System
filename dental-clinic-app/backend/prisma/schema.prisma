@@ -51,6 +51,28 @@ enum RoomType {
   SURGERY
 }
 
+enum TreatmentStatus {
+  PLANNED
+  IN_PROGRESS
+  NEEDS_FOLLOW_UP
+  COMPLETED
+  BILLED
+  ARCHIVED
+}
+
+enum ToothStatus {
+  HEALTHY
+  DECAYED
+  FILLED
+  CROWNED
+  ROOT_CANAL
+  MISSING
+  IMPLANT
+  EXTRACTION_NEEDED
+  SEALANT
+  OTHER
+}
+
 model User {
   id           String   @id @default(uuid())
   firstName    String
@@ -75,6 +97,7 @@ model User {
   expensesRecorded Expense[]     @relation("ExpenseRecordedBy")
   auditLogs        AuditLog[]
   documentsUploaded Document[]
+  toothUpdates     PatientTooth[]
 
   registeredPatients Patient[] @relation("PatientRegistrations")
 
@@ -135,6 +158,7 @@ model Patient {
   treatments   Treatment[]
   payments     Payment[]
   documents    Document[]
+  teeth        PatientTooth[]
 
   registeredBy   User?   @relation("PatientRegistrations", fields: [registeredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
   registeredById String?
@@ -194,26 +218,50 @@ model Room {
 
 
 model Treatment {
-  id               String        @id @default(uuid())
-  doctor           Doctor        @relation(fields: [doctorId], references: [id])
+  id               String          @id @default(uuid())
+  doctor           Doctor          @relation(fields: [doctorId], references: [id])
   doctorId         String
-  patient          Patient       @relation(fields: [patientId], references: [id])
+  patient          Patient         @relation(fields: [patientId], references: [id])
   patientId        String
   dateOfTreatment  DateTime
   typeOfTreatment  TreatmentType
   notes            String?
   procedure        String?
-  teethInvolved    Int[]         @default([])
-  followUpRequired Boolean       @default(false)
+  status           TreatmentStatus @default(PLANNED)
+  followUpRequired Boolean         @default(false)
   followUpDate     DateTime?
-  completed        Boolean       @default(false)
-  cost             Decimal?      @db.Decimal(10, 2)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  cost             Decimal?        @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  teeth TreatmentTooth[]
 
   // Link to an appointment if this treatment was performed as part of one
   appointment   Appointment? @relation(fields: [appointmentId], references: [id])
   appointmentId String?
+}
+
+model TreatmentTooth {
+  id          String    @id @default(uuid())
+  treatment   Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  treatmentId String
+  toothNumber Int
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+model PatientTooth {
+  id          String      @id @default(uuid())
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+  toothNumber Int
+  status      ToothStatus @default(HEALTHY)
+  notes       String?
+  updatedAt   DateTime    @updatedAt
+  updatedBy   User?       @relation(fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  updatedById String?
+
+  @@unique([patientId, toothNumber])
 }
 
 model Payment {

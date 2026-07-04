@@ -14,21 +14,24 @@ export class TreatmentController {
     });
 
     static getAll = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-        const { doctorId, patientId, completed, dateFrom, dateTo } = req.query;
+        const { doctorId, patientId, status, dateFrom, dateTo } = req.query;
 
-        const treatments = await TreatmentService.getAllTreatments({
-            doctorId: doctorId as string | undefined,
-            patientId: patientId as string | undefined,
-            completed: completed === "true" ? true : completed === "false" ? false : undefined,
-            dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
-            dateTo: dateTo ? new Date(dateTo as string) : undefined,
-        });
+        const treatments = await TreatmentService.getAllTreatments(
+            {
+                doctorId: doctorId as string | undefined,
+                patientId: patientId as string | undefined,
+                status: status as any,
+                dateFrom: dateFrom ? new Date(dateFrom as string) : undefined,
+                dateTo: dateTo ? new Date(dateTo as string) : undefined,
+            },
+            req.user?.userId
+        );
 
         sendSuccess(res, treatments);
     });
 
     static getById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-        const treatment = await TreatmentService.getTreatmentById(req.params.id);
+        const treatment = await TreatmentService.getTreatmentById(req.params.id, req.user?.userId);
         sendSuccess(res, treatment);
     });
 
@@ -41,12 +44,13 @@ export class TreatmentController {
         sendSuccess(res, treatment, "Treatment updated successfully");
     });
 
-    static markCompleted = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-        const treatment = await TreatmentService.markAsCompleted(
+    static updateStatus = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+        const treatment = await TreatmentService.updateTreatmentStatus(
             req.params.id,
+            req.body.status,
             req.user?.userId
         );
-        sendSuccess(res, treatment, "Treatment marked as completed");
+        sendSuccess(res, treatment, "Treatment status updated");
     });
 
     static delete = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

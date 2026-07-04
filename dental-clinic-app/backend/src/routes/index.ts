@@ -9,11 +9,13 @@ import expenseRoutes from "./expense.routes";
 import reportRoutes from "./report.routes";
 import documentRoutes from "./document.routes";
 import roomRoutes from "./room.routes";
+import toothRoutes from "./tooth.routes";
 
 const router = Router();
 
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
+router.use("/patients", toothRoutes);
 router.use("/patients", patientRoutes);
 router.use("/appointments", appointmentRoutes);
 router.use("/treatments", treatmentRoutes);

@@ -1,4 +1,4 @@
-import { PrismaClient, Role, TreatmentType, PaymentMethod, AppointmentStatus, Prisma } from "@prisma/client";
+import { PrismaClient, Role, TreatmentType, PaymentMethod, AppointmentStatus, TreatmentStatus, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { seedPermissions } from "./seeders/permissions.seed";
@@ -340,10 +340,10 @@ async function main() {
                 typeOfTreatment: treatmentType,
                 notes: `Treatment completed: ${procedure}. Outcome: successful. Follow-up: ${appointment.followUpRequired ? "yes" : "no"}`,
                 procedure: procedure,
-                teethInvolved: appointment.teethInvolved,
+                teeth: { create: appointment.teethInvolved.map((toothNumber) => ({ toothNumber })) },
                 followUpRequired: appointment.followUpRequired,
                 followUpDate,
-                completed: appointment.status === AppointmentStatus.COMPLETED,
+                status: appointment.status === AppointmentStatus.COMPLETED ? TreatmentStatus.COMPLETED : TreatmentStatus.PLANNED,
                 cost: new Prisma.Decimal(costFor(treatmentType))
             }
         });
@@ -453,10 +453,10 @@ async function main() {
                     typeOfTreatment: treatmentType,
                     notes: `${treatmentType} performed during today's visit.`,
                     procedure: appt.procedure,
-                    teethInvolved: appt.teethInvolved,
+                    teeth: { create: appt.teethInvolved.map((toothNumber) => ({ toothNumber })) },
                     followUpRequired: followUp,
                     followUpDate: followUp ? new Date(todayStart.getTime() + (2 + Math.floor(Math.random() * 5)) * 24 * 60 * 60 * 1000) : null,
-                    completed: slot.status === AppointmentStatus.COMPLETED,
+                    status: slot.status === AppointmentStatus.COMPLETED ? TreatmentStatus.COMPLETED : TreatmentStatus.PLANNED,
                     cost: new Prisma.Decimal(cost)
                 }
             });
