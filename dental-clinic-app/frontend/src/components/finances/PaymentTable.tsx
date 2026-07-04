@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Loader2, TrendingUp } from 'lucide-react';
 import { getAllPayments, deletePayment } from '../../services/payment.service';
 import { Payment } from '../../types/payment.types';
 import PaymentFormModal from './PaymentFormModal';
 import { toast } from '../ui/Toaster';
+import { Button } from '../ui/Button';
 
 const PaymentTable: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -137,38 +138,43 @@ const PaymentTable: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#26a37e' }} />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
       </div>
     );
   }
+
+  const totalAmount = filteredPayments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+  const formattedTotal = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(totalAmount);
 
   return (
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-surface-900 mb-4">Payments</h1>
-        
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-bold text-surface-900">Payments</h1>
+          <div className="flex items-center gap-2 rounded-full bg-success-50 px-3.5 py-1.5 text-sm font-semibold text-success-700">
+            <TrendingUp className="h-4 w-4" />
+            {formattedTotal} received
+          </div>
+        </div>
+
         {/* Search and Create Button */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400 w-4 h-4" />
             <input
               type="text"
               placeholder="Search payments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-[#26a37e] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-md focus:outline-none focus:border-primary-500 focus:shadow-focus"
             />
           </div>
-          
-          <button
-            onClick={handleCreatePayment}
-            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-            style={{ backgroundColor: '#26a37e' }}
-          >
-            <Plus className="w-5 h-5" />
+
+          <Button onClick={handleCreatePayment}>
+            <Plus className="w-4 h-4" />
             Create Payment
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -224,8 +230,8 @@ const PaymentTable: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-700">
                         {formatDate(payment.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-surface-900">
-                        {formatCurrency(payment.amount)}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-success-700 tabular-nums">
+                        +{formatCurrency(payment.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-700">
                         {payment.method || 'N/A'}
@@ -234,15 +240,14 @@ const PaymentTable: React.FC = () => {
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEditPayment(payment)}
-                            className="p-2 rounded-lg transition-colors hover:bg-[#effcf6]"
-                            style={{ color: '#26a37e' }}
+                            className="p-2 rounded-lg text-primary-600 transition-colors hover:bg-primary-50"
                             title="Edit payment"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeletePayment(payment)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-danger-600 hover:bg-danger-50 rounded-lg transition-colors"
                             title="Delete payment"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -291,10 +296,9 @@ const PaymentTable: React.FC = () => {
                         onClick={() => setCurrentPage(pageNum)}
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
-                            ? 'text-white'
+                            ? 'bg-primary-600 text-white'
                             : 'border border-surface-300 hover:bg-surface-50'
                         }`}
-                        style={currentPage === pageNum ? { backgroundColor: '#26a37e' } : {}}
                       >
                         {pageNum}
                       </button>

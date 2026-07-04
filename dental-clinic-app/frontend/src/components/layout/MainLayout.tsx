@@ -28,10 +28,15 @@ export function MainLayout() {
 
   return (
     <div className="flex h-screen bg-surface-50">
-      <Sidebar userRole={user?.role} onLogout={handleLogout} />
+      <Sidebar userRole={user?.role} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title={PAGE_TITLES[activeSegment] ?? 'Dashboard'} userName={user?.username} />
+        <Header
+          title={PAGE_TITLES[activeSegment] ?? 'Dashboard'}
+          userName={user?.username}
+          userRole={user?.role}
+          onLogout={handleLogout}
+        />
 
         <main className="flex-1 overflow-auto">
           <AnimatePresence mode="wait">

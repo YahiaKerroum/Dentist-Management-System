@@ -1,101 +1,167 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
-  User,
   Users,
   Calendar,
   Stethoscope,
   FileText,
-  LogOut,
   UserCog,
   Wallet,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 interface SidebarProps {
-  onLogout: () => void;
   userRole?: string;
 }
 
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: Users, label: 'Patients', path: '/patients', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: Calendar, label: 'Appointments', path: '/appointments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: Stethoscope, label: 'Treatments', path: '/treatments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: Wallet, label: 'Finances', path: '/finances', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: FileText, label: 'Reports', path: '/reports', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
-  { icon: UserCog, label: 'Staff', path: '/staff', roles: ['MANAGER'] },
-  { icon: User, label: 'Profile', path: '/profile', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+interface NavItem {
+  icon: typeof LayoutDashboard;
+  label: string;
+  path: string;
+  roles: string[];
+}
+
+interface NavSection {
+  label?: string;
+  items: NavItem[];
+}
+
+const NAV_SECTIONS: NavSection[] = [
+  {
+    items: [
+      { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    ],
+  },
+  {
+    label: 'Clinical',
+    items: [
+      { icon: Users, label: 'Patients', path: '/patients', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+      { icon: Calendar, label: 'Appointments', path: '/appointments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+      { icon: Stethoscope, label: 'Treatments', path: '/treatments', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    ],
+  },
+  {
+    label: 'Business',
+    items: [
+      { icon: Wallet, label: 'Finances', path: '/finances', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+      { icon: FileText, label: 'Reports', path: '/reports', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+    ],
+  },
+  {
+    label: 'Admin',
+    items: [{ icon: UserCog, label: 'Staff', path: '/staff', roles: ['MANAGER'] }],
+  },
 ];
 
-const ROLE_LABEL: Record<string, string> = {
-  MANAGER: 'Manager',
-  DOCTOR: 'Doctor',
-  ASSISTANT: 'Assistant',
-  RECEPTIONIST: 'Receptionist',
-};
+export function Sidebar({ userRole = 'DOCTOR' }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true');
 
-export function Sidebar({ onLogout, userRole = 'DOCTOR' }: SidebarProps) {
-  const visibleMenuItems = menuItems.filter((item) => item.roles.includes(userRole));
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => {
+      localStorage.setItem('sidebar-collapsed', String(!prev));
+      return !prev;
+    });
+  };
+
+  const sections = NAV_SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter((item) => item.roles.includes(userRole)),
+  })).filter((section) => section.items.length > 0);
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-surface-800 bg-surface-900">
-      <div className="flex items-center gap-3 px-5 py-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500 shadow-sm">
-          <Stethoscope className="h-5 w-5 text-white" />
-        </div>
-        <div>
-          <h1 className="text-base font-semibold tracking-tight text-white">DentalCare</h1>
-          <p className="text-xs text-surface-400">Practice Management</p>
-        </div>
+    <aside
+      className={cn(
+        'flex h-screen shrink-0 flex-col bg-gradient-to-b from-surface-900 to-surface-950 transition-[width] duration-300 ease-out',
+        collapsed ? 'w-[76px]' : 'w-64'
+      )}
+    >
+      <div className={cn('flex items-center gap-2.5 px-5 py-6', collapsed && 'justify-center px-0')}>
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-tight text-primary-400 ring-1 ring-inset ring-primary-400/40">
+          D
+        </span>
+        {!collapsed && (
+          <div className="min-w-0">
+            <h1 className="truncate text-[15px] font-semibold leading-tight tracking-tight">
+              <span className="text-white">Dental</span>
+              <span className="text-primary-400">Care</span>
+            </h1>
+            <p className="truncate text-[11px] text-surface-500">Practice Management</p>
+          </div>
+        )}
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3">
-        {visibleMenuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  'group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive ? 'text-white' : 'text-surface-400 hover:bg-surface-800 hover:text-surface-100'
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  {isActive && (
-                    <motion.div
-                      layoutId="sidebar-active"
-                      className="absolute inset-0 rounded-md bg-primary-600"
-                      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                    />
-                  )}
-                  <Icon className="relative z-10 h-[18px] w-[18px] shrink-0" />
-                  <span className="relative z-10">{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
+      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pt-2">
+        {sections.map((section, i) => (
+          <div key={section.label ?? i}>
+            {section.label && !collapsed && (
+              <p className="mb-1.5 px-3 text-[10.5px] font-semibold uppercase tracking-wider text-surface-600">
+                {section.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    title={collapsed ? item.label : undefined}
+                    className={({ isActive }) =>
+                      cn(
+                        'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        collapsed && 'justify-center px-0',
+                        isActive ? 'text-white' : 'text-surface-400 hover:bg-surface-800/60 hover:text-surface-100'
+                      )
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-active-bg"
+                            className="absolute inset-0 rounded-lg bg-primary-500/15"
+                            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                          />
+                        )}
+                        {isActive && (
+                          <motion.div
+                            layoutId="sidebar-active-bar"
+                            className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary-400"
+                            transition={{ type: 'spring', stiffness: 500, damping: 40 }}
+                          />
+                        )}
+                        <Icon
+                          className={cn(
+                            'relative z-10 h-[18px] w-[18px] shrink-0',
+                            isActive ? 'text-primary-300' : 'text-surface-500 group-hover:text-surface-300'
+                          )}
+                        />
+                        {!collapsed && <span className="relative z-10 truncate">{item.label}</span>}
+                      </>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      <div className="border-t border-surface-800 p-3">
-        <div className="mb-2 flex items-center gap-2 rounded-md bg-surface-800/60 px-3 py-2.5">
-          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success-500" />
-          <p className="text-xs text-surface-300">
-            Signed in as <span className="font-medium text-surface-100">{ROLE_LABEL[userRole] ?? userRole}</span>
-          </p>
-        </div>
+      <div className="border-t border-surface-800/80 p-3">
         <button
-          onClick={onLogout}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-surface-400 transition-colors hover:bg-danger-500/10 hover:text-danger-400"
+          onClick={toggleCollapsed}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-surface-500 transition-colors hover:bg-surface-800/60 hover:text-surface-200',
+            collapsed && 'justify-center px-0'
+          )}
         >
-          <LogOut className="h-[18px] w-[18px]" />
-          Log out
+          {collapsed ? <PanelLeftOpen className="h-[18px] w-[18px]" /> : <PanelLeftClose className="h-[18px] w-[18px]" />}
+          {!collapsed && <span>Collapse</span>}
         </button>
       </div>
     </aside>

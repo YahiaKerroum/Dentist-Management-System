@@ -53,7 +53,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
 
   const renderLabel = (entry: any) => {
     const percent = entry.percent || 0;
-    return `${entry.name} ${(percent * 100).toFixed(0)}%`;
+    return `${(percent * 100).toFixed(0)}%`;
   };
 
   if (loading) {
@@ -85,13 +85,13 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
       {data.length > 0 ? (
         <>
           <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
+            <PieChart margin={{ top: 8, right: 28, bottom: 8, left: 28 }}>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
-                outerRadius={80}
+                outerRadius={75}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderLabel}
