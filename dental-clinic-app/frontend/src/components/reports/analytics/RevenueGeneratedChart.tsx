@@ -41,7 +41,7 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
         <Loader2 className="animate-spin text-green-600" size={24} />
       </div>
     );
@@ -49,24 +49,24 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <DollarSign className="text-green-600" size={20} />
-          <h3 className="font-semibold text-gray-800">Revenue Generated</h3>
+          <h3 className="font-semibold text-surface-800">Revenue Generated</h3>
           <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
             {formatCurrency(totalRevenue)}
           </span>
         </div>
 
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
           {[3, 6, 12].map((m) => (
             <button
               key={m}
@@ -74,7 +74,7 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 months === m
                   ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-surface-600 hover:text-surface-800'
               }`}
             >
               {m}M
@@ -118,7 +118,7 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
           </AreaChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No revenue data available
         </div>
       )}

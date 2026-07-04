@@ -253,7 +253,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                     <div className="py-12">
                         <div className="flex flex-col items-center justify-center">
                             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mb-3"></div>
-                            <p className="text-sm text-gray-500">Loading form data...</p>
+                            <p className="text-sm text-surface-500">Loading form data...</p>
                         </div>
                     </div>
                 ) : (
@@ -269,15 +269,15 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Patient Selection */}
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <User className="w-4 h-4 text-gray-500" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <User className="w-4 h-4 text-surface-500" />
                                     Patient <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     name="patientId"
                                     value={formData.patientId}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                                     disabled={loadingPatients}
                                     required
                                 >
@@ -293,15 +293,15 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
 
                             {/* Doctor Selection */}
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Stethoscope className="w-4 h-4 text-gray-500" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <Stethoscope className="w-4 h-4 text-surface-500" />
                                     Doctor <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     name="doctorId"
                                     value={formData.doctorId}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                                     disabled={loadingDoctors}
                                     required
                                 >
@@ -320,8 +320,8 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Date & Time */}
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Calendar className="w-4 h-4 text-gray-500" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <Calendar className="w-4 h-4 text-surface-500" />
                                     Appointment Date & Time <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -329,22 +329,22 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                                     name="dateOfTreatment"
                                     value={formData.dateOfTreatment}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
                                     required
                                 />
                             </div>
 
                             {/* Treatment Type */}
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FileText className="w-4 h-4 text-gray-500" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <FileText className="w-4 h-4 text-surface-500" />
                                     Treatment Type
                                 </label>
                                 <select
                                     name="typeOfTreatment"
                                     value={formData.typeOfTreatment || ''}
                                     onChange={handleChange}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
                                 >
                                     <option value="">Select treatment type</option>
                                     {Object.entries(TREATMENT_TYPE_INFO).map(([type, info]) => (
@@ -382,7 +382,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                                         >
                                             {selectedTreatmentInfo.label}
                                         </h3>
-                                        <p className="text-sm text-gray-700">
+                                        <p className="text-sm text-surface-700">
                                             {selectedTreatmentInfo.description}
                                         </p>
                                     </div>
@@ -392,7 +392,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
 
                         {/* Teeth Involved */}
                         <div>
-                            <label className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                            <label className="text-sm font-medium text-surface-700 mb-3 flex items-center gap-2">
                                 🦷 Teeth Involved
                                 {formData.teethInvolved && formData.teethInvolved.length > 0 && (
                                     <span className="px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-semibold rounded-full">
@@ -410,7 +410,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Procedure */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-surface-700 mb-2">
                                     Procedure Details
                                 </label>
                                 <textarea
@@ -418,14 +418,14 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                                     value={formData.procedure || ''}
                                     onChange={handleChange}
                                     rows={4}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                                     placeholder="Describe the procedure performed..."
                                 />
                             </div>
 
                             {/* Notes */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-surface-700 mb-2">
                                     Clinical Notes
                                 </label>
                                 <textarea
@@ -433,23 +433,23 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                                     value={formData.notes || ''}
                                     onChange={handleChange}
                                     rows={4}
-                                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                                    className="w-full px-4 py-2.5 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
                                     placeholder="Add any clinical observations..."
                                 />
                             </div>
                         </div>
 
                         {/* Follow-up Required */}
-                        <div className="flex items-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+                        <div className="flex items-center p-4 bg-surface-50 rounded-lg border border-surface-200">
                             <input
                                 type="checkbox"
                                 name="followUpRequired"
                                 id="followUpRequired"
                                 checked={formData.followUpRequired}
                                 onChange={handleChange}
-                                className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                                className="w-4 h-4 text-teal-600 border-surface-300 rounded focus:ring-teal-500"
                             />
-                            <label htmlFor="followUpRequired" className="ml-3 text-sm font-medium text-gray-700">
+                            <label htmlFor="followUpRequired" className="ml-3 text-sm font-medium text-surface-700">
                                 Follow-up appointment required
                             </label>
                         </div>
@@ -467,7 +467,7 @@ export function AppointmentForm({ mode, initialData, onSubmit, onCancel, token }
                                 type="button"
                                 onClick={onCancel}
                                 disabled={isSubmitting}
-                                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex-1 px-6 py-3 bg-surface-100 text-surface-700 font-medium rounded-lg hover:bg-surface-200 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Cancel
                             </button>

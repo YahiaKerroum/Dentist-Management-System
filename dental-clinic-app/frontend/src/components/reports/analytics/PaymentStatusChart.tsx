@@ -58,7 +58,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -66,18 +66,18 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-4">
         <CreditCard className="text-green-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Payment Status</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <h3 className="font-semibold text-surface-800">Payment Status</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full">
           Total: {total}
         </span>
       </div>
@@ -116,7 +116,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
           <div className="grid grid-cols-3 gap-2 mt-4">
             {data.map((item) => (
               <div key={item.name} className="text-center">
-                <div className="text-xs text-gray-500">{item.name}</div>
+                <div className="text-xs text-surface-500">{item.name}</div>
                 <div className="text-sm font-semibold" style={{ color: item.color }}>
                   {formatCurrency(item.amount)}
                 </div>
@@ -125,7 +125,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
           </div>
         </>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No payment data available
         </div>
       )}

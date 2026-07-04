@@ -255,14 +255,14 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
     >
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-6 border-b border-surface-200">
+          <h2 className="text-xl font-semibold text-surface-900">
             {payment ? 'Edit Payment' : 'Create New Payment'}
           </h2>
           <button
             onClick={handleClose}
             disabled={submitting}
-            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
+            className="text-surface-400 hover:text-surface-600 transition-colors disabled:opacity-50"
           >
             <X className="w-6 h-6" />
           </button>
@@ -279,11 +279,11 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
 
           {/* Patient Selection */}
           <div className="relative">
-            <label htmlFor="patient" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="patient" className="block text-sm font-medium text-surface-700 mb-1">
               Patient <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400 w-5 h-5" />
               <input
                 type="text"
                 id="patient"
@@ -291,32 +291,32 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
                 onChange={handlePatientSearchChange}
                 onFocus={() => setShowPatientDropdown(true)}
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.patientId ? 'border-red-500' : 'border-gray-300'
+                  errors.patientId ? 'border-red-500' : 'border-surface-300'
                 }`}
                 placeholder="Search patient by name..."
                 disabled={submitting}
                 autoComplete="off"
               />
               {loadingPatients && (
-                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 animate-spin text-gray-400" />
+                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 animate-spin text-surface-400" />
               )}
             </div>
             
             {/* Patient Dropdown */}
             {showPatientDropdown && filteredPatients.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-10 w-full mt-1 bg-white border border-surface-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {filteredPatients.map(patient => (
                   <button
                     key={patient.id}
                     type="button"
                     onClick={() => handlePatientSelect(patient)}
-                    className="w-full px-4 py-2 text-left hover:bg-gray-50 transition-colors"
+                    className="w-full px-4 py-2 text-left hover:bg-surface-50 transition-colors"
                   >
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-surface-900">
                       {patient.firstName} {patient.lastName}
                     </div>
                     {patient.email && (
-                      <div className="text-sm text-gray-500">{patient.email}</div>
+                      <div className="text-sm text-surface-500">{patient.email}</div>
                     )}
                   </button>
                 ))}
@@ -330,7 +330,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date */}
             <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="date" className="block text-sm font-medium text-surface-700 mb-1">
                 Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -340,7 +340,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
                 value={formData.date}
                 onChange={handleInputChange}
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.date ? 'border-red-500' : 'border-gray-300'
+                  errors.date ? 'border-red-500' : 'border-surface-300'
                 }`}
                 disabled={submitting}
               />
@@ -349,7 +349,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
 
             {/* Amount */}
             <div>
-              <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="amount" className="block text-sm font-medium text-surface-700 mb-1">
                 Amount <span className="text-red-500">*</span>
               </label>
               <input
@@ -361,7 +361,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
                 step="0.01"
                 min="0"
                 className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.amount ? 'border-red-500' : 'border-gray-300'
+                  errors.amount ? 'border-red-500' : 'border-surface-300'
                 }`}
                 placeholder="0.00"
                 disabled={submitting}
@@ -372,7 +372,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
 
           {/* Payment Method */}
           <div>
-            <label htmlFor="method" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="method" className="block text-sm font-medium text-surface-700 mb-1">
               Payment Method
             </label>
             <select
@@ -380,7 +380,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
               name="method"
               value={formData.method}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={submitting}
             >
               {PAYMENT_METHODS.map(method => (
@@ -393,7 +393,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
 
           {/* Notes */}
           <div>
-            <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="notes" className="block text-sm font-medium text-surface-700 mb-1">
               Notes
             </label>
             <textarea
@@ -402,7 +402,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
               value={formData.notes}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Add any additional notes..."
               disabled={submitting}
             />
@@ -414,7 +414,7 @@ const PaymentFormModal: React.FC<PaymentFormModalProps> = ({
               type="button"
               onClick={handleClose}
               disabled={submitting}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-50 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

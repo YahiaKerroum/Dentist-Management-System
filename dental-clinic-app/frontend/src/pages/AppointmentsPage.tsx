@@ -262,18 +262,18 @@ const hasActiveFilters =
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#26a37e' }}></div>
             </div>
         );
     }
 
     return (
-        <div className="bg-gray-50 min-h-full p-8">
+        <div className="bg-surface-50 min-h-full p-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-                    <p className="text-gray-500 mt-1">
+                    <h1 className="text-2xl font-bold text-surface-900">Appointments</h1>
+                    <p className="text-surface-500 mt-1">
                         {userRole === 'DOCTOR' ? 'Manage your appointments' : 'Manage clinic appointments'}
                     </p>
                 </div>
@@ -294,16 +294,16 @@ const hasActiveFilters =
             )}
 
             {/* Search and Filter Bar */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div className="bg-white rounded-xl shadow-sm border border-surface-100 mb-6">
                 <div className="p-4 flex items-center gap-4">
                     <div className="flex-1 relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400" />
+                            <Search className="h-5 w-5 text-surface-400" />
                         </div>
                         <input
                             type="text"
                             placeholder="Search by patient or doctor name..."
-                            className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-lg leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3] transition duration-150 ease-in-out sm:text-sm"
+                            className="block w-full pl-10 pr-3 py-2.5 border border-surface-200 rounded-lg leading-5 bg-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e] transition duration-150 ease-in-out sm:text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -313,15 +313,15 @@ const hasActiveFilters =
                         onClick={() => setShowFilters(!showFilters)}
                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
                             showFilters || hasActiveFilters
-                                ? 'border-[#3DBEA3] text-[#3DBEA3]'
-                                : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                ? 'border-[#26a37e] text-[#26a37e]'
+                                : 'border-surface-200 text-surface-600 hover:bg-surface-50'
                         }`}
-                        style={showFilters || hasActiveFilters ? { backgroundColor: '#E8F5F0' } : {}}
+                        style={showFilters || hasActiveFilters ? { backgroundColor: '#effcf6' } : {}}
                     >
                         <Filter className="w-4 h-4" />
                         Filters
                         {hasActiveFilters && (
-                            <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#3DBEA3' }}>
+                            <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#26a37e' }}>
                                 !
                             </span>
                         )}
@@ -330,14 +330,14 @@ const hasActiveFilters =
                 </div>
                     
                 {showFilters && (
-                    <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                    <div className="px-4 pb-4 border-t border-surface-100 pt-4">
                         <div className="grid grid-cols-5 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">Patient</label>
                                 <select
                                     value={patientFilter}
                                     onChange={(e) => setPatientFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                 >
                                     <option value="all">All Patients</option>
                                     {patients.map((patient) => (
@@ -349,11 +349,11 @@ const hasActiveFilters =
                             </div>
                                 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">Doctor</label>
                                 <select
                                     value={doctorFilter}
                                     onChange={(e) => setDoctorFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                 >
                                     <option value="all">All Doctors</option>
                                     {doctors.map((doc) => (
@@ -365,9 +365,9 @@ const hasActiveFilters =
                             </div>
                                 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">Status</label>
                                 <select
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                     value={statusFilter}
                                     onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | 'all')}
                                 >
@@ -381,22 +381,22 @@ const hasActiveFilters =
                             </div>
                                 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">From Date</label>
                                 <input
                                     type="date"
                                     value={dateRange.from}
                                     onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                 />
                             </div>
                                 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                <label className="block text-sm font-medium text-surface-700 mb-1">To Date</label>
                                 <input
                                     type="date"
                                     value={dateRange.to}
                                     onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                 />
                             </div>
                         </div>
@@ -404,8 +404,8 @@ const hasActiveFilters =
                             <div className="mt-3 flex justify-end">
                                 <button
                                     onClick={clearFilters}
-                                    className="text-sm font-medium hover:text-[#2FA88E]"
-                                    style={{ color: '#3DBEA3' }}
+                                    className="text-sm font-medium hover:text-[#188467]"
+                                    style={{ color: '#26a37e' }}
                                 >
                                     Clear all filters
                                 </button>

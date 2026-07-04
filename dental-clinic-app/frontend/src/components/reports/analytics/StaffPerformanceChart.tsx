@@ -64,7 +64,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -72,21 +72,21 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="text-blue-600" size={20} />
-          <h3 className="font-semibold text-gray-800">Staff Performance</h3>
+          <h3 className="font-semibold text-surface-800">Staff Performance</h3>
         </div>
 
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
           {(['revenue', 'appointments', 'treatments'] as const).map((v) => (
             <button
               key={v}
@@ -94,7 +94,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
               className={`px-3 py-1 text-sm rounded-md transition-colors capitalize ${
                 view === v
                   ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-surface-600 hover:text-surface-800'
               }`}
             >
               {v}
@@ -129,7 +129,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
           </BarChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No staff performance data available
         </div>
       )}
@@ -139,14 +139,14 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-xs text-gray-500 uppercase">
+              <tr className="text-left text-xs text-surface-500 uppercase">
                 <th className="pb-2">Doctor</th>
                 <th className="pb-2 text-right">Revenue</th>
                 <th className="pb-2 text-right">Appointments</th>
                 <th className="pb-2 text-right">Treatments</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-surface-100">
               {data.map((staff, index) => (
                 <tr key={staff.doctorId}>
                   <td className="py-2 flex items-center gap-2">

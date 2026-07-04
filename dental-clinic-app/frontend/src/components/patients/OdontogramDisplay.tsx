@@ -22,7 +22,7 @@ export function OdontogramDisplay({ teethStates = {} }: OdontogramProps) {
       case 'implant':
         return 'bg-purple-100 border-purple-400';
       default:
-        return 'bg-gray-50 border-gray-300';
+        return 'bg-surface-50 border-surface-300';
     }
   };
 
@@ -52,7 +52,7 @@ export function OdontogramDisplay({ teethStates = {} }: OdontogramProps) {
   const lowerRight = Array.from({ length: 8 }, (_, i) => i + 25); // 25-32
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="bg-white rounded-lg border border-surface-200 p-6">
       <div className="mb-4">
         <h3 className="text-lg font-semibold mb-4">Dental Chart (Odontogram)</h3>
         
@@ -81,10 +81,10 @@ export function OdontogramDisplay({ teethStates = {} }: OdontogramProps) {
         </div>
 
         {/* Odontogram */}
-        <div className="border border-gray-300 rounded p-4 bg-gray-50">
+        <div className="border border-surface-300 rounded p-4 bg-surface-50">
           {/* Upper Arch */}
           <div className="mb-8">
-            <p className="text-xs text-gray-600 text-center mb-2 font-semibold">UPPER ARCH</p>
+            <p className="text-xs text-surface-600 text-center mb-2 font-semibold">UPPER ARCH</p>
             
             {/* Upper Right */}
             <div className="flex justify-center gap-1 mb-2">
@@ -119,7 +119,7 @@ export function OdontogramDisplay({ teethStates = {} }: OdontogramProps) {
 
           {/* Lower Arch */}
           <div>
-            <p className="text-xs text-gray-600 text-center mb-2 font-semibold">LOWER ARCH</p>
+            <p className="text-xs text-surface-600 text-center mb-2 font-semibold">LOWER ARCH</p>
             
             {/* Lower Left (reversed display) */}
             <div className="flex justify-center gap-1 mb-2">

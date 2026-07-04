@@ -39,50 +39,50 @@ export const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ appointments, on
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+    <div className="bg-white rounded-xl shadow-sm border border-surface-200">
+      <div className="p-4 border-b border-surface-200 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          <button className="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+            <ChevronLeft className="w-5 h-5 text-surface-600" />
           </button>
-          <span className="text-gray-900">October 2025</span>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ChevronRight className="w-5 h-5 text-gray-600" />
+          <span className="text-surface-900">October 2025</span>
+          <button className="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+            <ChevronRight className="w-5 h-5 text-surface-600" />
           </button>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ZoomOut className="w-4 h-4 text-gray-600" />
+          <button className="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+            <ZoomOut className="w-4 h-4 text-surface-600" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ZoomIn className="w-4 h-4 text-gray-600" />
+          <button className="p-2 hover:bg-surface-100 rounded-lg transition-colors">
+            <ZoomIn className="w-4 h-4 text-surface-600" />
           </button>
         </div>
       </div>
 
       <div className="overflow-auto" style={{ maxHeight: '600px' }}>
         <div className="min-w-[900px]">
-          <div className="grid grid-cols-8 border-b border-gray-200 bg-gray-50">
+          <div className="grid grid-cols-8 border-b border-surface-200 bg-surface-50">
             <div className="p-3"></div>
             {weekDays.map(day => (
-              <div key={day.dateStr} className="p-3 text-center border-l border-gray-200">
-                <div className="text-gray-500">{day.day}</div>
-                <div className="text-gray-900">{day.date} {day.month} {day.year}</div>
+              <div key={day.dateStr} className="p-3 text-center border-l border-surface-200">
+                <div className="text-surface-500">{day.day}</div>
+                <div className="text-surface-900">{day.date} {day.month} {day.year}</div>
               </div>
             ))}
           </div>
 
           <div className="relative">
             {timeSlots.map((time) => (
-              <div key={time} className="grid grid-cols-8 border-b border-gray-200" style={{ height: '5rem' }}>
-                <div className="p-3 text-gray-500 border-r border-gray-200 bg-gray-50">{time}</div>
+              <div key={time} className="grid grid-cols-8 border-b border-surface-200" style={{ height: '5rem' }}>
+                <div className="p-3 text-surface-500 border-r border-surface-200 bg-surface-50">{time}</div>
                 {weekDays.map((day) => {
                   const appointment = getAppointmentForSlot(day.dateStr, time);
                   return (
-                    <div key={`${day.dateStr}-${time}`} className="relative border-l border-gray-200 hover:bg-blue-50/30 cursor-pointer transition-colors p-1">
+                    <div key={`${day.dateStr}-${time}`} className="relative border-l border-surface-200 hover:bg-blue-50/30 cursor-pointer transition-colors p-1">
                       {appointment && (
-                        <div onClick={() => onAppointmentClick(appointment)} className={`h-full w-full rounded-lg p-2 cursor-pointer transition-all overflow-hidden ${selectedAppointment?.id === appointment.id ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-400' : appointment.status === 'confirmed' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : appointment.status === 'pending' ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' : 'bg-gray-100 text-gray-900 hover:bg-gray-200'}`}>
+                        <div onClick={() => onAppointmentClick(appointment)} className={`h-full w-full rounded-lg p-2 cursor-pointer transition-all overflow-hidden ${selectedAppointment?.id === appointment.id ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-400' : appointment.status === 'confirmed' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : appointment.status === 'pending' ? 'bg-amber-100 text-amber-900 hover:bg-amber-200' : 'bg-surface-100 text-surface-900 hover:bg-surface-200'}`}>
                           <div className="truncate">{appointment.patientName}</div>
                           <div className="truncate opacity-80">{appointment.type}</div>
                         </div>
@@ -96,10 +96,10 @@ export const WeeklyCalendar: React.FC<WeeklyCalendarProps> = ({ appointments, on
         </div>
       </div>
 
-      <div className="border-t border-gray-200 flex">
-        <button onClick={() => setActiveView('day')} className={`flex-1 py-3 transition-colors ${activeView === 'day' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Day</button>
-        <button onClick={() => setActiveView('week')} className={`flex-1 py-3 transition-colors ${activeView === 'week' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Week</button>
-        <button onClick={() => setActiveView('month')} className={`flex-1 py-3 transition-colors ${activeView === 'month' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-600 hover:text-gray-900'}`}>Month</button>
+      <div className="border-t border-surface-200 flex">
+        <button onClick={() => setActiveView('day')} className={`flex-1 py-3 transition-colors ${activeView === 'day' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-surface-600 hover:text-surface-900'}`}>Day</button>
+        <button onClick={() => setActiveView('week')} className={`flex-1 py-3 transition-colors ${activeView === 'week' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-surface-600 hover:text-surface-900'}`}>Week</button>
+        <button onClick={() => setActiveView('month')} className={`flex-1 py-3 transition-colors ${activeView === 'month' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-surface-600 hover:text-surface-900'}`}>Month</button>
       </div>
     </div>
   );

@@ -7,6 +7,10 @@ import { StaffProfileView } from '../components/staff/StaffProfileView';
 import { downloadCSV, formatStaffForExport } from '../utils/export.utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { UserPlus, Search, Filter, Download, X } from 'lucide-react';
+import { Button } from '../components/ui/Button';
+import { Input } from '../components/ui/Input';
+import { Skeleton } from '../components/ui/Skeleton';
+import { toast } from '../components/ui/Toaster';
 
 interface StaffPageProps {
     token: string;
@@ -19,39 +23,20 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState<Role | ''>('');
-    
-    // Modal states
+
     const [isFormModalOpen, setIsFormModalOpen] = useState(false);
     const [isProfileViewOpen, setIsProfileViewOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
     const [formLoading, setFormLoading] = useState(false);
 
-    // Search input ref for keyboard shortcuts
     const searchInputRef = useRef<HTMLInputElement>(null);
 
-    // Keyboard shortcuts
     useKeyboardShortcuts([
-        {
-            key: 'k',
-            ctrl: true,
-            description: 'Focus search',
-            action: () => searchInputRef.current?.focus(),
-        },
-        {
-            key: 'n',
-            ctrl: true,
-            description: 'Add new staff',
-            action: () => handleAddNew(),
-        },
-        {
-            key: 'e',
-            ctrl: true,
-            description: 'Export to CSV',
-            action: () => handleExportCSV(),
-        },
+        { key: 'k', ctrl: true, description: 'Focus search', action: () => searchInputRef.current?.focus() },
+        { key: 'n', ctrl: true, description: 'Add new staff', action: () => handleAddNew() },
+        { key: 'e', ctrl: true, description: 'Export to CSV', action: () => handleExportCSV() },
     ]);
 
-    // Fetch all staff
     const fetchStaff = async () => {
         try {
             setLoading(true);
@@ -70,10 +55,8 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
         fetchStaff();
     }, [token]);
 
-    // Filter staff based on search term and role
     useEffect(() => {
         let filtered = staff;
-
         if (searchTerm) {
             const searchLower = searchTerm.toLowerCase();
             filtered = filtered.filter(
@@ -84,15 +67,12 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     member.username.toLowerCase().includes(searchLower)
             );
         }
-
         if (roleFilter) {
             filtered = filtered.filter((member) => member.role === roleFilter);
         }
-
         setFilteredStaff(filtered);
     }, [searchTerm, roleFilter, staff]);
 
-    // Handle create staff
     const handleCreate = async (data: CreateUserDTO | UpdateUserDTO) => {
         try {
             setFormLoading(true);
@@ -100,15 +80,14 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
             setIsFormModalOpen(false);
             setSelectedStaff(null);
             fetchStaff();
-            alert('Staff member created successfully');
+            toast.success('Staff member created');
         } catch (err: any) {
-            alert(err.message || 'Failed to create staff member');
+            toast.error(err.message || 'Failed to create staff member');
         } finally {
             setFormLoading(false);
         }
     };
 
-    // Handle update staff
     const handleUpdate = async (data: CreateUserDTO | UpdateUserDTO) => {
         if (!selectedStaff) return;
         try {
@@ -117,169 +96,94 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
             setIsFormModalOpen(false);
             setSelectedStaff(null);
             fetchStaff();
-            alert('Staff member updated successfully');
+            toast.success('Staff member updated');
         } catch (err: any) {
-            alert(err.message || 'Failed to update staff member');
+            toast.error(err.message || 'Failed to update staff member');
         } finally {
             setFormLoading(false);
         }
     };
 
-    // Handle delete staff
     const handleDelete = async (staffMember: User) => {
         if (!window.confirm(`Are you sure you want to delete ${staffMember.firstName} ${staffMember.lastName}?`)) {
             return;
         }
-
         try {
             await deleteStaff(staffMember.id, token);
             fetchStaff();
-            alert('Staff member deleted successfully');
+            toast.success('Staff member deleted');
         } catch (err: any) {
-            alert(err.message || 'Failed to delete staff member');
+            toast.error(err.message || 'Failed to delete staff member');
         }
     };
 
-    // Handle edit button click
     const handleEdit = (staffMember: User) => {
         setSelectedStaff(staffMember);
         setIsFormModalOpen(true);
     };
 
-    // Handle view profile
     const handleView = (staffMember: User) => {
         setSelectedStaff(staffMember);
         setIsProfileViewOpen(true);
     };
 
-    // Handle add new staff
     const handleAddNew = () => {
         setSelectedStaff(null);
         setIsFormModalOpen(true);
     };
 
-    // Handle export to CSV
     const handleExportCSV = () => {
         const dataToExport = formatStaffForExport(filteredStaff);
         downloadCSV(dataToExport, 'staff');
     };
 
-    // Handle clear filters
     const handleClearFilters = () => {
         setSearchTerm('');
         setRoleFilter('');
     };
 
-    // Check if filters are active
-    const hasActiveFilters = () => {
-        return searchTerm !== '' || roleFilter !== '';
-    };
+    const hasActiveFilters = searchTerm !== '' || roleFilter !== '';
 
     if (loading) {
         return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '100vh',
-                fontSize: '18px',
-                color: '#6c757d'
-            }}>
-                Loading staff...
+            <div className="space-y-4 p-8">
+                <Skeleton className="h-8 w-64" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-96 w-full" />
             </div>
         );
     }
 
     return (
-        <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
-            {/* Header */}
-            <div style={{ marginBottom: '32px' }}>
-                <h1 style={{ margin: '0 0 8px 0', fontSize: '32px', fontWeight: 600, color: '#1f2937' }}>
-                    Staff Management
-                </h1>
-                <p style={{ margin: 0, color: '#6b7280', fontSize: '16px' }}>
-                    Manage your clinic staff members, roles, and access
-                </p>
+        <div className="mx-auto max-w-7xl p-8">
+            <div className="mb-8">
+                <h1 className="text-xl font-semibold text-surface-900">Staff Management</h1>
+                <p className="mt-1 text-sm text-surface-500">Manage your clinic staff members, roles, and access</p>
             </div>
 
-            {/* Error Message */}
             {error && (
-                <div style={{
-                    padding: '16px',
-                    backgroundColor: '#fee',
-                    border: '1px solid #fcc',
-                    borderRadius: '8px',
-                    color: '#c00',
-                    marginBottom: '24px'
-                }}>
+                <div className="mb-6 rounded-md border border-danger-100 bg-danger-50 px-4 py-3 text-sm text-danger-700">
                     {error}
                 </div>
             )}
 
-            {/* Filters and Actions */}
-            <div style={{
-                display: 'flex',
-                gap: '16px',
-                marginBottom: '24px',
-                flexWrap: 'wrap',
-                alignItems: 'center'
-            }}>
-                {/* Search Input */}
-                <div style={{ flex: '1', minWidth: '250px', position: 'relative' }}>
-                    <Search
-                        size={18}
-                        style={{
-                            position: 'absolute',
-                            left: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#6b7280'
-                        }}
-                    />
-                    <input
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+                <div className="min-w-[250px] flex-1">
+                    <Input
                         ref={searchInputRef}
-                        type="text"
                         placeholder="Search by name, email... (Ctrl+K)"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            width: '100%',
-                            padding: '10px 12px 10px 40px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            boxSizing: 'border-box'
-                        }}
+                        leadingIcon={<Search size={16} />}
                     />
                 </div>
 
-                {/* Role Filter */}
-                <div style={{ position: 'relative', minWidth: '200px' }}>
-                    <Filter
-                        size={18}
-                        style={{
-                            position: 'absolute',
-                            left: '12px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            color: '#6b7280',
-                            pointerEvents: 'none'
-                        }}
-                    />
+                <div className="relative min-w-[180px]">
+                    <Filter size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
                     <select
                         value={roleFilter}
                         onChange={(e) => setRoleFilter(e.target.value as Role | '')}
-                        style={{
-                            width: '100%',
-                            padding: '10px 12px 10px 40px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            boxSizing: 'border-box',
-                            cursor: 'pointer',
-                            appearance: 'none',
-                            backgroundColor: 'white'
-                        }}
+                        className="h-10 w-full appearance-none rounded-md border border-surface-300 bg-white pl-10 pr-3 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
                     >
                         <option value="">All Roles</option>
                         <option value="DOCTOR">Doctors</option>
@@ -288,104 +192,31 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     </select>
                 </div>
 
-                {/* Export Button */}
-                <button
-                    onClick={handleExportCSV}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#6b7280',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4b5563'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#6b7280'}
-                    title="Export to CSV (Ctrl+E)"
-                >
-                    <Download size={18} />
+                <Button variant="secondary" onClick={handleExportCSV} title="Export to CSV (Ctrl+E)">
+                    <Download size={16} />
                     Export
-                </button>
+                </Button>
 
-                {/* Clear Filters Button */}
-                {hasActiveFilters() && (
-                    <button
-                        onClick={handleClearFilters}
-                        style={{
-                            padding: '10px 20px',
-                            backgroundColor: '#f3f4f6',
-                            color: '#374151',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '8px',
-                            fontSize: '14px',
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            transition: 'background-color 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e7eb'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
-                    >
-                        <X size={18} />
+                {hasActiveFilters && (
+                    <Button variant="ghost" onClick={handleClearFilters}>
+                        <X size={16} />
                         Clear Filters
-                    </button>
+                    </Button>
                 )}
 
-                {/* Add New Staff Button */}
-                <button
-                    onClick={handleAddNew}
-                    style={{
-                        padding: '10px 20px',
-                        backgroundColor: '#3DBEA3',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'background-color 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2FA88E'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3DBEA3'}
-                    title="Add new staff member (Ctrl+N)"
-                >
-                    <UserPlus size={18} />
+                <Button onClick={handleAddNew} title="Add new staff member (Ctrl+N)">
+                    <UserPlus size={16} />
                     Add Staff Member
-                </button>
+                </Button>
             </div>
 
-            {/* Staff Count */}
-            <div style={{
-                padding: '12px 16px',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                marginBottom: '16px',
-                fontSize: '14px',
-                color: '#495057'
-            }}>
-                Showing <strong>{filteredStaff.length}</strong> of <strong>{staff.length}</strong> staff members
+            <div className="mb-4 rounded-md bg-surface-100 px-4 py-2.5 text-sm text-surface-600">
+                Showing <strong className="font-semibold text-surface-800">{filteredStaff.length}</strong> of{' '}
+                <strong className="font-semibold text-surface-800">{staff.length}</strong> staff members
             </div>
 
-            {/* Staff Table */}
-            <StaffTable
-                staff={filteredStaff}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onView={handleView}
-            />
+            <StaffTable staff={filteredStaff} onEdit={handleEdit} onDelete={handleDelete} onView={handleView} />
 
-            {/* Form Modal */}
             <StaffFormModal
                 isOpen={isFormModalOpen}
                 onClose={() => {
@@ -398,7 +229,6 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                 token={token}
             />
 
-            {/* Profile View Modal */}
             <StaffProfileView
                 isOpen={isProfileViewOpen}
                 onClose={() => {

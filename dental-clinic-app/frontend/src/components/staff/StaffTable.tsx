@@ -14,7 +14,7 @@ const getRoleBadgeColor = (role: Role): string => {
         case 'MANAGER':
             return '#dc3545';
         case 'DOCTOR':
-            return '#3DBEA3';
+            return '#26a37e';
         case 'ASSISTANT':
             return '#28a745';
         default:
@@ -137,8 +137,8 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                                         onClick={() => onView(member)}
                                         style={{
                                             padding: '8px',
-                                            backgroundColor: '#E8F5F0',
-                                            color: '#3DBEA3',
+                                            backgroundColor: '#effcf6',
+                                            color: '#26a37e',
                                             border: 'none',
                                             borderRadius: '6px',
                                             cursor: 'pointer',
@@ -147,12 +147,12 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                                             transition: 'all 0.2s'
                                         }}
                                         onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#3DBEA3';
+                                            e.currentTarget.style.backgroundColor = '#26a37e';
                                             e.currentTarget.style.color = 'white';
                                         }}
                                         onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#E8F5F0';
-                                            e.currentTarget.style.color = '#3DBEA3';
+                                            e.currentTarget.style.backgroundColor = '#effcf6';
+                                            e.currentTarget.style.color = '#26a37e';
                                         }}
                                         title="View Profile"
                                     >

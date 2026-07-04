@@ -93,12 +93,12 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
       {/* Name Fields */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-700 mb-2">
             First Name <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User size={18} className="text-gray-400" />
+              <User size={18} className="text-surface-400" />
             </div>
             <input
               name="firstName"
@@ -106,18 +106,18 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all"
               placeholder="Enter first name"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-700 mb-2">
             Last Name <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User size={18} className="text-gray-400" />
+              <User size={18} className="text-surface-400" />
             </div>
             <input
               name="lastName"
@@ -125,7 +125,7 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all"
               placeholder="Enter last name"
             />
           </div>
@@ -135,37 +135,37 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
       {/* Contact Fields */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-700 mb-2">
             Email
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Mail size={18} className="text-gray-400" />
+              <Mail size={18} className="text-surface-400" />
             </div>
             <input
               name="email"
               type="email"
               value={formData.email || ''}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all"
               placeholder="email@example.com"
             />
           </div>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-surface-700 mb-2">
             Phone
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Phone size={18} className="text-gray-400" />
+              <Phone size={18} className="text-surface-400" />
             </div>
             <input
               name="phone"
               type="tel"
               value={formData.phone || ''}
               onChange={handleChange}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+              className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all"
               placeholder="+1 (555) 000-0000"
             />
           </div>
@@ -174,38 +174,38 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
 
       {/* Date of Birth */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-surface-700 mb-2">
           Date of Birth
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Calendar size={18} className="text-gray-400" />
+            <Calendar size={18} className="text-surface-400" />
           </div>
           <input
             name="dateOfBirth"
             type="date"
             value={formData.dateOfBirth || ''}
             onChange={handleChange}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all"
           />
         </div>
       </div>
 
       {/* Primary Doctor Selection */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-surface-700 mb-2">
           Primary Doctor
         </label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-            <Stethoscope size={18} className="text-gray-400" />
+            <Stethoscope size={18} className="text-surface-400" />
           </div>
           <select
             name="primaryDentistId"
             value={formData.primaryDentistId || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, primaryDentistId: e.target.value }))}
             disabled={loadingDoctors}
-            className="w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/30 focus:border-[#3DBEA3] transition-all appearance-none bg-white disabled:bg-gray-50 disabled:cursor-not-allowed"
+            className="w-full pl-10 pr-10 py-2.5 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#26a37e]/30 focus:border-[#26a37e] transition-all appearance-none bg-white disabled:bg-surface-50 disabled:cursor-not-allowed"
           >
             <option value="">Select a doctor (optional)</option>
             {doctors.map((doctor) => (
@@ -216,18 +216,18 @@ export function PatientForm({ mode, initialData, onSubmit, onCancel, token }: Pa
             ))}
           </select>
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </div>
         </div>
         {loadingDoctors && (
-          <p className="text-xs text-gray-500 mt-1 ml-1">Loading doctors...</p>
+          <p className="text-xs text-surface-500 mt-1 ml-1">Loading doctors...</p>
         )}
       </div>
 
-      <div className="flex gap-3 pt-4 border-t border-gray-100">
-        <Button type="submit" className="flex-1 bg-[#3DBEA3] hover:bg-[#35a892] text-white">
+      <div className="flex gap-3 pt-4 border-t border-surface-100">
+        <Button type="submit" className="flex-1 bg-[#26a37e] hover:bg-[#35a892] text-white">
           {mode === 'add' ? 'Add Patient' : 'Save Changes'}
         </Button>
         <Button type="button" variant="secondary" onClick={onCancel} className="flex-1">

@@ -283,31 +283,31 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
         return (
             <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: '#D5EDE8', borderTopColor: '#3DBEA3' }} />
-                    <p className="text-gray-500">Loading treatments...</p>
+                    <div className="w-12 h-12 border-4 rounded-full animate-spin" style={{ borderColor: '#b0ecd2', borderTopColor: '#26a37e' }} />
+                    <p className="text-surface-500">Loading treatments...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="h-full bg-gradient-to-br from-slate-50 via-white to-[#E8F5F0]">
+        <div className="h-full bg-gradient-to-br from-slate-50 via-white to-[#effcf6]">
             {/* Header Section */}
-            <div className="bg-white border-b border-gray-100 px-6 py-5">
+            <div className="bg-white border-b border-surface-100 px-6 py-5">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(to bottom right, #26a37e, #188467)' }}>
                             <Stethoscope className="w-6 h-6 text-white" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-900">Treatment Records</h1>
-                            <p className="text-gray-500 text-sm">Manage and track all dental procedures</p>
+                            <h1 className="text-2xl font-bold text-surface-900">Treatment Records</h1>
+                            <p className="text-surface-500 text-sm">Manage and track all dental procedures</p>
                         </div>
                     </div>
                     <button
                         onClick={handleAddTreatment}
                         className="flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-0.5"
-                        style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}
+                        style={{ background: 'linear-gradient(to right, #26a37e, #188467)' }}
                     >
                         <Plus className="w-5 h-5" />
                         New Treatment
@@ -349,14 +349,14 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             </div>
                         </div>
                     </div>
-                    <div className="rounded-xl p-4 border" style={{ background: 'linear-gradient(to bottom right, #E8F5F0, #D5EDE8)', borderColor: '#D5EDE8' }}>
+                    <div className="rounded-xl p-4 border" style={{ background: 'linear-gradient(to bottom right, #effcf6, #b0ecd2)', borderColor: '#b0ecd2' }}>
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#D5EDE8' }}>
-                                <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#b0ecd2' }}>
+                                <Calendar className="w-5 h-5" style={{ color: '#26a37e' }} />
                             </div>
                             <div>
-                                <p className="text-2xl font-bold" style={{ color: '#1C6B5A' }}>{stats.thisMonth}</p>
-                                <p className="text-xs" style={{ color: '#3DBEA3' }}>This Month</p>
+                                <p className="text-2xl font-bold" style={{ color: '#145446' }}>{stats.thisMonth}</p>
+                                <p className="text-xs" style={{ color: '#26a37e' }}>This Month</p>
                             </div>
                         </div>
                     </div>
@@ -387,31 +387,31 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                 )}
 
                 {/* Search and Filters */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div className="bg-white rounded-xl shadow-sm border border-surface-100 mb-6">
                     <div className="p-4 flex items-center gap-4">
                         <div className="flex-1 relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-surface-400" />
                             <input
                                 type="text"
                                 placeholder="Search by patient, doctor, treatment type, or notes..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3] transition-all"
+                                className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e] transition-all"
                             />
                         </div>
                         <button
                             onClick={() => setShowFilters(!showFilters)}
                             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
                                 showFilters || hasActiveFilters
-                                    ? 'border-[#3DBEA3] text-[#3DBEA3]'
-                                    : 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                    ? 'border-[#26a37e] text-[#26a37e]'
+                                    : 'border-surface-200 text-surface-600 hover:bg-surface-50'
                             }`}
-                            style={showFilters || hasActiveFilters ? { backgroundColor: '#E8F5F0' } : {}}
+                            style={showFilters || hasActiveFilters ? { backgroundColor: '#effcf6' } : {}}
                         >
                             <Filter className="w-4 h-4" />
                             Filters
                             {hasActiveFilters && (
-                                <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#3DBEA3' }}>
+                                <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#26a37e' }}>
                                     !
                                 </span>
                             )}
@@ -420,14 +420,14 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                     </div>
 
                     {showFilters && (
-                        <div className="px-4 pb-4 border-t border-gray-100 pt-4">
+                        <div className="px-4 pb-4 border-t border-surface-100 pt-4">
                             <div className="grid grid-cols-5 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Treatment Type</label>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">Treatment Type</label>
                                     <select
                                         value={typeFilter}
                                         onChange={(e) => setTypeFilter(e.target.value as TreatmentType | 'all')}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3DBEA3]/20 focus:border-[#3DBEA3]"
+                                        className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
                                     >
                                         <option value="all">All Types</option>
                                         {Object.entries(TREATMENT_TYPE_CONFIG).map(([key, config]) => (
@@ -438,11 +438,11 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">Status</label>
                                     <select
                                         value={statusFilter}
                                         onChange={(e) => setStatusFilter(e.target.value as 'all' | 'completed' | 'pending')}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                        className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                                     >
                                         <option value="all">All Status</option>
                                         <option value="completed">Completed</option>
@@ -450,11 +450,11 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">Doctor</label>
                                     <select
                                         value={doctorFilter}
                                         onChange={(e) => setDoctorFilter(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                        className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                                     >
                                         <option value="all">All Doctors</option>
                                         {doctors.map((doc) => (
@@ -465,21 +465,21 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     </select>
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">From Date</label>
                                     <input
                                         type="date"
                                         value={dateRange.from}
                                         onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                        className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                                    <label className="block text-sm font-medium text-surface-700 mb-1">To Date</label>
                                     <input
                                         type="date"
                                         value={dateRange.to}
                                         onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+                                        className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
                                     />
                                 </div>
                             </div>
@@ -498,15 +498,15 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                 </div>
 
                 {/* Treatments Table */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-surface-100 overflow-hidden">
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
-                                <tr className="bg-gray-50/80">
+                                <tr className="bg-surface-50/80">
                                     <th className="px-6 py-4 text-left">
                                         <button
                                             onClick={() => handleSort('date')}
-                                            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                                            className="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider hover:text-surface-700"
                                         >
                                             Date
                                             <ArrowUpDown className="w-3 h-3" />
@@ -515,7 +515,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     <th className="px-6 py-4 text-left">
                                         <button
                                             onClick={() => handleSort('patient')}
-                                            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                                            className="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider hover:text-surface-700"
                                         >
                                             Patient
                                             <ArrowUpDown className="w-3 h-3" />
@@ -524,7 +524,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     <th className="px-6 py-4 text-left">
                                         <button
                                             onClick={() => handleSort('doctor')}
-                                            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                                            className="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider hover:text-surface-700"
                                         >
                                             Doctor
                                             <ArrowUpDown className="w-3 h-3" />
@@ -533,39 +533,39 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                     <th className="px-6 py-4 text-left">
                                         <button
                                             onClick={() => handleSort('type')}
-                                            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                                            className="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider hover:text-surface-700"
                                         >
                                             Treatment
                                             <ArrowUpDown className="w-3 h-3" />
                                         </button>
                                     </th>
-                                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-left text-xs font-semibold text-surface-500 uppercase tracking-wider">
                                         Teeth
                                     </th>
                                     <th className="px-6 py-4 text-left">
                                         <button
                                             onClick={() => handleSort('status')}
-                                            className="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wider hover:text-gray-700"
+                                            className="flex items-center gap-2 text-xs font-semibold text-surface-500 uppercase tracking-wider hover:text-surface-700"
                                         >
                                             Status
                                             <ArrowUpDown className="w-3 h-3" />
                                         </button>
                                     </th>
-                                    <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-4 text-right text-xs font-semibold text-surface-500 uppercase tracking-wider">
                                         Actions
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-100">
+                            <tbody className="divide-y divide-surface-100">
                                 {paginatedTreatments.length === 0 ? (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-12 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                                                    <Stethoscope className="w-8 h-8 text-gray-400" />
+                                                <div className="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center">
+                                                    <Stethoscope className="w-8 h-8 text-surface-400" />
                                                 </div>
-                                                <p className="text-gray-500 font-medium">No treatments found</p>
-                                                <p className="text-gray-400 text-sm">
+                                                <p className="text-surface-500 font-medium">No treatments found</p>
+                                                <p className="text-surface-400 text-sm">
                                                     {hasActiveFilters ? 'Try adjusting your filters' : 'Add your first treatment record'}
                                                 </p>
                                             </div>
@@ -577,13 +577,13 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                         return (
                                             <tr
                                                 key={treatment.id}
-                                                className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                                                className="hover:bg-surface-50/50 cursor-pointer transition-colors"
                                                 onClick={() => handleViewTreatment(treatment)}
                                             >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-2">
-                                                        <Calendar className="w-4 h-4 text-gray-400" />
-                                                        <span className="text-sm font-medium text-gray-900">
+                                                        <Calendar className="w-4 h-4 text-surface-400" />
+                                                        <span className="text-sm font-medium text-surface-900">
                                                             {formatDate(treatment.dateOfTreatment)}
                                                         </span>
                                                     </div>
@@ -594,11 +594,11 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                                             {treatment.patient.firstName[0]}{treatment.patient.lastName[0]}
                                                         </div>
                                                         <div>
-                                                            <p className="font-medium text-gray-900">
+                                                            <p className="font-medium text-surface-900">
                                                                 {treatment.patient.firstName} {treatment.patient.lastName}
                                                             </p>
                                                             {treatment.patient.phone && (
-                                                                <p className="text-xs text-gray-500">{treatment.patient.phone}</p>
+                                                                <p className="text-xs text-surface-500">{treatment.patient.phone}</p>
                                                             )}
                                                         </div>
                                                     </div>
@@ -608,7 +608,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                                                             <User className="w-4 h-4 text-blue-600" />
                                                         </div>
-                                                        <span className="text-sm text-gray-700">
+                                                        <span className="text-sm text-surface-700">
                                                             Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
                                                         </span>
                                                     </div>
@@ -631,19 +631,19 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                                             {treatment.teethInvolved.slice(0, 3).map((tooth) => (
                                                                 <span
                                                                     key={tooth}
-                                                                    className="w-6 h-6 bg-gray-100 rounded text-xs font-medium text-gray-600 flex items-center justify-center"
+                                                                    className="w-6 h-6 bg-surface-100 rounded text-xs font-medium text-surface-600 flex items-center justify-center"
                                                                 >
                                                                     {tooth}
                                                                 </span>
                                                             ))}
                                                             {treatment.teethInvolved.length > 3 && (
-                                                                <span className="text-xs text-gray-500">
+                                                                <span className="text-xs text-surface-500">
                                                                     +{treatment.teethInvolved.length - 3}
                                                                 </span>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-gray-400 text-sm">—</span>
+                                                        <span className="text-surface-400 text-sm">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -673,22 +673,22 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                                                 e.stopPropagation();
                                                                 setOpenMenuId(openMenuId === treatment.id ? null : treatment.id);
                                                             }}
-                                                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                                            className="p-2 hover:bg-surface-100 rounded-lg transition-colors"
                                                         >
-                                                            <MoreVertical className="w-4 h-4 text-gray-500" />
+                                                            <MoreVertical className="w-4 h-4 text-surface-500" />
                                                         </button>
                                                         {openMenuId === treatment.id && (
-                                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-10">
+                                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-lg border border-surface-100 py-1 z-10">
                                                                 <button
                                                                     onClick={() => handleViewTreatment(treatment)}
-                                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                                    className="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center gap-2"
                                                                 >
                                                                     <Eye className="w-4 h-4" />
                                                                     View Details
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleEditTreatment(treatment)}
-                                                                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                                    className="w-full px-4 py-2 text-left text-sm text-surface-700 hover:bg-surface-50 flex items-center gap-2"
                                                                 >
                                                                     <Edit2 className="w-4 h-4" />
                                                                     Edit Treatment
@@ -702,7 +702,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                                                         Mark Completed
                                                                     </button>
                                                                 )}
-                                                                <hr className="my-1 border-gray-100" />
+                                                                <hr className="my-1 border-surface-100" />
                                                                 <button
                                                                     onClick={() => {
                                                                         setDeleteConfirmId(treatment.id);
@@ -726,8 +726,8 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                     </div>
 
                     {totalPages > 1 && (
-                        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
-                            <p className="text-sm text-gray-500">
+                        <div className="px-6 py-4 border-t border-surface-100 flex items-center justify-between">
+                            <p className="text-sm text-surface-500">
                                 Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
                                 {Math.min(currentPage * itemsPerPage, filteredTreatments.length)} of{' '}
                                 {filteredTreatments.length} treatments
@@ -736,7 +736,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                     disabled={currentPage === 1}
-                                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="p-2 rounded-lg border border-surface-200 hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <ChevronLeft className="w-4 h-4" />
                                 </button>
@@ -758,7 +758,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                             className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                                                 page === currentPage
                                                     ? 'bg-teal-500 text-white'
-                                                    : 'hover:bg-gray-100 text-gray-600'
+                                                    : 'hover:bg-surface-100 text-surface-600'
                                             }`}
                                         >
                                             {page}
@@ -768,7 +768,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                     disabled={currentPage === totalPages}
-                                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="p-2 rounded-lg border border-surface-200 hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -814,17 +814,17 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                                 <Trash2 className="w-6 h-6 text-red-600" />
                             </div>
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900">Delete Treatment</h3>
-                                <p className="text-gray-500 text-sm">This action cannot be undone</p>
+                                <h3 className="text-lg font-semibold text-surface-900">Delete Treatment</h3>
+                                <p className="text-surface-500 text-sm">This action cannot be undone</p>
                             </div>
                         </div>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-surface-600 mb-6">
                             Are you sure you want to delete this treatment record? All associated data will be permanently removed.
                         </p>
                         <div className="flex gap-3 justify-end">
                             <button
                                 onClick={() => setDeleteConfirmId(null)}
-                                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+                                className="px-4 py-2 text-surface-700 hover:bg-surface-100 rounded-lg font-medium transition-colors"
                             >
                                 Cancel
                             </button>

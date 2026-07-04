@@ -51,7 +51,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-96">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-96">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -59,19 +59,19 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingDown className="text-red-600" size={20} />
-          <h3 className="font-semibold text-gray-800">Expense Trends</h3>
+          <h3 className="font-semibold text-surface-800">Expense Trends</h3>
           {trendPercentage !== 0 && (
             <span
               className={`text-xs px-2 py-1 rounded-full ${
@@ -86,7 +86,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
         </div>
 
         {/* Month Selector */}
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
           {[3, 6, 12].map((m) => (
             <button
               key={m}
@@ -94,7 +94,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 months === m
                   ? 'bg-white text-red-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-surface-600 hover:text-surface-800'
               }`}
             >
               {m}M
@@ -106,19 +106,19 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
       {/* Stats Summary */}
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="text-center">
-          <div className="text-xs text-gray-500">Total</div>
-          <div className="text-sm font-semibold text-gray-800">{formatCurrency(totalExpenses)}</div>
+          <div className="text-xs text-surface-500">Total</div>
+          <div className="text-sm font-semibold text-surface-800">{formatCurrency(totalExpenses)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-500">Average</div>
-          <div className="text-sm font-semibold text-gray-800">{formatCurrency(avgExpenses)}</div>
+          <div className="text-xs text-surface-500">Average</div>
+          <div className="text-sm font-semibold text-surface-800">{formatCurrency(avgExpenses)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-500">Highest</div>
+          <div className="text-xs text-surface-500">Highest</div>
           <div className="text-sm font-semibold text-red-600">{formatCurrency(maxExpense)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-500">Lowest</div>
+          <div className="text-xs text-surface-500">Lowest</div>
           <div className="text-sm font-semibold text-green-600">{formatCurrency(minExpense)}</div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
           </AreaChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No expense trend data available
         </div>
       )}

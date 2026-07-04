@@ -256,7 +256,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
 
       {/* Header with title and create button */}
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-2xl font-semibold text-gray-800">Expenses</h2>
+        <h2 className="text-2xl font-semibold text-surface-800">Expenses</h2>
         <button
           onClick={handleCreate}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -270,18 +270,18 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       <div className="mb-5 flex flex-col sm:flex-row gap-3">
         {/* Search bar */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400" size={20} />
           <input
             type="text"
             placeholder="Search by category, paid to, or notes..."
             value={searchQuery}
             onChange={handleSearchChange}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-10 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-surface-400 hover:text-surface-600"
             >
               <X size={20} />
             </button>
@@ -290,11 +290,11 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
 
         {/* Category Filter */}
         <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-500" />
+          <Filter size={18} className="text-surface-500" />
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -308,7 +308,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {SORT_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -321,7 +321,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
         {(searchQuery || categoryFilter !== 'All' || sortBy !== 'date-desc') && (
           <button
             onClick={handleClearFilters}
-            className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            className="px-3 py-2 text-surface-600 hover:text-surface-800 hover:bg-surface-100 rounded-lg transition-colors"
           >
             Clear
           </button>
@@ -332,7 +332,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       {loading && (
         <div className="flex justify-center items-center py-10">
           <Loader2 className="animate-spin text-blue-600" size={40} />
-          <span className="ml-3 text-gray-600">Loading expenses...</span>
+          <span className="ml-3 text-surface-600">Loading expenses...</span>
         </div>
       )}
 
@@ -345,7 +345,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
 
       {/* Empty state */}
       {!loading && !error && filteredExpenses.length === 0 && (
-        <div className="text-center py-10 text-gray-500">
+        <div className="text-center py-10 text-surface-500">
           <p className="text-lg">No expenses found.</p>
           <p className="mt-2">
             {expenses.length === 0 
@@ -361,21 +361,21 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Category</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Paid To</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Amount</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Date</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Notes</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Status</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Actions</th>
+                <tr className="bg-surface-100 text-left">
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Category</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Paid To</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Amount</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Date</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Notes</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Status</th>
+                  <th className="p-3 border-b-2 border-surface-200 font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {currentExpenses.map((expense) => (
                   <tr 
                     key={expense.id} 
-                    className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
+                    className="border-b border-surface-200 hover:bg-surface-50 cursor-pointer"
                     onClick={() => handleViewDetail(expense)}
                   >
                     <td className="p-3">{expense.category}</td>
@@ -431,7 +431,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-between items-center mt-4 px-2">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-surface-600">
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length} expenses
               </span>
               <div className="flex gap-2">
@@ -440,14 +440,14 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
                   disabled={currentPage === 1}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg ${
                     currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-surface-100 text-surface-400 cursor-not-allowed'
+                      : 'bg-surface-200 text-surface-700 hover:bg-surface-300'
                   }`}
                 >
                   <ChevronLeft size={18} />
                   Previous
                 </button>
-                <span className="flex items-center px-3 py-2 text-gray-600">
+                <span className="flex items-center px-3 py-2 text-surface-600">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
@@ -455,8 +455,8 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
                   disabled={currentPage === totalPages}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg ${
                     currentPage === totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-surface-100 text-surface-400 cursor-not-allowed'
+                      : 'bg-surface-200 text-surface-700 hover:bg-surface-300'
                   }`}
                 >
                   Next
