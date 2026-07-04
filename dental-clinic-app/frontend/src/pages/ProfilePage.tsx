@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { getUserProfile, updateUserProfile } from '../services/user.service';
+import { getUserProfile, updateUserProfile, getUserPermissions } from '../services/user.service';
 import { User, UpdateUserDTO } from '../types/user';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -14,7 +14,72 @@ import {
     Pencil,
     Calendar,
     Clock,
+    ShieldCheck,
+    IdCard,
 } from 'lucide-react';
+
+const PERMISSION_GROUPS: Array<{ key: string; label: string; actions: { label: string; value: string }[] }> = [
+    {
+        key: 'patients',
+        label: 'Patients',
+        actions: [
+            { label: 'View', value: 'patients.view' },
+            { label: 'Create', value: 'patients.create' },
+            { label: 'Update', value: 'patients.update' },
+            { label: 'Delete', value: 'patients.delete' },
+        ],
+    },
+    {
+        key: 'appointments',
+        label: 'Appointments',
+        actions: [
+            { label: 'View', value: 'appointments.view' },
+            { label: 'Create', value: 'appointments.create' },
+            { label: 'Update', value: 'appointments.update' },
+            { label: 'Cancel', value: 'appointments.cancel' },
+        ],
+    },
+    {
+        key: 'treatments',
+        label: 'Treatments',
+        actions: [
+            { label: 'View', value: 'treatments.view' },
+            { label: 'Create', value: 'treatments.create' },
+            { label: 'Update', value: 'treatments.update' },
+            { label: 'Delete', value: 'treatments.delete' },
+        ],
+    },
+    {
+        key: 'payments',
+        label: 'Payments',
+        actions: [
+            { label: 'View', value: 'payment.view' },
+            { label: 'Create', value: 'payment.create' },
+            { label: 'Update', value: 'payment.update' },
+            { label: 'Delete', value: 'payment.delete' },
+        ],
+    },
+    {
+        key: 'expenses',
+        label: 'Expenses',
+        actions: [
+            { label: 'View', value: 'expenses.view' },
+            { label: 'Create', value: 'expenses.create' },
+            { label: 'Update', value: 'expenses.update' },
+            { label: 'Delete', value: 'expenses.delete' },
+        ],
+    },
+    {
+        key: 'documents',
+        label: 'Documents',
+        actions: [
+            { label: 'View', value: 'documents.view' },
+            { label: 'Create', value: 'documents.create' },
+            { label: 'Update', value: 'documents.update' },
+            { label: 'Delete', value: 'documents.delete' },
+        ],
+    },
+];
 
 interface ProfilePageProps {
     token: string;
@@ -42,6 +107,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<UpdateUserDTO>({});
     const [workingHours, setWorkingHours] = useState<any[]>([]);
+    const [permissions, setPermissions] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
@@ -68,6 +134,10 @@ export function ProfilePage({ token }: ProfilePageProps) {
             } else if (response.data.role === 'DOCTOR') {
                 setWorkingHours(DEFAULT_WORKING_HOURS);
             }
+
+            getUserPermissions(response.data.id, token)
+                .then((res) => setPermissions(res.data || []))
+                .catch(() => setPermissions([]));
         } catch (err: any) {
             setError(err.message || 'Failed to load profile');
         } finally {
@@ -247,6 +317,65 @@ export function ProfilePage({ token }: ProfilePageProps) {
                         )}
                     </div>
                 )}
+
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <Card className="p-5 lg:col-span-1">
+                        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-surface-400">
+                            <IdCard className="h-3.5 w-3.5" />
+                            Account Details
+                        </h2>
+                        <dl className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Username</dt>
+                                <dd className="font-medium text-surface-800">@{user.username}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Role</dt>
+                                <dd className="font-medium text-surface-800">{ROLE_LABEL[user.role] ?? user.role}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="shrink-0 text-surface-500">User ID</dt>
+                                <dd className="truncate font-mono text-xs text-surface-500">{user.id}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Last updated</dt>
+                                <dd className="font-medium text-surface-800">
+                                    {new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </dd>
+                            </div>
+                        </dl>
+                    </Card>
+
+                    <Card className="p-5 lg:col-span-2">
+                        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-surface-400">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            My Access
+                        </h2>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {PERMISSION_GROUPS.map((group) => (
+                                <div key={group.key} className="rounded-lg border border-surface-200 p-3">
+                                    <p className="mb-2 text-sm font-semibold text-surface-800">{group.label}</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {group.actions.map((action) => {
+                                            const granted = permissions.includes(action.value);
+                                            return (
+                                                <span
+                                                    key={action.value}
+                                                    className={cn(
+                                                        'rounded px-1.5 py-0.5 text-[11px] font-medium',
+                                                        granted ? 'bg-success-50 text-success-700' : 'bg-surface-100 text-surface-400'
+                                                    )}
+                                                >
+                                                    {action.label}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+                </div>
 
                 {error && (
                     <div className="mt-6 flex items-center gap-2 rounded-md border border-danger-100 bg-danger-50 p-4 text-sm text-danger-600">

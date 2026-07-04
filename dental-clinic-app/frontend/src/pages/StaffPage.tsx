@@ -2,14 +2,15 @@ import React, { useEffect, useState, useRef } from 'react';
 import { getAllStaff, createStaff, updateStaff, deleteStaff } from '../services/user.service';
 import { User, Role, CreateUserDTO, UpdateUserDTO } from '../types/user';
 import { StaffTable } from '../components/staff/StaffTable';
-import { StaffFormModal } from '../components/staff/StaffFormModal';
+import { StaffForm } from '../components/staff/StaffForm';
 import { StaffProfileView } from '../components/staff/StaffProfileView';
 import { downloadCSV, formatStaffForExport } from '../utils/export.utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import { UserPlus, Search, Filter, Download, X } from 'lucide-react';
+import { UserPlus, Search, Filter, Download, X, Users } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Skeleton } from '../components/ui/Skeleton';
+import { Modal } from '../components/ui/Modal';
 import { toast } from '../components/ui/Toaster';
 
 interface StaffPageProps {
@@ -156,9 +157,14 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
 
     return (
         <div className="mx-auto max-w-7xl p-8">
-            <div className="mb-8">
-                <h1 className="text-xl font-semibold text-surface-900">Staff Management</h1>
-                <p className="mt-1 text-sm text-surface-500">Manage your clinic staff members, roles, and access</p>
+            <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary-100 text-primary-700">
+                    <Users className="h-5 w-5" />
+                </div>
+                <div>
+                    <h1 className="text-xl font-semibold text-surface-900">Staff Management</h1>
+                    <p className="mt-0.5 text-sm text-surface-500">Manage your clinic staff members, roles, and access</p>
+                </div>
             </div>
 
             {error && (
@@ -217,17 +223,25 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
 
             <StaffTable staff={filteredStaff} onEdit={handleEdit} onDelete={handleDelete} onView={handleView} />
 
-            <StaffFormModal
+            <Modal
                 isOpen={isFormModalOpen}
                 onClose={() => {
                     setIsFormModalOpen(false);
                     setSelectedStaff(null);
                 }}
-                onSubmit={selectedStaff ? handleUpdate : handleCreate}
-                staff={selectedStaff}
-                loading={formLoading}
-                token={token}
-            />
+                title={selectedStaff ? 'Edit Staff Member' : 'Add New Staff Member'}
+            >
+                <StaffForm
+                    onCancel={() => {
+                        setIsFormModalOpen(false);
+                        setSelectedStaff(null);
+                    }}
+                    onSubmit={selectedStaff ? handleUpdate : handleCreate}
+                    staff={selectedStaff}
+                    loading={formLoading}
+                    token={token}
+                />
+            </Modal>
 
             <StaffProfileView
                 isOpen={isProfileViewOpen}

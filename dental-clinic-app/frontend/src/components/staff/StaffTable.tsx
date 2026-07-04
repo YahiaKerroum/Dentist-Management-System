@@ -21,6 +21,13 @@ const ROLE_BADGE: Record<Role, 'danger' | 'primary' | 'success' | 'neutral'> = {
     RECEPTIONIST: 'neutral',
 };
 
+const ROLE_ACCENT: Record<Role, string> = {
+    MANAGER: 'bg-danger-500',
+    DOCTOR: 'bg-primary-500',
+    ASSISTANT: 'bg-success-500',
+    RECEPTIONIST: 'bg-surface-400',
+};
+
 export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete, onView }) => {
     if (staff.length === 0) {
         return (
@@ -44,9 +51,11 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                         transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.3) }}
                     >
                         <Card
-                            className="group flex h-full cursor-pointer flex-col p-5 transition-shadow hover:shadow-md"
+                            className="group flex h-full cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-md"
                             onClick={() => onView(member)}
                         >
+                            <div className={`h-1 w-full shrink-0 ${ROLE_ACCENT[member.role] ?? 'bg-surface-400'}`} />
+                            <div className="flex flex-1 flex-col p-5">
                             <div className="flex items-start justify-between">
                                 <div className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold ${avatar.bg} ${avatar.text}`}>
                                     {member.firstName[0]}
@@ -93,6 +102,7 @@ export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete,
                                     <Phone className="h-3.5 w-3.5 shrink-0 text-surface-400" />
                                     <span>{member.phone || 'Not set'}</span>
                                 </div>
+                            </div>
                             </div>
                         </Card>
                     </motion.div>
