@@ -20,6 +20,8 @@ enum Role {
 
 enum AppointmentStatus {
   SCHEDULED
+  CHECKED_IN
+  IN_PROGRESS
   COMPLETED
   CANCELLED
   NO_SHOW
@@ -41,6 +43,12 @@ enum PaymentMethod {
   CARD
   INSURANCE
   TRANSFER
+}
+
+enum RoomType {
+  CHAIR
+  XRAY
+  SURGERY
 }
 
 model User {
@@ -153,6 +161,7 @@ model Appointment {
   patientId String
 
   dateOfTreatment  DateTime
+  durationMinutes  Int               @default(30)
   status           AppointmentStatus @default(SCHEDULED)
   typeOfTreatment  TreatmentType?
   notes            String?
@@ -162,10 +171,25 @@ model Appointment {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
+  room   Room?   @relation(fields: [roomId], references: [id])
+  roomId String?
+
   // audit
   createdByUser   User?       @relation("UserAppointments", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   createdByUserId String?
   Treatment       Treatment[]
+}
+
+model Room {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      RoomType @default(CHAIR)
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
 }
 
 
@@ -181,7 +205,9 @@ model Treatment {
   procedure        String?
   teethInvolved    Int[]         @default([])
   followUpRequired Boolean       @default(false)
+  followUpDate     DateTime?
   completed        Boolean       @default(false)
+  cost             Decimal?      @db.Decimal(10, 2)
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 

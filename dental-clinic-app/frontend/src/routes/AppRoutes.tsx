@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { MainLayout } from '../components/layout/MainLayout';
-import { DashboardPage } from '../pages/DashboardPage';
+import { ClinicPulsePage } from '../pages/ClinicPulsePage';
 import { ProfilePage } from '../pages/ProfilePage';
 import { PatientsPage } from '../pages/PatientsPage';
 import { AppointmentsPage } from '../pages/AppointmentsPage';
@@ -42,7 +42,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<MainLayout />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="dashboard" element={<ClinicPulsePage />} />
         <Route path="profile" element={<ProfilePage token={token} />} />
         <Route path="patients" element={<PatientsRoute token={token} />} />
         <Route path="patients/:patientId" element={<PatientsRoute token={token} />} />

@@ -25,12 +25,14 @@ import {
     X,
     Clock,
     SlidersHorizontal,
+    Stethoscope,
 } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '../components/ui/DropdownMenu';
+import { Badge } from '../components/ui/Badge';
 import { getAvatarColor } from '../utils/avatarColor';
 
 interface PatientsPageProps {
@@ -322,7 +324,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#26a37e' }}></div>
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
             </div>
         );
     }
@@ -374,9 +376,9 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
             {/* Error Message */}
             {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg flex justify-between items-center">
+                <div className="mb-6 flex items-center justify-between rounded-lg border border-danger-100 bg-danger-50 p-4 text-danger-700">
                     <span>{error}</span>
-                    <button onClick={() => setError('')} className="text-sm font-medium hover:text-red-800">Dismiss</button>
+                    <button onClick={() => setError('')} className="text-sm font-medium hover:text-danger-800">Dismiss</button>
                 </div>
             )}
 
@@ -489,143 +491,144 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-surface-100 overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-surface-200">
-                        <thead className="bg-surface-50">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Patient Name
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Contact Info
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Date of Birth
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Last Updated
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Status
-                                </th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-surface-500 uppercase tracking-wider">
-                                    Actions
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-surface-200">
-                            {paginatedPatients.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-surface-500">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <UserIcon className="w-12 h-12 text-surface-300 mb-3" />
-                                            <p className="text-lg font-medium">No patients found</p>
-                                            <p className="text-sm">Try adjusting your search terms or add a new patient.</p>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ) : (
-                                paginatedPatients.map((patient) => {
-                                    const avatar = getAvatarColor(`${patient.firstName}${patient.lastName}`);
-                                    return (
-                                    <tr key={patient.id} className="hover:bg-surface-50 transition-colors cursor-pointer" onClick={() => handleViewPatientDetails(patient)}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <div className="flex-shrink-0 h-10 w-10">
-                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold ${avatar.bg} ${avatar.text}`}>
-                                                        {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
-                                                    </div>
-                                                </div>
-                                                <div className="ml-4">
-                                                    <div className="text-sm font-medium text-surface-900">{patient.firstName} {patient.lastName}</div>
-                                                    <div className="text-xs text-surface-500">ID: #{patient.id ? patient.id.slice(0, 8) : ''}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex flex-col gap-1">
-                                                <div className="flex items-center text-sm text-surface-600">
-                                                    <Mail className="w-3 h-3 mr-2 text-surface-400" />
-                                                    {patient.email || 'N/A'}
-                                                </div>
-                                                <div className="flex items-center text-sm text-surface-600">
-                                                    <Phone className="w-3 h-3 mr-2 text-surface-400" />
-                                                    {patient.phone || 'N/A'}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center text-sm text-surface-600">
-                                                <Calendar className="w-4 h-4 mr-2 text-surface-400" />
-                                                {patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A'}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center text-sm text-surface-600">
-                                                <Clock className="w-4 h-4 mr-2 text-surface-400" />
-                                                <div className="flex flex-col">
-                                                    <span>{patient.updatedAt ? formatDate(patient.updatedAt) : 'N/A'}</span>
-                                                    <span className="text-xs text-surface-400">
-                                                        {patient.updatedAt ? new Date(patient.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                Active
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end gap-3">
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
-                                                    className="transition-colors"
-                                                    style={{ color: '#26a37e' }}
-                                                    title="Edit"
-                                                >
-                                                    <Edit className="w-4 h-4" />
-                                                </button>
-                                                {deleteConfirmId === patient.id ? (
-                                                    <div className="flex items-center gap-2 animate-fadeIn">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); handleDeletePatient(patient.id); }}
-                                                            className="text-xs px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                                                        >
-                                                            Confirm
-                                                        </button>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
-                                                            className="text-surface-500 hover:text-surface-700"
-                                                        >
-                                                            Cancel
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }}
-                                                        className="text-surface-400 hover:text-red-600 transition-colors"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
+            {/* Patient list */}
+            {paginatedPatients.length === 0 ? (
+                <div className="rounded-lg border border-surface-200 bg-white px-6 py-16 text-center text-surface-500">
+                    <div className="flex flex-col items-center justify-center">
+                        <UserIcon className="w-12 h-12 text-surface-300 mb-3" />
+                        <p className="text-lg font-medium">No patients found</p>
+                        <p className="text-sm">Try adjusting your search terms or add a new patient.</p>
+                    </div>
                 </div>
+            ) : (
+                <>
+                    <div className="hidden px-5 pb-2 text-xs font-semibold uppercase tracking-wide text-surface-400 lg:grid lg:grid-cols-[2.1fr_1.7fr_1.2fr_1.1fr_auto_auto] lg:gap-4">
+                        <span>Patient</span>
+                        <span>Contact</span>
+                        <span>Date of birth</span>
+                        <span>Last updated</span>
+                        <span>Status</span>
+                        <span className="text-right">Actions</span>
+                    </div>
 
-                {/* Pagination */}
-                {filteredPatients.length > 0 && (
-                    <div className="bg-white px-4 py-3 border-t border-surface-200 flex items-center justify-between sm:px-6">
-                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div className="space-y-2">
+                        {paginatedPatients.map((patient) => {
+                            const avatar = getAvatarColor(`${patient.firstName}${patient.lastName}`);
+                            const age = calculateAge(patient.dateOfBirth);
+                            return (
+                                <div
+                                    key={patient.id}
+                                    onClick={() => handleViewPatientDetails(patient)}
+                                    className="relative grid cursor-pointer grid-cols-1 gap-3 overflow-hidden rounded-lg border border-surface-200 bg-white p-4 pl-5 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md lg:grid-cols-[2.1fr_1.7fr_1.2fr_1.1fr_auto_auto] lg:items-center lg:gap-4 lg:p-3.5 lg:pl-5"
+                                >
+                                    <div className={`absolute inset-y-0 left-0 w-1.5 ${avatar.stripe}`} />
+                                    {/* Patient identity */}
+                                    <div className="flex items-center gap-3">
+                                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2 ring-white shadow-xs ${avatar.bg} ${avatar.text}`}>
+                                            {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="truncate text-sm font-semibold text-surface-900">{patient.firstName} {patient.lastName}</p>
+                                            {patient.primaryDentist ? (
+                                                <span className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-info-50 px-2 py-0.5 text-[11px] font-medium text-info-700">
+                                                    <Stethoscope className="h-3 w-3" />
+                                                    Dr. {patient.primaryDentist.user.firstName} {patient.primaryDentist.user.lastName}
+                                                </span>
+                                            ) : (
+                                                <span className="mt-0.5 inline-flex items-center rounded-full bg-surface-100 px-2 py-0.5 text-[11px] font-mono text-surface-500">
+                                                    #{patient.id ? patient.id.slice(0, 8) : ''}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Contact */}
+                                    <div className="flex flex-col gap-1 pl-14 lg:pl-0">
+                                        <div className="flex items-center text-sm text-surface-600">
+                                            <Mail className="mr-2 h-3 w-3 shrink-0 text-surface-400" />
+                                            <span className="truncate">{patient.email || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-surface-600">
+                                            <Phone className="mr-2 h-3 w-3 shrink-0 text-surface-400" />
+                                            {patient.phone || 'N/A'}
+                                        </div>
+                                    </div>
+
+                                    {/* DOB */}
+                                    <div className="pl-14 text-sm text-surface-600 lg:pl-0">
+                                        <div className="flex items-center">
+                                            <Calendar className="mr-2 h-4 w-4 shrink-0 text-surface-400" />
+                                            {patient.dateOfBirth ? (
+                                                <span>
+                                                    {formatDate(patient.dateOfBirth)}
+                                                    {age !== null && <span className="text-surface-400"> &middot; {age} yrs</span>}
+                                                </span>
+                                            ) : (
+                                                'N/A'
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Last updated */}
+                                    <div className="pl-14 text-sm text-surface-600 lg:pl-0">
+                                        <div className="flex items-center">
+                                            <Clock className="mr-2 h-4 w-4 shrink-0 text-surface-400" />
+                                            <div className="flex flex-col">
+                                                <span>{patient.updatedAt ? formatDate(patient.updatedAt) : 'N/A'}</span>
+                                                <span className="text-xs text-surface-400">
+                                                    {patient.updatedAt ? new Date(patient.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="pl-14 lg:pl-0">
+                                        <Badge variant="success">Active</Badge>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex gap-3 pl-14 text-sm font-medium lg:justify-end lg:pl-0">
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
+                                            className="text-primary-600 transition-colors hover:text-primary-700"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        {deleteConfirmId === patient.id ? (
+                                            <div className="flex items-center gap-2 animate-fadeIn">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleDeletePatient(patient.id); }}
+                                                    className="text-xs px-2 py-1 bg-danger-600 text-white rounded hover:bg-danger-700"
+                                                >
+                                                    Confirm
+                                                </button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
+                                                    className="text-surface-500 hover:text-surface-700"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }}
+                                                className="text-surface-400 hover:text-danger-600 transition-colors"
+                                                title="Delete"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="mt-4 flex items-center justify-between rounded-lg border border-surface-200 bg-white px-4 py-3 sm:px-6">
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                             <div>
                                 <p className="text-sm text-surface-700">
                                     Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredPatients.length)}</span> of <span className="font-medium">{filteredPatients.length}</span> results
@@ -646,10 +649,9 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             key={i}
                                             onClick={() => setCurrentPage(i + 1)}
                                             className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === i + 1
-                                                ? 'z-10 border-[#26a37e]'
+                                                ? 'z-10 border-primary-500 bg-primary-50 text-primary-700'
                                                 : 'bg-white border-surface-300 text-surface-500 hover:bg-surface-50'
                                                 }`}
-                                            style={currentPage === i + 1 ? { backgroundColor: '#effcf6', color: '#26a37e' } : {}}
                                         >
                                             {i + 1}
                                         </button>
@@ -666,8 +668,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                             </div>
                         </div>
                     </div>
-                )}
-            </div>
+                </>
+            )}
 
             {/* Patient Form Modal */}
             <Modal

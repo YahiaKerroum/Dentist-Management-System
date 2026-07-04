@@ -33,7 +33,7 @@ interface NavSection {
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+      { icon: LayoutDashboard, label: 'Clinic Pulse', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
     ],
   },
   {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { 
+import { AnimatePresence, motion } from 'framer-motion';
+import {
     getAllAppointments,
     createAppointment, 
     updateAppointment, 
@@ -7,14 +8,19 @@ import {
     deleteAppointment 
 } from '../services/appointment.service';
 import { Appointment, CreateAppointmentDTO, AppointmentStatus } from '../types/appointment';
+import { getAllRooms } from '../services/room.service';
+import type { Room } from '../types/room';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { AppointmentForm } from '../components/appointments/AppointmentForm';
 import { AppointmentDetailsPanel } from '../components/appointments/AppointmentDetailsPanel';
 import { AppointmentsTable } from '../components/appointments/AppointmentsTable';
+import { ChairPlanner } from '../components/appointments/ChairPlanner';
 import {
     Plus,
     Search,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import { SuccessDialog, ErrorDialog } from '../components/appointments/Dialogs';
 import { Filter, X } from 'lucide-react';
@@ -27,6 +33,11 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '../components/ui/DropdownMenu';
+
+const isSameDay = (isoDate: string, day: Date) => {
+    const d = new Date(isoDate);
+    return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+};
 
 interface AppointmentsPageProps {
     token: string;
@@ -43,7 +54,14 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
     const [patients, setPatients] = useState<Patient[]>([]);
     const [doctors, setDoctors] = useState<User[]>([]);
-    
+    const [rooms, setRooms] = useState<Room[]>([]);
+    const [viewMode, setViewMode] = useState<'chair' | 'table'>('chair');
+    const [plannerDate, setPlannerDate] = useState(() => {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        return d;
+    });
+
     const [showSuccess, setShowSuccess] = useState(false);  
     const [successMessage, setSuccessMessage] = useState(''); 
     const [showError, setShowError] = useState(false);
@@ -72,6 +90,10 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             fetchAppointments();
         }
     }, [token, userRole]);
+
+    useEffect(() => {
+        getAllRooms().then(setRooms).catch((err) => console.error('Failed to fetch rooms:', err));
+    }, [token]);
 
     const fetchAppointments = async () => {
         try {
@@ -156,6 +178,22 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
             setErrorMessage(err.message || 'Failed to save appointment');
             setIsModalOpen(false);
             setShowError(true); 
+        }
+    };
+
+    const handleMoveAppointment = async (id: string, newDateOfTreatment: string, roomId: string | null) => {
+        try {
+            const updatedAppointment = await updateAppointment(id, { dateOfTreatment: newDateOfTreatment, roomId });
+            setAppointments(prev => prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
+            if (detailAppointment?.id === updatedAppointment.id) {
+                setDetailAppointment(updatedAppointment);
+            }
+            setSuccessMessage('Appointment rescheduled successfully!');
+            setShowSuccess(true);
+            setError('');
+        } catch (error: any) {
+            setErrorMessage(error.message || 'Failed to reschedule appointment');
+            setShowError(true);
         }
     };
 
@@ -280,12 +318,33 @@ const hasActiveFilters =
                         {userRole === 'DOCTOR' ? 'Manage your appointments' : 'Manage clinic appointments'}
                     </p>
                 </div>
-                
-                {/* Create appointment button */}
-                <Button onClick={handleAddAppointment} className="shadow-sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Appointment
-                </Button>
+
+                <div className="flex items-center gap-3">
+                    <div className="inline-flex rounded-md border border-surface-200 bg-surface-100 p-0.5">
+                        <button
+                            onClick={() => setViewMode('chair')}
+                            className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                viewMode === 'chair' ? 'bg-white text-surface-900 shadow-xs' : 'text-surface-500 hover:text-surface-700'
+                            }`}
+                        >
+                            Chair View
+                        </button>
+                        <button
+                            onClick={() => setViewMode('table')}
+                            className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                viewMode === 'table' ? 'bg-white text-surface-900 shadow-xs' : 'text-surface-500 hover:text-surface-700'
+                            }`}
+                        >
+                            Table View
+                        </button>
+                    </div>
+
+                    {/* Create appointment button */}
+                    <Button onClick={handleAddAppointment} className="shadow-sm">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create Appointment
+                    </Button>
+                </div>
             </div>
 
             {/* Error Message */}
@@ -296,7 +355,48 @@ const hasActiveFilters =
                 </div>
             )}
 
+            {viewMode === 'chair' && (
+                <div className="mb-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setPlannerDate((d) => { const next = new Date(d); next.setDate(next.getDate() - 1); return next; })}
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-surface-300 text-surface-500 hover:bg-surface-100"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <p className="min-w-[160px] text-center text-sm font-medium text-surface-800">
+                            {plannerDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </p>
+                        <button
+                            onClick={() => setPlannerDate((d) => { const next = new Date(d); next.setDate(next.getDate() + 1); return next; })}
+                            className="flex h-8 w-8 items-center justify-center rounded-md border border-surface-300 text-surface-500 hover:bg-surface-100"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                        <button
+                            onClick={() => { const d = new Date(); d.setHours(0, 0, 0, 0); setPlannerDate(d); }}
+                            className="ml-1 rounded-md border border-surface-300 px-3 py-1.5 text-xs font-medium text-surface-600 hover:bg-surface-100"
+                        >
+                            Today
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {viewMode === 'chair' && (
+                <ChairPlanner
+                    date={plannerDate}
+                    rooms={rooms}
+                    appointments={appointments.filter((a) => isSameDay(a.dateOfTreatment, plannerDate))}
+                    selectedAppointmentId={detailAppointment?.id || null}
+                    onAppointmentClick={handleViewDetails}
+                    onMoveAppointment={handleMoveAppointment}
+                />
+            )}
+
             {/* Search and Filter Bar */}
+            {viewMode === 'table' && (
+            <>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div className="relative w-full sm:w-96">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -408,28 +508,47 @@ const hasActiveFilters =
                 </div>
             </div>
 
-            {/* Main Content: Table + Details Panel */}
-            <div className="flex gap-2">
-                {/* Appointments Table */}
-                <div className="flex-1">
-                    <AppointmentsTable
-                        appointments={filteredAppointments}
-                        selectedAppointmentId={detailAppointment?.id || null}
-                        onAppointmentClick={handleViewDetails}
-                        userRole={userRole}
-                    />
-                </div>
+            {/* Appointments Table */}
+            <AppointmentsTable
+                appointments={filteredAppointments}
+                selectedAppointmentId={detailAppointment?.id || null}
+                onAppointmentClick={handleViewDetails}
+                userRole={userRole}
+            />
+            </>
+            )}
 
-                {/* Details Panel */}
-                <AppointmentDetailsPanel
-                    appointment={detailAppointment}
-                    onClose={() => setDetailAppointment(null)}
-                    userRole={userRole}
-                    onStatusUpdate={handleStatusUpdate}
-                    onEdit={handleEditAppointment}
-                    onDelete={handleDeleteAppointment}
-                />
-            </div>
+            {/* Appointment Details Drawer */}
+            <AnimatePresence>
+                {detailAppointment && (
+                    <>
+                        <motion.div
+                            className="fixed inset-0 z-40 bg-surface-950/30"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            onClick={() => setDetailAppointment(null)}
+                        />
+                        <motion.div
+                            className="fixed right-0 top-0 z-50 h-full w-full max-w-sm shadow-xl"
+                            initial={{ x: '100%' }}
+                            animate={{ x: 0 }}
+                            exit={{ x: '100%' }}
+                            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                            <AppointmentDetailsPanel
+                                appointment={detailAppointment}
+                                onClose={() => setDetailAppointment(null)}
+                                userRole={userRole}
+                                onStatusUpdate={handleStatusUpdate}
+                                onEdit={handleEditAppointment}
+                                onDelete={handleDeleteAppointment}
+                            />
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
 
             {/* Appointment Form Modal */}
             <Modal

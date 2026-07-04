@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Calendar, Clock, User, FileText, CheckCircle, Edit, Trash2 } from 'lucide-react';
+import { X, Calendar, Clock, User, FileText, CheckCircle, Edit, Trash2, Armchair } from 'lucide-react';
 import { Appointment, AppointmentStatus } from '../../types/appointment';
 import { ConfirmationDialog } from './Dialogs';
 
@@ -30,7 +30,7 @@ export function AppointmentDetailsPanel({
 
     if (!appointment) {
         return (
-            <div className="w-80 bg-white rounded-xl shadow-sm border border-surface-200 p-6">
+            <div className="flex h-full w-full items-center justify-center bg-white p-6">
                 <p className="text-surface-500 text-center">Select an appointment to view details</p>
             </div>
         );
@@ -118,8 +118,8 @@ export function AppointmentDetailsPanel({
 
     return (
         <>
-            <div className="w-80 bg-white rounded-xl shadow-sm border border-surface-200">
-                <div className="p-6 border-b border-surface-200 flex items-center justify-between">
+            <div className="flex h-full w-full flex-col bg-white">
+                <div className="p-6 border-b border-surface-200 flex items-center justify-between shrink-0">
                     <h3 className="text-surface-900 font-semibold">Appointment Details</h3>
                     <button 
                         onClick={onClose} 
@@ -129,7 +129,7 @@ export function AppointmentDetailsPanel({
                     </button>
                 </div>
 
-                <div className="p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     {/* Date */}
                     <div>
                         <div className="flex items-center gap-2 text-surface-500 mb-2">
@@ -147,7 +147,20 @@ export function AppointmentDetailsPanel({
                             <Clock className="w-4 h-4" />
                             <span className="text-sm">Time</span>
                         </div>
-                        <div className="text-surface-900">{time}</div>
+                        <div className="text-surface-900">{time} &middot; {appointment.durationMinutes} min</div>
+                    </div>
+
+                    <div className="border-t border-surface-100"></div>
+
+                    {/* Room / Chair */}
+                    <div>
+                        <div className="flex items-center gap-2 text-surface-500 mb-2">
+                            <Armchair className="w-4 h-4" />
+                            <span className="text-sm">Chair / Room</span>
+                        </div>
+                        <div className="text-surface-900">
+                            {appointment.room ? appointment.room.name : 'Unassigned'}
+                        </div>
                     </div>
 
                     <div className="border-t border-surface-100"></div>
@@ -294,7 +307,7 @@ export function AppointmentDetailsPanel({
                 </div>
 
                 {/* Action Buttons - Available to all roles */}
-                <div className="p-6 border-t border-surface-200 space-y-2">
+                <div className="p-6 border-t border-surface-200 space-y-2 shrink-0">
                     <button 
                         onClick={() => onEdit && onEdit(appointment)}
                         className="w-full py-2 px-4 text-white rounded-lg hover:opacity-90 transition-colors flex items-center justify-center gap-2 font-medium"

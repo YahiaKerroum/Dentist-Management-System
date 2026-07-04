@@ -1,4 +1,5 @@
 import {
+  ClinicPulseResponse,
   MyPatientsCountResponse,
   TotalPatientsResponse,
   MyAppointmentsResponse,
@@ -26,6 +27,9 @@ async function get<T>(path: string, token: string, params?: Record<string, unkno
   const { data } = await apiClient.get<T>(`${RESOURCE}${path}`, { params, headers: authHeader(token) });
   return data;
 }
+
+// Clinic Pulse Dashboard
+export const getClinicPulse = (token: string) => get<ClinicPulseResponse>('/clinic-pulse', token);
 
 // 1. My Patients Count - DOCTOR (Stat Card)
 export const getMyPatientsCount = (token: string) => get<MyPatientsCountResponse>('/my-patients-count', token);

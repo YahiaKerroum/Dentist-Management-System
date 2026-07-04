@@ -5,7 +5,7 @@ import { Header } from './Header';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PAGE_TITLES: Record<string, string> = {
-  dashboard: 'Dashboard',
+  dashboard: 'Clinic Pulse',
   profile: 'Profile',
   patients: 'Patients',
   appointments: 'Appointments',

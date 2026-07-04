@@ -249,7 +249,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
                 )}
 
                 {error && (
-                    <div className="mt-6 flex items-center gap-2 rounded-md border border-danger-200 bg-danger-50 p-4 text-sm text-danger-600">
+                    <div className="mt-6 flex items-center gap-2 rounded-md border border-danger-100 bg-danger-50 p-4 text-sm text-danger-600">
                         <span className="font-semibold">Error:</span> {error}
                     </div>
                 )}

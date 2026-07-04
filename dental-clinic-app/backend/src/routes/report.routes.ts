@@ -9,6 +9,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get("/dashboard", authorize(Role.MANAGER, Role.DOCTOR), ReportController.getDashboard);
+router.get("/clinic-pulse", authorize(Role.MANAGER, Role.DOCTOR, Role.ASSISTANT), ReportController.getClinicPulse);
 router.get("/financial", authorize(Role.MANAGER), ReportController.getFinancial);
 router.get("/appointments", authorize(Role.MANAGER), ReportController.getAppointments);
 router.get("/patients", authorize(Role.MANAGER), ReportController.getPatients);

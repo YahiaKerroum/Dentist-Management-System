@@ -14,8 +14,10 @@ interface AppointmentsTableProps {
     userRole: string;
 }
 
-const STATUS_BADGE: Record<AppointmentStatus, 'info' | 'success' | 'danger' | 'neutral'> = {
+const STATUS_BADGE: Record<AppointmentStatus, 'info' | 'success' | 'warning' | 'danger' | 'neutral'> = {
     [AppointmentStatus.SCHEDULED]: 'info',
+    [AppointmentStatus.CHECKED_IN]: 'warning',
+    [AppointmentStatus.IN_PROGRESS]: 'warning',
     [AppointmentStatus.COMPLETED]: 'success',
     [AppointmentStatus.CANCELLED]: 'danger',
     [AppointmentStatus.NO_SHOW]: 'neutral',

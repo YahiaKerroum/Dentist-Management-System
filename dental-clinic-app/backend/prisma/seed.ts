@@ -18,6 +18,23 @@ function getRandomItem<T>(array: T[]): T {
     return array[Math.floor(Math.random() * array.length)];
 }
 
+const TREATMENT_BASE_COST: Record<string, number> = {
+    CONSULTATION: 50,
+    FILLING: 180,
+    EXTRACTION: 220,
+    ROOT_CANAL: 650,
+    CLEANING: 120,
+    IMPLANT: 1800,
+    ORTHODONTICS: 2500,
+    OTHER: 150,
+};
+
+function costFor(type: string): number {
+    const base = TREATMENT_BASE_COST[type] ?? 150;
+    const variance = base * 0.2;
+    return Math.round(base + (Math.random() * variance * 2 - variance));
+}
+
 async function main() {
     console.log("🌱 Seeding database with comprehensive data...");
 
@@ -212,6 +229,28 @@ async function main() {
     console.log(`✅ Created/Updated ${patients.length} patients`);
 
     // -----------------------
+    // Rooms (Chairs / X-Ray / Surgery)
+    // -----------------------
+    const roomsData = [
+        { name: "Chair 1", type: "CHAIR" as const, order: 0 },
+        { name: "Chair 2", type: "CHAIR" as const, order: 1 },
+        { name: "Chair 3", type: "CHAIR" as const, order: 2 },
+        { name: "X-Ray Room", type: "XRAY" as const, order: 3 },
+        { name: "Surgery Room", type: "SURGERY" as const, order: 4 }
+    ];
+
+    const rooms = [];
+    for (const r of roomsData) {
+        const room = await prisma.room.upsert({
+            where: { name: r.name },
+            update: { type: r.type, order: r.order },
+            create: r
+        });
+        rooms.push(room);
+    }
+    console.log(`✅ Seeded ${rooms.length} rooms`);
+
+    // -----------------------
     // Create 30+ Appointments
     // -----------------------
     const appointmentStatuses: AppointmentStatus[] = [
@@ -230,6 +269,8 @@ async function main() {
         TreatmentType.IMPLANT,
         TreatmentType.ORTHODONTICS
     ];
+
+    const paymentMethods: PaymentMethod[] = [PaymentMethod.CASH, PaymentMethod.CARD, PaymentMethod.INSURANCE, PaymentMethod.TRANSFER];
 
     const procedures = [
         "Upper right molar filling",
@@ -286,6 +327,10 @@ async function main() {
         const treatmentType = getRandomItem(treatmentTypes);
         const procedure = getRandomItem(procedures);
 
+        const followUpDate = appointment.followUpRequired
+            ? new Date(appointment.dateOfTreatment.getTime() + (3 + Math.floor(Math.random() * 11)) * 24 * 60 * 60 * 1000)
+            : null;
+
         await prisma.treatment.create({
             data: {
                 doctorId: appointment.doctorId,
@@ -297,7 +342,9 @@ async function main() {
                 procedure: procedure,
                 teethInvolved: appointment.teethInvolved,
                 followUpRequired: appointment.followUpRequired,
-                completed: appointment.status === AppointmentStatus.COMPLETED
+                followUpDate,
+                completed: appointment.status === AppointmentStatus.COMPLETED,
+                cost: new Prisma.Decimal(costFor(treatmentType))
             }
         });
         treatmentCount++;
@@ -305,9 +352,151 @@ async function main() {
     console.log(`✅ Created ${treatmentCount} treatments`);
 
     // -----------------------
+    // Today's Clinic Activity (for Clinic Pulse dashboard)
+    // -----------------------
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(todayStart);
+    todayEnd.setHours(23, 59, 59, 999);
+    const now = new Date();
+
+    // Re-running the seed shouldn't pile up duplicate "today" demo appointments
+    const staleToday = await prisma.appointment.findMany({
+        where: { dateOfTreatment: { gte: todayStart, lte: todayEnd } },
+        select: { id: true }
+    });
+    const staleTodayIds = staleToday.map(a => a.id);
+    if (staleTodayIds.length) {
+        await prisma.treatment.deleteMany({ where: { appointmentId: { in: staleTodayIds } } });
+        await prisma.appointment.deleteMany({ where: { id: { in: staleTodayIds } } });
+    }
+
+    function atToday(hour: number, minute: number = 0): Date {
+        const d = new Date(todayStart);
+        d.setHours(hour, minute, 0, 0);
+        return d;
+    }
+
+    const chairRooms = rooms.filter(r => r.type === "CHAIR");
+    const xrayRoom = rooms.find(r => r.type === "XRAY")!;
+    const surgeryRoom = rooms.find(r => r.type === "SURGERY")!;
+    const currentHour = Math.min(Math.max(now.getHours() + now.getMinutes() / 60, 9), 17);
+
+    interface TodaySlot {
+        time: Date;
+        status: AppointmentStatus;
+        room: typeof rooms[number];
+        duration: number;
+    }
+
+    const slots: TodaySlot[] = [];
+
+    // Earlier today: already completed visits
+    [9, 9.5, 10, 10.5, 11].forEach((h, idx) => {
+        if (h < currentHour - 0.5) {
+            slots.push({ time: atToday(Math.floor(h), (h % 1) * 60), status: AppointmentStatus.COMPLETED, room: chairRooms[idx % chairRooms.length], duration: 30 });
+        }
+    });
+
+    // Happening right now
+    slots.push({ time: atToday(Math.floor(currentHour), Math.round((currentHour % 1) * 60)), status: AppointmentStatus.IN_PROGRESS, room: chairRooms[0], duration: 30 });
+
+    // Checked in and waiting
+    slots.push({ time: atToday(Math.floor(currentHour), Math.min(59, Math.round((currentHour % 1) * 60) + 10)), status: AppointmentStatus.CHECKED_IN, room: chairRooms[1], duration: 30 });
+    slots.push({ time: atToday(Math.floor(currentHour), Math.min(59, Math.round((currentHour % 1) * 60) + 20)), status: AppointmentStatus.CHECKED_IN, room: chairRooms[2], duration: 45 });
+
+    // A delayed/no-show visit earlier this morning for realism
+    slots.push({ time: atToday(Math.max(8, Math.floor(currentHour) - 1), 15), status: AppointmentStatus.NO_SHOW, room: xrayRoom, duration: 20 });
+
+    // Rest of today: scheduled ahead
+    [currentHour + 1, currentHour + 1.5, currentHour + 2.5, currentHour + 3, currentHour + 4].forEach((h, idx) => {
+        if (h <= 18) {
+            slots.push({ time: atToday(Math.floor(h), Math.round((h % 1) * 60)), status: AppointmentStatus.SCHEDULED, room: idx % 4 === 0 ? surgeryRoom : chairRooms[idx % chairRooms.length], duration: 30 });
+        }
+    });
+
+    let todayApptCount = 0;
+    let todayRevenue = 0;
+    for (let i = 0; i < slots.length; i++) {
+        const slot = slots[i];
+        const patient = patients[(i * 3 + 7) % patients.length];
+        const doctor = doctorUsers[i % doctorUsers.length];
+        const treatmentType = getRandomItem(treatmentTypes);
+        const followUp = Math.random() > 0.5;
+
+        const appt = await prisma.appointment.create({
+            data: {
+                doctorId: doctor.doctorProfile!.id,
+                patientId: patient.id,
+                dateOfTreatment: slot.time,
+                durationMinutes: slot.duration,
+                status: slot.status,
+                typeOfTreatment: treatmentType,
+                notes: `Clinic Pulse demo visit (${slot.status}).`,
+                procedure: getRandomItem(procedures),
+                teethInvolved: [Math.floor(Math.random() * 32) + 1],
+                followUpRequired: followUp,
+                roomId: slot.room.id,
+                createdByUserId: managerUser.id
+            }
+        });
+        todayApptCount++;
+
+        if (slot.status === AppointmentStatus.COMPLETED || slot.status === AppointmentStatus.IN_PROGRESS) {
+            const cost = costFor(treatmentType);
+            await prisma.treatment.create({
+                data: {
+                    doctorId: doctor.doctorProfile!.id,
+                    patientId: patient.id,
+                    appointmentId: appt.id,
+                    dateOfTreatment: slot.time,
+                    typeOfTreatment: treatmentType,
+                    notes: `${treatmentType} performed during today's visit.`,
+                    procedure: appt.procedure,
+                    teethInvolved: appt.teethInvolved,
+                    followUpRequired: followUp,
+                    followUpDate: followUp ? new Date(todayStart.getTime() + (2 + Math.floor(Math.random() * 5)) * 24 * 60 * 60 * 1000) : null,
+                    completed: slot.status === AppointmentStatus.COMPLETED,
+                    cost: new Prisma.Decimal(cost)
+                }
+            });
+
+            if (slot.status === AppointmentStatus.COMPLETED) {
+                const paidInFull = Math.random() > 0.35;
+                const paidAmount = paidInFull ? cost : Math.round(cost * (0.3 + Math.random() * 0.4));
+                await prisma.payment.create({
+                    data: {
+                        patientId: patient.id,
+                        recordedById: getRandomItem([managerUser, ...receptionistUsers]).id,
+                        date: slot.time,
+                        amount: new Prisma.Decimal(paidAmount),
+                        method: getRandomItem(paymentMethods),
+                        notes: `Payment for ${treatmentType} - ${paidInFull ? "paid in full" : "partial payment"}.`
+                    }
+                });
+                todayRevenue += paidAmount;
+            }
+        }
+    }
+    console.log(`✅ Created ${todayApptCount} of today's appointments across ${rooms.length} rooms ($${todayRevenue} collected so far today)`);
+
+    // A handful of overdue follow-ups so the "needs attention" widgets have real data
+    const followUpCandidates = await prisma.treatment.findMany({
+        where: { followUpRequired: true, followUpDate: null },
+        take: 6
+    });
+    for (const t of followUpCandidates) {
+        const daysAgo = Math.floor(Math.random() * 10) + 1;
+        await prisma.treatment.update({
+            where: { id: t.id },
+            data: { followUpDate: new Date(todayStart.getTime() - daysAgo * 24 * 60 * 60 * 1000) }
+        });
+    }
+    console.log(`✅ Marked ${followUpCandidates.length} treatments as overdue follow-ups`);
+
+    // -----------------------
     // Create 40+ Payments
     // -----------------------
-    const paymentMethods: PaymentMethod[] = [PaymentMethod.CASH, PaymentMethod.CARD, PaymentMethod.INSURANCE, PaymentMethod.TRANSFER];
     const paymentNames = [
         "Consultation Fee",
         "Filling Treatment",
