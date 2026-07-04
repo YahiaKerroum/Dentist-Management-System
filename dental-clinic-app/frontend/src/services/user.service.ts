@@ -1,48 +1,16 @@
 import { UserResponse, UpdateUserDTO, CreateUserDTO, Role, User } from '../types/user';
+import { apiClient, authHeader } from '../lib/apiClient';
 
-const API_URL = 'http://localhost:4000/api/users';
+const RESOURCE = '/users';
 
 export const getUserProfile = async (token: string): Promise<UserResponse> => {
-  try {
-    const response = await fetch(`${API_URL}/me`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch user profile');
-    }
-
-    return response.json();
-  } catch (error) {
-    console.error('Error fetching user profile:', error);
-    throw new Error('Failed to fetch user profile');
-  }
+  const { data } = await apiClient.get(`${RESOURCE}/me`, { headers: authHeader(token) });
+  return data;
 };
 
-
-export const updateUserProfile = async (
-  data: UpdateUserDTO,
-  token: string
-): Promise<UserResponse> => {
-  const response = await fetch(`${API_URL}/me`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to update profile');
-  }
-
-  return response.json();
+export const updateUserProfile = async (data: UpdateUserDTO, token: string): Promise<UserResponse> => {
+  const { data: body } = await apiClient.put(`${RESOURCE}/me`, data, { headers: authHeader(token) });
+  return body;
 };
 
 // Staff Management Functions
@@ -51,65 +19,21 @@ export const getAllStaff = async (
   token: string,
   filters?: { role?: Role; search?: string }
 ): Promise<{ success: boolean; data: User[] }> => {
-  const params = new URLSearchParams();
-  if (filters?.role) params.append('role', filters.role);
-  if (filters?.search) params.append('search', filters.search);
-
-  const response = await fetch(`${API_URL}${params.toString() ? `?${params.toString()}` : ''}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to fetch staff');
-  }
-
-  return response.json();
+  const { data } = await apiClient.get(RESOURCE, { params: filters, headers: authHeader(token) });
+  return data;
 };
 
-export const getStaffById = async (
-  id: string,
-  token: string
-): Promise<{ success: boolean; data: UserResponse }> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to fetch staff member');
-  }
-
-  return response.json();
+export const getStaffById = async (id: string, token: string): Promise<{ success: boolean; data: UserResponse }> => {
+  const { data } = await apiClient.get(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+  return data;
 };
 
 export const createStaff = async (
   data: CreateUserDTO,
   token: string
 ): Promise<{ success: boolean; data: UserResponse }> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to create staff member');
-  }
-
-  return response.json();
+  const { data: body } = await apiClient.post(RESOURCE, data, { headers: authHeader(token) });
+  return body;
 };
 
 export const updateStaff = async (
@@ -117,62 +41,19 @@ export const updateStaff = async (
   data: UpdateUserDTO,
   token: string
 ): Promise<{ success: boolean; data: UserResponse }> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to update staff member');
-  }
-
-  return response.json();
+  const { data: body } = await apiClient.put(`${RESOURCE}/${id}`, data, { headers: authHeader(token) });
+  return body;
 };
 
-export const deleteStaff = async (
-  id: string,
-  token: string
-): Promise<{ success: boolean; message: string }> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to delete staff member');
-  }
-
-  return response.json();
+export const deleteStaff = async (id: string, token: string): Promise<{ success: boolean; message: string }> => {
+  const { data } = await apiClient.delete(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+  return data;
 };
 
 // Permissions management
-export const getUserPermissions = async (
-  id: string,
-  token: string
-): Promise<{ success: boolean; data: string[] }> => {
-  const response = await fetch(`${API_URL}/${id}/permissions`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to fetch permissions');
-  }
-
-  return response.json();
+export const getUserPermissions = async (id: string, token: string): Promise<{ success: boolean; data: string[] }> => {
+  const { data } = await apiClient.get(`${RESOURCE}/${id}/permissions`, { headers: authHeader(token) });
+  return data;
 };
 
 export const grantUserPermission = async (
@@ -180,21 +61,12 @@ export const grantUserPermission = async (
   permissionName: string,
   token: string
 ): Promise<{ success: boolean; message?: string }> => {
-  const response = await fetch(`${API_URL}/${id}/permissions`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ permissionName }),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to grant permission');
-  }
-
-  return response.json();
+  const { data } = await apiClient.post(
+    `${RESOURCE}/${id}/permissions`,
+    { permissionName },
+    { headers: authHeader(token) }
+  );
+  return data;
 };
 
 export const revokeUserPermission = async (
@@ -202,18 +74,8 @@ export const revokeUserPermission = async (
   permissionName: string,
   token: string
 ): Promise<{ success: boolean; message?: string }> => {
-  const response = await fetch(`${API_URL}/${id}/permissions/${encodeURIComponent(permissionName)}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+  const { data } = await apiClient.delete(`${RESOURCE}/${id}/permissions/${encodeURIComponent(permissionName)}`, {
+    headers: authHeader(token),
   });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || 'Failed to revoke permission');
-  }
-
-  return response.json();
+  return data;
 };
