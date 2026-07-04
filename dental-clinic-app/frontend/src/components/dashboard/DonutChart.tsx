@@ -40,11 +40,11 @@ export const DonutChart: React.FC<{ data: Slice[] }> = ({ data }) => {
         <circle cx="100" cy="100" r="50" fill="white" />
       </svg>
 
-      <div className="grid grid-cols-2 gap-4 mt-6 w-full">
+      <div className="grid grid-cols-2 gap-3 mt-6 w-full">
         {data.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-sm text-gray-600">{item.label} ({item.percentage}%)</span>
+            <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+            <span className="text-sm text-surface-600">{item.label} <span className="text-surface-400">({item.percentage}%)</span></span>
           </div>
         ))}
       </div>

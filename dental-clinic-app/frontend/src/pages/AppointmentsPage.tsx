@@ -19,9 +19,10 @@ import {
 import { SuccessDialog, ErrorDialog } from '../components/appointments/Dialogs';
 import { Filter, ChevronDown, X } from 'lucide-react';
 import { getPatients } from '../services/patient.service';
-import { getAllStaff } from '../services/user.service';
+import { getAllStaff, getUserProfile } from '../services/user.service';
 import { Patient } from '../types/patient';
 import { User } from '../types/user';
+import { decodeToken } from '../utils/jwt';
 
 interface AppointmentsPageProps {
     token: string;
@@ -58,14 +59,9 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [userId, setUserId] = useState<string>('');
 
     useEffect(() => {
-        // Extract user role and ID from JWT token
-        try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            setUserRole(payload.role || '');
-            setUserId(payload.userId || '');
-        } catch (err) {
-            console.error('Failed to parse token:', err);
-        }
+        const payload = decodeToken(token);
+        setUserRole(payload?.role || '');
+        setUserId(payload?.userId || '');
     }, [token]);
 
     useEffect(() => {
@@ -81,17 +77,8 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
 
             // If user is DOCTOR, fetch their doctor profile ID for sorting (not filtering)
             if (userRole === 'DOCTOR') {
-                const userResponse = await fetch('http://localhost:4000/api/users/me', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (userResponse.ok) {
-                    const userData = await userResponse.json();
-                    doctorProfileId = userData.data?.doctorProfile?.id;
-                }
+                const userData = await getUserProfile(token);
+                doctorProfileId = userData.data?.doctorProfile?.id;
             }
 
             // Fetch all appointments

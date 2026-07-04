@@ -1,109 +1,51 @@
-import { useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { DashboardPage } from '../../pages/DashboardPage';
-import { ProfilePage } from '../../pages/ProfilePage';
-import { PatientsPage } from '../../pages/PatientsPage';
-import { AppointmentsPage } from '../../pages/AppointmentsPage';
-import { TreatmentsPage } from '../../pages/TreatmentsPage';
-import { ReportsPage } from '../../pages/ReportsPage';
-import { StaffPage } from '../../pages/StaffPage';
-import FinancesPage from '../../pages/FinancesPage'; 
+import { useAuth } from '../../contexts/AuthContext';
 
-interface MainLayoutProps {
-  token: string;
-  onLogout: () => void;
-}
+const PAGE_TITLES: Record<string, string> = {
+  dashboard: 'Dashboard',
+  profile: 'Profile',
+  patients: 'Patients',
+  appointments: 'Appointments',
+  treatments: 'Treatments',
+  staff: 'Staff Management',
+  reports: 'Reports',
+  finances: 'Finances',
+};
 
-export function MainLayout({ token, onLogout }: MainLayoutProps) {
-  const [activePage, setActivePage] = useState('dashboard');
-  const [targetPatientId, setTargetPatientId] = useState<string | null>(null);
+export function MainLayout() {
+  const { user, logout } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const activeSegment = location.pathname.split('/')[1] || 'dashboard';
 
-  // Extract username and role from token for display
-  const getUserName = () => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.username || 'User';
-    } catch {
-      return 'User';
-    }
-  };
-
-  const getUserRole = () => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.role || 'DOCTOR';
-    } catch {
-      return 'DOCTOR';
-    }
-  };
-
-  const getPageTitle = () => {
-    const titles: Record<string, string> = {
-      dashboard: 'Dashboard',
-      profile: 'Profile',
-      patients: 'Patients',
-      appointments: 'Appointments',
-      treatments: 'Treatments',
-      staff: 'Staff Management',
-      reports: 'Reports',
-      finances: 'Finances', // ← ADD THIS LINE
-    };
-    return titles[activePage] || 'Dashboard';
-  };
-
-  const renderPage = () => {
-    switch (activePage) {
-      case 'dashboard':
-        return <DashboardPage token={token} />;
-      case 'profile':
-        return <ProfilePage token={token} />;
-      case 'patients':
-        return (
-          <PatientsPage 
-            token={token} 
-            initialPatientId={targetPatientId || undefined}
-            onPatientOpened={() => setTargetPatientId(null)}
-          />
-        );
-      case 'appointments':
-        return <AppointmentsPage token={token} />;
-      case 'treatments':
-        return (
-          <TreatmentsPage
-            token={token}
-            onNavigateToPatient={(patientId) => {
-              console.log('MainLayout onNavigateToPatient called with:', patientId);
-              setTargetPatientId(patientId);
-              setActivePage('patients');
-            }}
-          />
-        );
-      case 'staff':
-        return <StaffPage token={token} />;
-      case 'reports':
-  return <ReportsPage token={token} userRole={getUserRole()} />;
-      case 'finances': // ← ADD THIS CASE
-        return <FinancesPage />;
-      default:
-        return <DashboardPage token={token} />;
-    }
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar
-        activePage={activePage}
-        onPageChange={setActivePage}
-        onLogout={onLogout}
-        userRole={getUserRole()}
-      />
-      
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header title={getPageTitle()} userName={getUserName()} onLogout={onLogout} />
-        
+    <div className="flex h-screen bg-surface-50">
+      <Sidebar userRole={user?.role} onLogout={handleLogout} />
+
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <Header title={PAGE_TITLES[activeSegment] ?? 'Dashboard'} userName={user?.username} />
+
         <main className="flex-1 overflow-auto">
-          {renderPage()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="h-full"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

@@ -1,61 +1,34 @@
 import { PatientResponse, SinglePatientResponse, CreatePatientDTO, UpdatePatientDTO } from '../types/patient';
+import { apiClient, ApiError, authHeader } from '../lib/apiClient';
 
-const API_URL = 'http://localhost:4000/api/patients';
+const RESOURCE = '/patients';
+
+function rethrow(err: unknown, fallback: string, forbiddenMessage: string): never {
+  if (err instanceof ApiError) {
+    throw new Error(err.status === 403 ? forbiddenMessage : err.message || fallback);
+  }
+  throw err instanceof Error ? err : new Error(fallback);
+}
 
 export const getPatients = async (token: string): Promise<PatientResponse> => {
-  const response = await fetch(API_URL, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to fetch patients';
-    try {
-      const errorData = await response.json();
-      message = errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to view patients';
-    }
-    throw new Error(message);
+  try {
+    const { data } = await apiClient.get(RESOURCE, { headers: authHeader(token) });
+    return data;
+  } catch (err) {
+    return rethrow(err, 'Failed to fetch patients', 'You do not have permission to view patients');
   }
-
-  return response.json();
 };
 
 export const getPatientById = async (id: string, token: string): Promise<SinglePatientResponse> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to fetch patient';
-    try {
-      const errorData = await response.json();
-      message = errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to view patients';
-    }
-    throw new Error(message);
+  try {
+    const { data } = await apiClient.get(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+    return data;
+  } catch (err) {
+    return rethrow(err, 'Failed to fetch patient', 'You do not have permission to view patients');
   }
-
-  return response.json();
 };
 
 export const createPatient = async (data: CreatePatientDTO, token: string): Promise<SinglePatientResponse> => {
-  // Convert dateOfBirth string to Date object if provided
   const payload: any = {
     firstName: data.firstName,
     lastName: data.lastName,
@@ -63,97 +36,40 @@ export const createPatient = async (data: CreatePatientDTO, token: string): Prom
     email: data.email,
     primaryDentistId: data.primaryDentistId,
   };
-
   if (data.dateOfBirth) {
     payload.dateOfBirth = new Date(data.dateOfBirth);
   }
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to create patient';
-    try {
-      const errorData = await response.json();
-      message = errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to create patients';
-    }
-    throw new Error(message);
+  try {
+    const { data: body } = await apiClient.post(RESOURCE, payload, { headers: authHeader(token) });
+    return body;
+  } catch (err) {
+    return rethrow(err, 'Failed to create patient', 'You do not have permission to create patients');
   }
-
-  return response.json();
 };
-
 
 export const updatePatient = async (
   id: string,
   data: UpdatePatientDTO,
   token: string
 ): Promise<SinglePatientResponse> => {
-  // Convert dateOfBirth string to Date object if provided
   const payload: any = { ...data };
-  
   if (data.dateOfBirth) {
     payload.dateOfBirth = new Date(data.dateOfBirth);
   }
 
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to update patient';
-    try {
-      const errorData = await response.json();
-      message = errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to update patients';
-    }
-    throw new Error(message);
+  try {
+    const { data: body } = await apiClient.put(`${RESOURCE}/${id}`, payload, { headers: authHeader(token) });
+    return body;
+  } catch (err) {
+    return rethrow(err, 'Failed to update patient', 'You do not have permission to update patients');
   }
-
-  return response.json();
 };
 
-
 export const deletePatient = async (id: string, token: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to delete patient';
-    try {
-      const errorData = await response.json();
-      message = errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to delete patients';
-    }
-    throw new Error(message);
+  try {
+    await apiClient.delete(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+  } catch (err) {
+    return rethrow(err, 'Failed to delete patient', 'You do not have permission to delete patients');
   }
 };

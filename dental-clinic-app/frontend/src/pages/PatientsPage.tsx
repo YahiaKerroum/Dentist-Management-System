@@ -8,6 +8,7 @@ import { PatientForm } from '../components/patients/PatientForm';
 import { PatientDetailPanel } from './PatientDetailPage';
 import { downloadCSV, formatPatientsForExport } from '../utils/export.utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { decodeToken } from '../utils/jwt';
 import {
     Plus,
     Search,
@@ -116,11 +117,10 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
     const fetchUserPermissions = async () => {
         try {
-            // Decode token to get userId
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const userId = payload.userId;
-            setCurrentUserId(userId);
-            const response = await getUserPermissions(userId, token);
+            const payload = decodeToken(token);
+            if (!payload) throw new Error('Invalid token');
+            setCurrentUserId(payload.userId);
+            const response = await getUserPermissions(payload.userId, token);
             setUserPermissions(response.data || []);
         } catch (err) {
             console.error('Failed to fetch permissions:', err);
@@ -331,7 +331,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                 <PatientDetailPanel
                     patient={detailPatient}
                     token={token}
-                    userRole="DOCTOR"
+                    userRole={decodeToken(token)?.role ?? 'DOCTOR'}
                     currentUserId={currentUserId}
                     userPermissions={userPermissions}
                     onClose={() => setViewingDetail(false)}

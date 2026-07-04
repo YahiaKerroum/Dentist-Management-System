@@ -1,44 +1,18 @@
 import { Expense, CreateExpenseData, UpdateExpenseData } from '../types/expense.types';
+import { apiClient, authHeader } from '../lib/apiClient';
 
-const API_URL = 'http://localhost:4000/api/expenses';
+const RESOURCE = '/expenses';
 
-const buildHeaders = (token: string) => ({
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json',
-});
-
-const handleResponse = async <T>(response: Response, fallback: string): Promise<T> => {
-  const data = await response.json().catch(() => null);
-  const message = (data as any)?.message || (data as any)?.error?.message || fallback;
-
-  if (!response.ok) {
-    throw new Error(message);
-  }
-
-  return data as T;
-};
-
-// Get all expenses
 export const getExpenses = async (token: string): Promise<{ success: boolean; data: Expense[] }> => {
-  const response = await fetch(API_URL, {
-    method: 'GET',
-    headers: buildHeaders(token),
-  });
-
-  return handleResponse(response, 'Failed to fetch expenses');
+  const { data } = await apiClient.get(RESOURCE, { headers: authHeader(token) });
+  return data;
 };
 
-// Get single expense by ID
 export const getExpenseById = async (id: string, token: string): Promise<{ success: boolean; data: Expense }> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'GET',
-    headers: buildHeaders(token),
-  });
-
-  return handleResponse(response, 'Failed to fetch expense');
+  const { data } = await apiClient.get(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+  return data;
 };
 
-// Create new expense
 export const createExpense = async (
   data: CreateExpenseData,
   token: string
@@ -50,71 +24,42 @@ export const createExpense = async (
     date: new Date(data.date),
     notes: data.notes || '',
   };
-
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: buildHeaders(token),
-    body: JSON.stringify(payload),
-  });
-
-  return handleResponse(response, 'Failed to create expense');
+  const { data: body } = await apiClient.post(RESOURCE, payload, { headers: authHeader(token) });
+  return body;
 };
 
-// Update expense
 export const updateExpense = async (
   id: string,
   data: UpdateExpenseData,
   token: string
 ): Promise<{ success: boolean; data: Expense }> => {
   const payload: any = {};
-
   if (data.category) payload.category = data.category;
   if (data.paidTo) payload.paidTo = data.paidTo;
   if (data.amount !== undefined) payload.amount = Number(data.amount);
   if (data.date) payload.date = new Date(data.date);
   if (data.notes !== undefined) payload.notes = data.notes;
 
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: buildHeaders(token),
-    body: JSON.stringify(payload),
-  });
-
-  return handleResponse(response, 'Failed to update expense');
+  const { data: body } = await apiClient.put(`${RESOURCE}/${id}`, payload, { headers: authHeader(token) });
+  return body;
 };
 
-// Delete expense
 export const deleteExpense = async (id: string, token: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-    headers: buildHeaders(token),
-  });
-
-  await handleResponse(response, 'Failed to delete expense');
+  await apiClient.delete(`${RESOURCE}/${id}`, { headers: authHeader(token) });
 };
 
-// Search expenses
 export const searchExpenses = async (
   query: string,
   token: string
 ): Promise<{ success: boolean; data: Expense[] }> => {
-  const response = await fetch(`${API_URL}/search?query=${encodeURIComponent(query)}`, {
-    method: 'GET',
-    headers: buildHeaders(token),
-  });
-
-  return handleResponse(response, 'Failed to search expenses');
+  const { data } = await apiClient.get(`${RESOURCE}/search`, { params: { query }, headers: authHeader(token) });
+  return data;
 };
 
-// Approve expense (Manager only)
 export const approveExpense = async (
   id: string,
   token: string
 ): Promise<{ success: boolean; data: Expense }> => {
-  const response = await fetch(`${API_URL}/${id}/approve`, {
-    method: 'PATCH',
-    headers: buildHeaders(token),
-  });
-
-  return handleResponse(response, 'Failed to approve expense');
+  const { data } = await apiClient.patch(`${RESOURCE}/${id}/approve`, undefined, { headers: authHeader(token) });
+  return data;
 };

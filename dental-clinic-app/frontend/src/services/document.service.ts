@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:4000/api/documents';
+import { apiClient, ApiError, authHeader } from '../lib/apiClient';
+
+const RESOURCE = '/documents';
 
 export interface Document {
   id: string;
@@ -34,172 +36,81 @@ export interface CreateDocumentDTO {
   filePath: string;
 }
 
-export const uploadDocument = async (
-  data: { patientId: string; name?: string; type?: string; file: File },
-  token: string
-): Promise<SingleDocumentResponse> => {
-  const formData = new FormData();
-  formData.append("patientId", data.patientId);
-  if (data.name) formData.append("name", data.name);
-  if (data.type) formData.append("type", data.type);
-  formData.append("file", data.file);
-
-  const response = await fetch(`${API_URL}/upload`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to upload document';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || errorData.message || message;
-    } catch (_) {}
-    if (response.status === 403) {
-      message = 'You do not have permission to upload documents';
-    }
-    throw new Error(message);
-  }
-
-  return response.json();
-};
-
 export interface UpdateDocumentDTO {
   name?: string;
   type?: string;
 }
 
-export const getDocumentsByPatientId = async (patientId: string, token: string): Promise<DocumentResponse> => {
-  const response = await fetch(`${API_URL}/patient/${patientId}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to fetch documents';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to view documents';
-    }
-    throw new Error(message);
+function rethrow(err: unknown, fallback: string, forbiddenMessage: string): never {
+  if (err instanceof ApiError) {
+    throw new Error(err.status === 403 ? forbiddenMessage : err.message || fallback);
   }
+  throw err instanceof Error ? err : new Error(fallback);
+}
 
-  return response.json();
+export const uploadDocument = async (
+  data: { patientId: string; name?: string; type?: string; file: File },
+  token: string
+): Promise<SingleDocumentResponse> => {
+  const formData = new FormData();
+  formData.append('patientId', data.patientId);
+  if (data.name) formData.append('name', data.name);
+  if (data.type) formData.append('type', data.type);
+  formData.append('file', data.file);
+
+  try {
+    const { data: body } = await apiClient.post(`${RESOURCE}/upload`, formData, { headers: authHeader(token) });
+    return body;
+  } catch (err) {
+    return rethrow(err, 'Failed to upload document', 'You do not have permission to upload documents');
+  }
+};
+
+export const getDocumentsByPatientId = async (patientId: string, token: string): Promise<DocumentResponse> => {
+  try {
+    const { data } = await apiClient.get(`${RESOURCE}/patient/${patientId}`, { headers: authHeader(token) });
+    return data;
+  } catch (err) {
+    return rethrow(err, 'Failed to fetch documents', 'You do not have permission to view documents');
+  }
 };
 
 export const getDocumentById = async (id: string, token: string): Promise<SingleDocumentResponse> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to fetch document';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to view this document';
-    }
-    throw new Error(message);
+  try {
+    const { data } = await apiClient.get(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+    return data;
+  } catch (err) {
+    return rethrow(err, 'Failed to fetch document', 'You do not have permission to view this document');
   }
-
-  return response.json();
 };
 
 export const createDocument = async (data: CreateDocumentDTO, token: string): Promise<SingleDocumentResponse> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to upload document';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You do not have permission to upload documents';
-    }
-    throw new Error(message);
+  try {
+    const { data: body } = await apiClient.post(RESOURCE, data, { headers: authHeader(token) });
+    return body;
+  } catch (err) {
+    return rethrow(err, 'Failed to upload document', 'You do not have permission to upload documents');
   }
-
-  return response.json();
 };
 
-export const updateDocument = async (id: string, data: UpdateDocumentDTO, token: string): Promise<SingleDocumentResponse> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to update document';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You can only update documents you uploaded';
-    }
-    throw new Error(message);
+export const updateDocument = async (
+  id: string,
+  data: UpdateDocumentDTO,
+  token: string
+): Promise<SingleDocumentResponse> => {
+  try {
+    const { data: body } = await apiClient.put(`${RESOURCE}/${id}`, data, { headers: authHeader(token) });
+    return body;
+  } catch (err) {
+    return rethrow(err, 'Failed to update document', 'You can only update documents you uploaded');
   }
-
-  return response.json();
 };
 
 export const deleteDocument = async (id: string, token: string): Promise<{ success: boolean; message?: string }> => {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    let message = 'Failed to delete document';
-    try {
-      const errorData = await response.json();
-      message = errorData.error?.message || errorData.message || message;
-    } catch (_) {
-      // response body may be empty; keep default message
-    }
-    if (response.status === 403) {
-      message = 'You can only delete documents you uploaded';
-    }
-    throw new Error(message);
+  try {
+    const { data } = await apiClient.delete(`${RESOURCE}/${id}`, { headers: authHeader(token) });
+    return data;
+  } catch (err) {
+    return rethrow(err, 'Failed to delete document', 'You can only delete documents you uploaded');
   }
-
-  return response.json();
 };
