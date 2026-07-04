@@ -160,12 +160,12 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-xl font-semibold text-gray-800">
+          <h3 className="text-xl font-semibold text-surface-800">
             {isEditing ? 'Edit Expense' : 'Add New Expense'}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-surface-500 hover:text-surface-700 transition-colors"
           >
             <X size={24} />
           </button>
@@ -182,14 +182,14 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
           {/* Category field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
               Category <span className="text-red-500">*</span>
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                validationErrors.category ? 'border-red-500' : 'border-gray-300'
+                validationErrors.category ? 'border-red-500' : 'border-surface-300'
               }`}
             >
               <option value="">Select a category</option>
@@ -206,7 +206,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
           {/* Paid To field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
               Paid To <span className="text-red-500">*</span>
             </label>
             <input
@@ -215,7 +215,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
               onChange={(e) => setPaidTo(e.target.value)}
               placeholder="Enter vendor or recipient name"
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                validationErrors.paidTo ? 'border-red-500' : 'border-gray-300'
+                validationErrors.paidTo ? 'border-red-500' : 'border-surface-300'
               }`}
             />
             {validationErrors.paidTo && (
@@ -225,12 +225,12 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
           {/* Amount field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
               Amount <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <DollarSign
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400"
                 size={18}
               />
               <input
@@ -241,7 +241,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
                 className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  validationErrors.amount ? 'border-red-500' : 'border-gray-300'
+                  validationErrors.amount ? 'border-red-500' : 'border-surface-300'
                 }`}
               />
             </div>
@@ -252,7 +252,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
           {/* Date field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
               Date <span className="text-red-500">*</span>
             </label>
             <input
@@ -260,7 +260,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                validationErrors.date ? 'border-red-500' : 'border-gray-300'
+                validationErrors.date ? 'border-red-500' : 'border-surface-300'
               }`}
             />
             {validationErrors.date && (
@@ -270,15 +270,15 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
 
           {/* Notes field */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notes <span className="text-gray-400">(optional)</span>
+            <label className="block text-sm font-medium text-surface-700 mb-1">
+              Notes <span className="text-surface-400">(optional)</span>
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any additional notes..."
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 border border-surface-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
@@ -288,7 +288,7 @@ export const ExpenseFormModal: React.FC<ExpenseFormModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-surface-300 text-surface-700 rounded-lg hover:bg-surface-100 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>

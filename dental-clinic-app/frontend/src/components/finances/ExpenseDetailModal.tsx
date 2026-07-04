@@ -48,10 +48,10 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Modal Header */}
         <div className="flex justify-between items-center p-4 border-b">
-          <h3 className="text-xl font-semibold text-gray-800">Expense Details</h3>
+          <h3 className="text-xl font-semibold text-surface-800">Expense Details</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-surface-500 hover:text-surface-700 transition-colors"
           >
             <X size={24} />
           </button>
@@ -84,8 +84,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
           {/* Amount - Highlighted */}
           <div className="text-center mb-6">
-            <p className="text-sm text-gray-500 mb-1">Amount</p>
-            <p className="text-3xl font-bold text-gray-800">
+            <p className="text-sm text-surface-500 mb-1">Amount</p>
+            <p className="text-3xl font-bold text-surface-800">
               {formatCurrency(Number(expense.amount))}
             </p>
           </div>
@@ -93,38 +93,38 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
           {/* Details Grid */}
           <div className="space-y-4">
             {/* Category */}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg">
               <Tag className="text-blue-600 mt-0.5" size={20} />
               <div>
-                <p className="text-sm text-gray-500">Category</p>
-                <p className="font-medium text-gray-800">{expense.category}</p>
+                <p className="text-sm text-surface-500">Category</p>
+                <p className="font-medium text-surface-800">{expense.category}</p>
               </div>
             </div>
 
             {/* Paid To */}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg">
               <User className="text-blue-600 mt-0.5" size={20} />
               <div>
-                <p className="text-sm text-gray-500">Paid To</p>
-                <p className="font-medium text-gray-800">{expense.paidTo || 'N/A'}</p>
+                <p className="text-sm text-surface-500">Paid To</p>
+                <p className="font-medium text-surface-800">{expense.paidTo || 'N/A'}</p>
               </div>
             </div>
 
             {/* Date */}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg">
               <Calendar className="text-blue-600 mt-0.5" size={20} />
               <div>
-                <p className="text-sm text-gray-500">Date</p>
-                <p className="font-medium text-gray-800">{formatDate(expense.date)}</p>
+                <p className="text-sm text-surface-500">Date</p>
+                <p className="font-medium text-surface-800">{formatDate(expense.date)}</p>
               </div>
             </div>
 
             {/* Notes */}
-            <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg">
               <FileText className="text-blue-600 mt-0.5" size={20} />
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Notes</p>
-                <p className="font-medium text-gray-800 whitespace-pre-wrap">
+                <p className="text-sm text-surface-500">Notes</p>
+                <p className="font-medium text-surface-800 whitespace-pre-wrap">
                   {expense.notes || 'No notes provided'}
                 </p>
               </div>
@@ -132,11 +132,11 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
 
             {/* Recorded By */}
             {expense.recordedBy && (
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-start gap-3 p-3 bg-surface-50 rounded-lg">
                 <User className="text-blue-600 mt-0.5" size={20} />
                 <div>
-                  <p className="text-sm text-gray-500">Recorded By</p>
-                  <p className="font-medium text-gray-800">
+                  <p className="text-sm text-surface-500">Recorded By</p>
+                  <p className="font-medium text-surface-800">
                     {expense.recordedBy.firstName} {expense.recordedBy.lastName}
                   </p>
                 </div>
@@ -148,8 +148,8 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
               <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg">
                 <CheckCircle className="text-green-600 mt-0.5" size={20} />
                 <div>
-                  <p className="text-sm text-gray-500">Approved By</p>
-                  <p className="font-medium text-gray-800">
+                  <p className="text-sm text-surface-500">Approved By</p>
+                  <p className="font-medium text-surface-800">
                     {expense.approvedBy.firstName} {expense.approvedBy.lastName}
                   </p>
                 </div>
@@ -162,7 +162,7 @@ export const ExpenseDetailModal: React.FC<ExpenseDetailModalProps> = ({
         <div className="p-4 border-t">
           <button
             onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="w-full px-4 py-2 bg-surface-100 text-surface-700 rounded-lg hover:bg-surface-200 transition-colors"
           >
             Close
           </button>

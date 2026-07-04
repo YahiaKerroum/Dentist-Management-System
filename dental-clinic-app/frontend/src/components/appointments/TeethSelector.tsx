@@ -29,28 +29,28 @@ export function TeethSelector({ selectedTeeth, onChange }: TeethSelectorProps) {
 
     return (
         <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-surface-700 mb-1">
                 Teeth Involved
             </label>
             
             {/* Selected Teeth Display */}
             <div 
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[42px] flex items-center justify-between"
+                className="w-full px-3 py-2 border border-surface-300 rounded-lg bg-white cursor-pointer hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[42px] flex items-center justify-between"
                 onClick={() => setIsOpen(!isOpen)}
             >
-                <span className={selectedTeeth.length === 0 ? 'text-gray-400' : 'text-gray-900'}>
+                <span className={selectedTeeth.length === 0 ? 'text-surface-400' : 'text-surface-900'}>
                     {selectedTeeth.length === 0 
                         ? 'Click to select teeth' 
                         : `Selected: ${selectedTeeth.join(', ')}`}
                 </span>
-                <span className="text-gray-400">{isOpen ? '▲' : '▼'}</span>
+                <span className="text-surface-400">{isOpen ? '▲' : '▼'}</span>
             </div>
 
             {/* Teeth Grid */}
             {isOpen && (
-                <div className="mt-2 p-4 border border-gray-300 rounded-lg bg-white shadow-lg">
+                <div className="mt-2 p-4 border border-surface-300 rounded-lg bg-white shadow-lg">
                     <div className="flex justify-between items-center mb-3">
-                        <span className="text-sm font-medium text-gray-700">
+                        <span className="text-sm font-medium text-surface-700">
                             {selectedTeeth.length} tooth selected
                         </span>
                         <button
@@ -65,7 +65,7 @@ export function TeethSelector({ selectedTeeth, onChange }: TeethSelectorProps) {
                     <div className="space-y-4">
                         {quadrants.map((quadrant) => (
                             <div key={quadrant.name}>
-                                <h4 className="text-xs font-semibold text-gray-600 mb-2">
+                                <h4 className="text-xs font-semibold text-surface-600 mb-2">
                                     {quadrant.name}
                                 </h4>
                                 <div className="grid grid-cols-8 gap-2">
@@ -78,7 +78,7 @@ export function TeethSelector({ selectedTeeth, onChange }: TeethSelectorProps) {
                                                 h-10 rounded-lg text-sm font-medium transition-colors
                                                 ${selectedTeeth.includes(tooth)
                                                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                    : 'bg-surface-100 text-surface-700 hover:bg-surface-200'
                                                 }
                                             `}
                                         >
@@ -92,7 +92,7 @@ export function TeethSelector({ selectedTeeth, onChange }: TeethSelectorProps) {
                 </div>
             )}
 
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-surface-500 mt-1">
                 Click to open dental chart and select teeth (1-32)
             </p>
         </div>

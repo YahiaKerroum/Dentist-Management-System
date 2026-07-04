@@ -176,7 +176,7 @@ export function TreatmentFormModal({
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl">
                 {/* Header */}
-                <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}>
+                <div className="px-6 py-4 flex items-center justify-between" style={{ background: 'linear-gradient(to right, #26a37e, #188467)' }}>
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                             <Stethoscope className="w-5 h-5 text-white" />
@@ -212,12 +212,12 @@ export function TreatmentFormModal({
                         <div className="grid grid-cols-2 gap-4">
                             {/* Patient Selection */}
                             <div className="relative">
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <User className="w-4 h-4 text-gray-400" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <User className="w-4 h-4 text-surface-400" />
                                     Patient <span className="text-red-500">*</span>
                                 </label>
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400" />
                                     <input
                                         type="text"
                                         value={patientSearch}
@@ -230,27 +230,27 @@ export function TreatmentFormModal({
                                         }}
                                         onFocus={() => setShowPatientDropdown(true)}
                                         placeholder="Search patient by name, phone, or email..."
-                                        className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                         disabled={!!treatment}
                                     />
                                 </div>
                                 {showPatientDropdown && !treatment && filteredPatients.length > 0 && (
-                                    <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 max-h-48 overflow-y-auto">
+                                    <div className="absolute z-10 w-full mt-1 bg-white rounded-xl shadow-lg border border-surface-100 max-h-48 overflow-y-auto">
                                         {filteredPatients.slice(0, 8).map((patient) => (
                                             <button
                                                 key={patient.id}
                                                 type="button"
                                                 onClick={() => handlePatientSelect(patient)}
-                                                className="w-full px-4 py-2.5 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                                                className="w-full px-4 py-2.5 text-left hover:bg-surface-50 flex items-center gap-3 transition-colors"
                                             >
                                                 <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                                                     {patient.firstName[0]}{patient.lastName[0]}
                                                 </div>
                                                 <div>
-                                                    <p className="font-medium text-gray-900 text-sm">
+                                                    <p className="font-medium text-surface-900 text-sm">
                                                         {patient.firstName} {patient.lastName}
                                                     </p>
-                                                    <p className="text-xs text-gray-500">{patient.phone || patient.email}</p>
+                                                    <p className="text-xs text-surface-500">{patient.phone || patient.email}</p>
                                                 </div>
                                                 {formData.patientId === patient.id && (
                                                     <Check className="w-4 h-4 text-teal-500 ml-auto" />
@@ -263,14 +263,14 @@ export function TreatmentFormModal({
 
                             {/* Doctor Selection */}
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Stethoscope className="w-4 h-4 text-gray-400" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <Stethoscope className="w-4 h-4 text-surface-400" />
                                     Doctor <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={formData.doctorId}
                                     onChange={(e) => setFormData(prev => ({ ...prev, doctorId: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full px-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                     disabled={!!treatment}
                                 >
                                     <option value="">Select a doctor</option>
@@ -287,28 +287,28 @@ export function TreatmentFormModal({
                         {/* Date and Type Row */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <Calendar className="w-4 h-4 text-gray-400" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <Calendar className="w-4 h-4 text-surface-400" />
                                     Treatment Date <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="date"
                                     value={formData.dateOfTreatment}
                                     onChange={(e) => setFormData(prev => ({ ...prev, dateOfTreatment: e.target.value }))}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full px-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                     disabled={!!treatment}
                                 />
                             </div>
 
                             <div>
-                                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
-                                    <FileText className="w-4 h-4 text-gray-400" />
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-2">
+                                    <FileText className="w-4 h-4 text-surface-400" />
                                     Treatment Type <span className="text-red-500">*</span>
                                 </label>
                                 <select
                                     value={formData.typeOfTreatment}
                                     onChange={(e) => setFormData(prev => ({ ...prev, typeOfTreatment: e.target.value as TreatmentType }))}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                                    className="w-full px-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
                                     disabled={!!treatment}
                                 >
                                     {Object.entries(TREATMENT_TYPE_CONFIG).map(([key, config]) => (
@@ -338,14 +338,14 @@ export function TreatmentFormModal({
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600 leading-relaxed">
+                            <p className="text-sm text-surface-600 leading-relaxed">
                                 {selectedTypeConfig.description}
                             </p>
                         </div>
 
                         {/* Teeth Selection */}
                         <div>
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
+                            <label className="flex items-center gap-2 text-sm font-medium text-surface-700 mb-3">
                                 🦷 Teeth Involved
                                 {formData.teethInvolved.length > 0 && (
                                     <span className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded-full text-xs">
@@ -353,7 +353,7 @@ export function TreatmentFormModal({
                                     </span>
                                 )}
                             </label>
-                            <div className="bg-gray-50 rounded-xl p-4">
+                            <div className="bg-surface-50 rounded-xl p-4">
                                 <div className="flex flex-col gap-3">
                                     {/* Upper teeth */}
                                     <div className="flex justify-center gap-1">
@@ -366,14 +366,14 @@ export function TreatmentFormModal({
                                                     className={`w-7 h-8 rounded text-xs font-medium transition-all ${
                                                         formData.teethInvolved.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50'
+                                                            : 'bg-white border border-surface-200 text-surface-600 hover:border-teal-300 hover:bg-teal-50'
                                                     }`}
                                                 >
                                                     {tooth}
                                                 </button>
                                             ))}
                                         </div>
-                                        <div className="w-px bg-gray-300 mx-1" />
+                                        <div className="w-px bg-surface-300 mx-1" />
                                         <div className="flex gap-1">
                                             {TEETH_QUADRANTS.upperLeft.map((tooth) => (
                                                 <button
@@ -383,7 +383,7 @@ export function TreatmentFormModal({
                                                     className={`w-7 h-8 rounded text-xs font-medium transition-all ${
                                                         formData.teethInvolved.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50'
+                                                            : 'bg-white border border-surface-200 text-surface-600 hover:border-teal-300 hover:bg-teal-50'
                                                     }`}
                                                 >
                                                     {tooth}
@@ -391,9 +391,9 @@ export function TreatmentFormModal({
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="text-center text-xs text-gray-400">Upper Arch</div>
-                                    <div className="border-t border-gray-200 my-1" />
-                                    <div className="text-center text-xs text-gray-400">Lower Arch</div>
+                                    <div className="text-center text-xs text-surface-400">Upper Arch</div>
+                                    <div className="border-t border-surface-200 my-1" />
+                                    <div className="text-center text-xs text-surface-400">Lower Arch</div>
                                     {/* Lower teeth */}
                                     <div className="flex justify-center gap-1">
                                         <div className="flex gap-1">
@@ -405,14 +405,14 @@ export function TreatmentFormModal({
                                                     className={`w-7 h-8 rounded text-xs font-medium transition-all ${
                                                         formData.teethInvolved.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50'
+                                                            : 'bg-white border border-surface-200 text-surface-600 hover:border-teal-300 hover:bg-teal-50'
                                                     }`}
                                                 >
                                                     {tooth}
                                                 </button>
                                             ))}
                                         </div>
-                                        <div className="w-px bg-gray-300 mx-1" />
+                                        <div className="w-px bg-surface-300 mx-1" />
                                         <div className="flex gap-1">
                                             {TEETH_QUADRANTS.lowerRight.map((tooth) => (
                                                 <button
@@ -422,7 +422,7 @@ export function TreatmentFormModal({
                                                     className={`w-7 h-8 rounded text-xs font-medium transition-all ${
                                                         formData.teethInvolved.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-600 hover:border-teal-300 hover:bg-teal-50'
+                                                            : 'bg-white border border-surface-200 text-surface-600 hover:border-teal-300 hover:bg-teal-50'
                                                     }`}
                                                 >
                                                     {tooth}
@@ -437,7 +437,7 @@ export function TreatmentFormModal({
                         {/* Procedure and Notes */}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-surface-700 mb-2">
                                     Procedure Details
                                 </label>
                                 <textarea
@@ -445,11 +445,11 @@ export function TreatmentFormModal({
                                     onChange={(e) => setFormData(prev => ({ ...prev, procedure: e.target.value }))}
                                     placeholder="Describe the procedure performed..."
                                     rows={3}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-surface-700 mb-2">
                                     Clinical Notes
                                 </label>
                                 <textarea
@@ -457,7 +457,7 @@ export function TreatmentFormModal({
                                     onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
                                     placeholder="Add any clinical observations..."
                                     rows={3}
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
+                                    className="w-full px-4 py-2.5 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all resize-none"
                                 />
                             </div>
                         </div>
@@ -480,11 +480,11 @@ export function TreatmentFormModal({
                     </div>
 
                     {/* Footer */}
-                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-surface-100">
                         <button
                             type="button"
                             onClick={onClose}
-                            className="px-5 py-2.5 text-gray-700 hover:bg-gray-100 rounded-xl font-medium transition-colors"
+                            className="px-5 py-2.5 text-surface-700 hover:bg-surface-100 rounded-xl font-medium transition-colors"
                         >
                             Cancel
                         </button>
@@ -492,7 +492,7 @@ export function TreatmentFormModal({
                             type="submit"
                             disabled={loading}
                             className="px-6 py-2.5 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                            style={{ background: 'linear-gradient(to right, #3DBEA3, #2FA88E)' }}
+                            style={{ background: 'linear-gradient(to right, #26a37e, #188467)' }}
                         >
                             {loading ? (
                                 <>

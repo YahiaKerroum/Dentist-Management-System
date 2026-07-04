@@ -3,6 +3,7 @@ import { Search, Plus, Edit, Trash2, Loader2 } from 'lucide-react';
 import { getAllPayments, deletePayment } from '../../services/payment.service';
 import { Payment } from '../../types/payment.types';
 import PaymentFormModal from './PaymentFormModal';
+import { toast } from '../ui/Toaster';
 
 const PaymentTable: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -93,12 +94,12 @@ const PaymentTable: React.FC = () => {
 
     try {
       await deletePayment(payment.id);
-      console.log('Payment deleted successfully');
+      toast.success('Payment deleted successfully');
       await fetchPayments();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to delete payment';
       console.error('Error deleting payment:', err);
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -136,7 +137,7 @@ const PaymentTable: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#3DBEA3' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: '#26a37e' }} />
       </div>
     );
   }
@@ -145,25 +146,25 @@ const PaymentTable: React.FC = () => {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Payments</h1>
+        <h1 className="text-2xl font-bold text-surface-900 mb-4">Payments</h1>
         
         {/* Search and Create Button */}
         <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
           <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-surface-400 w-5 h-5" />
             <input
               type="text"
               placeholder="Search payments..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#3DBEA3] focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-surface-300 rounded-lg focus:ring-2 focus:ring-[#26a37e] focus:border-transparent"
             />
           </div>
           
           <button
             onClick={handleCreatePayment}
             className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-            style={{ backgroundColor: '#3DBEA3' }}
+            style={{ backgroundColor: '#26a37e' }}
           >
             <Plus className="w-5 h-5" />
             Create Payment
@@ -181,7 +182,7 @@ const PaymentTable: React.FC = () => {
       {/* Empty State */}
       {!loading && filteredPayments.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">
+          <p className="text-surface-500 text-lg">
             {searchQuery ? 'No payments found matching your search.' : 'No payments yet. Create your first payment!'}
           </p>
         </div>
@@ -192,49 +193,49 @@ const PaymentTable: React.FC = () => {
         <>
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-surface-200">
+                <thead className="bg-surface-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                       Patient Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                       Date
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                       Amount
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                       Method
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-xs font-medium text-surface-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-surface-200">
                   {currentPayments.map((payment) => (
-                    <tr key={payment.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <tr key={payment.id} className="hover:bg-surface-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-surface-900">
                         {payment.patient 
                           ? `${payment.patient.firstName} ${payment.patient.lastName}`
                           : 'N/A'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-700">
                         {formatDate(payment.date)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-surface-900">
                         {formatCurrency(payment.amount)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-surface-700">
                         {payment.method || 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleEditPayment(payment)}
-                            className="p-2 rounded-lg transition-colors hover:bg-[#E8F5F0]"
-                            style={{ color: '#3DBEA3' }}
+                            className="p-2 rounded-lg transition-colors hover:bg-[#effcf6]"
+                            style={{ color: '#26a37e' }}
                             title="Edit payment"
                           >
                             <Edit className="w-4 h-4" />
@@ -258,7 +259,7 @@ const PaymentTable: React.FC = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-surface-700">
                 Showing {startIndex + 1} to {Math.min(endIndex, filteredPayments.length)} of {filteredPayments.length} results
               </p>
               
@@ -266,7 +267,7 @@ const PaymentTable: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-surface-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-50 transition-colors"
                 >
                   Previous
                 </button>
@@ -291,9 +292,9 @@ const PaymentTable: React.FC = () => {
                         className={`px-4 py-2 rounded-lg transition-colors ${
                           currentPage === pageNum
                             ? 'text-white'
-                            : 'border border-gray-300 hover:bg-gray-50'
+                            : 'border border-surface-300 hover:bg-surface-50'
                         }`}
-                        style={currentPage === pageNum ? { backgroundColor: '#3DBEA3' } : {}}
+                        style={currentPage === pageNum ? { backgroundColor: '#26a37e' } : {}}
                       >
                         {pageNum}
                       </button>
@@ -304,7 +305,7 @@ const PaymentTable: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 border border-surface-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-50 transition-colors"
                 >
                   Next
                 </button>

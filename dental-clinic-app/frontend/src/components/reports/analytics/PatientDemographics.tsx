@@ -61,7 +61,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -69,18 +69,18 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-4">
         <Users className="text-blue-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Patient Demographics</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <h3 className="font-semibold text-surface-800">Patient Demographics</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full">
           Total: {totalPatients}
         </span>
       </div>
@@ -88,7 +88,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Gender Distribution */}
         <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">By Gender</h4>
+          <h4 className="text-sm font-medium text-surface-600 mb-2 text-center">By Gender</h4>
           {genderData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -119,7 +119,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+            <div className="h-44 flex items-center justify-center text-surface-500 text-sm">
               No data
             </div>
           )}
@@ -127,7 +127,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
 
         {/* Age Distribution */}
         <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">By Age Group</h4>
+          <h4 className="text-sm font-medium text-surface-600 mb-2 text-center">By Age Group</h4>
           {ageData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -158,7 +158,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+            <div className="h-44 flex items-center justify-center text-surface-500 text-sm">
               No data
             </div>
           )}

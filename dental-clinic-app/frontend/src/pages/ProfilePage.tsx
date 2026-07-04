@@ -4,14 +4,14 @@ import { User, UpdateUserDTO } from '../types/user';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { toast } from '../components/ui/Toaster';
 import { 
     Camera, 
     Edit2, 
     Award, 
-    Phone, 
-    Mail, 
-    MapPin, 
-    Calendar, 
+    Phone,
+    Mail,
+    Calendar,
     Clock,
     TrendingUp,
     Users
@@ -29,7 +29,6 @@ export function ProfilePage({ token }: ProfilePageProps) {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchProfile();
@@ -112,22 +111,19 @@ export function ProfilePage({ token }: ProfilePageProps) {
     const handleSave = async () => {
         setSaving(true);
         setError('');
-        setSuccess('');
 
         try {
             const updateData = { ...formData };
-            
+
             // Add working hours for doctors
             if (user?.role === 'DOCTOR') {
                 updateData.workingTime = workingHours;
             }
-            
+
             const response = await updateUserProfile(updateData, token);
             setUser(response.data);
             setIsEditing(false);
-            setSuccess('Profile updated successfully');
-            // Clear success message after 3 seconds
-            setTimeout(() => setSuccess(''), 3000);
+            toast.success('Profile updated successfully');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
         } finally {
@@ -144,7 +140,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#26a37e' }}></div>
             </div>
         );
     }
@@ -153,7 +149,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
         return (
             <div className="p-6 flex flex-col items-center justify-center h-full text-center">
                 <div className="text-red-500 text-xl font-semibold mb-2">Error Loading Profile</div>
-                <p className="text-gray-600 mb-4">{error}</p>
+                <p className="text-surface-600 mb-4">{error}</p>
                 <Button onClick={() => window.location.reload()}>Retry</Button>
             </div>
         );
@@ -162,10 +158,10 @@ export function ProfilePage({ token }: ProfilePageProps) {
     if (!user) return null;
 
     return (
-        <div className="bg-gray-50 min-h-full pb-10">
+        <div className="bg-surface-50 min-h-full pb-10">
             {/* Modern Cover Section with Pattern */}
             <div className="relative h-64 overflow-visible" style={{ 
-                background: 'linear-gradient(135deg, #1C6B5A 0%, #3DBEA3 50%, #2FA88E 100%)'
+                background: 'linear-gradient(135deg, #145446 0%, #26a37e 50%, #188467 100%)'
             }}>
                 {/* Decorative Pattern */}
                 <div className="absolute inset-0 opacity-10">
@@ -191,17 +187,17 @@ export function ProfilePage({ token }: ProfilePageProps) {
                 <div className="relative inline-block">
                     <div 
                         className="w-40 h-40 rounded-2xl p-1.5 shadow-2xl"
-                        style={{ background: 'linear-gradient(135deg, #3DBEA3 0%, #2FA88E 100%)' }}
+                        style={{ background: 'linear-gradient(135deg, #26a37e 0%, #188467 100%)' }}
                     >
                         <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
-                            <span className="text-6xl font-bold" style={{ color: '#3DBEA3' }}>
+                            <span className="text-6xl font-bold" style={{ color: '#26a37e' }}>
                                 {user.firstName.charAt(0).toUpperCase()}
                             </span>
                         </div>
                     </div>
                     <button 
                         className="absolute -bottom-2 -right-2 p-3 rounded-xl text-white shadow-lg border-4 border-white hover:scale-105 transition-transform"
-                        style={{ backgroundColor: '#3DBEA3' }}
+                        style={{ backgroundColor: '#26a37e' }}
                     >
                         <Camera className="w-5 h-5" />
                     </button>
@@ -210,16 +206,16 @@ export function ProfilePage({ token }: ProfilePageProps) {
 
             {/* Profile Info Section */}
             <div className="px-8 pt-6 pb-6">
-                <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+                <div className="bg-white rounded-2xl shadow-sm p-8 border border-surface-100">
                     <div className="flex items-start justify-between mb-6">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                            <h1 className="text-4xl font-bold text-surface-900 mb-2">
                                 {user.firstName} {user.lastName}
                             </h1>
                             <div className="flex items-center gap-3 mb-4">
                                 <span 
                                     className="px-4 py-1.5 rounded-full text-sm font-semibold text-white"
-                                    style={{ backgroundColor: '#3DBEA3' }}
+                                    style={{ backgroundColor: '#26a37e' }}
                                 >
                                     {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
                                 </span>
@@ -229,17 +225,17 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                     </span>
                                 )}
                             </div>
-                            <div className="flex items-center gap-6 text-gray-600">
+                            <div className="flex items-center gap-6 text-surface-600">
                                 <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                        <Mail className="w-4 h-4" style={{ color: '#3DBEA3' }} />
+                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                        <Mail className="w-4 h-4" style={{ color: '#26a37e' }} />
                                     </div>
                                     <span className="text-sm">{user.email}</span>
                                 </div>
                                 {user.phone && (
                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                            <Phone className="w-4 h-4" style={{ color: '#3DBEA3' }} />
+                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                            <Phone className="w-4 h-4" style={{ color: '#26a37e' }} />
                                         </div>
                                         <span className="text-sm">{user.phone}</span>
                                     </div>
@@ -254,9 +250,9 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                     <p className="text-3xl font-bold text-blue-700">{calculateYearsExperience()}</p>
                                     <p className="text-xs text-blue-600 font-medium mt-1">Years Exp.</p>
                                 </div>
-                                <div className="text-center px-6 py-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #E8F5F0 0%, #D5EDE8 100%)' }}>
-                                    <p className="text-3xl font-bold" style={{ color: '#3DBEA3' }}>{user.doctorProfile?.patientCount || 0}</p>
-                                    <p className="text-xs font-medium mt-1" style={{ color: '#2FA88E' }}>Patients</p>
+                                <div className="text-center px-6 py-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #effcf6 0%, #b0ecd2 100%)' }}>
+                                    <p className="text-3xl font-bold" style={{ color: '#26a37e' }}>{user.doctorProfile?.patientCount || 0}</p>
+                                    <p className="text-xs font-medium mt-1" style={{ color: '#188467' }}>Patients</p>
                                 </div>
                             </div>
                         )}
@@ -270,80 +266,65 @@ export function ProfilePage({ token }: ProfilePageProps) {
                 {/* Left Sidebar */}
                 <div className="space-y-6">
                     {/* About Card */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-surface-100">
                         <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <Award className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                <Award className="w-5 h-5" style={{ color: '#26a37e' }} />
                             </div>
-                            <h3 className="font-semibold text-gray-800">About</h3>
+                            <h3 className="font-semibold text-surface-800">About</h3>
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Member Since</p>
-                                <p className="text-sm font-semibold text-gray-700">{formatMemberSince()}</p>
+                                <p className="text-xs text-surface-400 uppercase tracking-wider mb-1">Member Since</p>
+                                <p className="text-sm font-semibold text-surface-700">{formatMemberSince()}</p>
                             </div>
-                            {user.role === 'ASSISTANT' && (
-                                <div>
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Appointments Managed</p>
-                                    <p className="text-sm font-semibold text-gray-700">150+</p>
-                                </div>
-                            )}
                         </div>
                     </div>
 
                     {/* Contact Information Card */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-surface-100">
                         <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <Phone className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                <Phone className="w-5 h-5" style={{ color: '#26a37e' }} />
                             </div>
-                            <h3 className="font-semibold text-gray-800">Contact Details</h3>
+                            <h3 className="font-semibold text-surface-800">Contact Details</h3>
                         </div>
                         <div className="space-y-4">
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Phone className="w-4 h-4 text-gray-500" />
+                                <div className="w-10 h-10 rounded-xl bg-surface-50 flex items-center justify-center flex-shrink-0">
+                                    <Phone className="w-4 h-4 text-surface-500" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Phone Number</p>
-                                    <p className="text-sm font-medium text-gray-700 truncate">{user.phone || 'Not provided'}</p>
+                                    <p className="text-xs text-surface-400 uppercase tracking-wider mb-1">Phone Number</p>
+                                    <p className="text-sm font-medium text-surface-700 truncate">{user.phone || 'Not provided'}</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Mail className="w-4 h-4 text-gray-500" />
+                                <div className="w-10 h-10 rounded-xl bg-surface-50 flex items-center justify-center flex-shrink-0">
+                                    <Mail className="w-4 h-4 text-surface-500" />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Email Address</p>
-                                    <p className="text-sm font-medium text-gray-700 truncate">{user.email}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <MapPin className="w-4 h-4 text-gray-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Clinic Location</p>
-                                    <p className="text-sm font-medium text-gray-700">789 Dental Avenue, Medical Center</p>
+                                    <p className="text-xs text-surface-400 uppercase tracking-wider mb-1">Email Address</p>
+                                    <p className="text-sm font-medium text-surface-700 truncate">{user.email}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Activity Statistics */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-surface-100">
                         <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <TrendingUp className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                <TrendingUp className="w-5 h-5" style={{ color: '#26a37e' }} />
                             </div>
-                            <h3 className="font-semibold text-gray-800">Statistics</h3>
+                            <h3 className="font-semibold text-surface-800">Statistics</h3>
                         </div>
                         <div className="space-y-3">
                             {user.role === 'DOCTOR' && user.doctorProfile && (
                                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-transparent rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <Users className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm text-gray-700">Total Patients</span>
+                                        <span className="text-sm text-surface-700">Total Patients</span>
                                     </div>
                                     <span className="text-sm font-bold text-blue-700">{user.doctorProfile.patientCount || 0}</span>
                                 </div>
@@ -351,7 +332,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
                             <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-transparent rounded-lg">
                                 <div className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-purple-600" />
-                                    <span className="text-sm text-gray-700">Member Since</span>
+                                    <span className="text-sm text-surface-700">Member Since</span>
                                 </div>
                                 <span className="text-sm font-bold text-purple-700">{formatMemberSince()}</span>
                             </div>
@@ -363,12 +344,12 @@ export function ProfilePage({ token }: ProfilePageProps) {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Working Schedule - Only for Doctors */}
                     {user.role === 'DOCTOR' && (
-                        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                        <div className="bg-white rounded-2xl shadow-sm p-6 border border-surface-100">
                             <div className="flex items-center gap-2 mb-6">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                    <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#effcf6' }}>
+                                    <Calendar className="w-5 h-5" style={{ color: '#26a37e' }} />
                                 </div>
-                                <h3 className="font-semibold text-gray-800">Working Schedule</h3>
+                                <h3 className="font-semibold text-surface-800">Working Schedule</h3>
                             </div>
 
                             <div className="grid gap-3">
@@ -376,21 +357,21 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                     user.doctorProfile.workingTime.map((schedule: any, index: number) => (
                                         <div 
                                             key={index} 
-                                            className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                                            className="flex items-center justify-between p-4 bg-surface-50 hover:bg-surface-100 rounded-xl transition-colors"
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: schedule.time && schedule.time !== 'Closed' ? '#E8F5F0' : '#FEE2E2' }}>
-                                                    <Clock className="w-4 h-4" style={{ color: schedule.time && schedule.time !== 'Closed' ? '#3DBEA3' : '#DC2626' }} />
+                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: schedule.time && schedule.time !== 'Closed' ? '#effcf6' : '#FEE2E2' }}>
+                                                    <Clock className="w-4 h-4" style={{ color: schedule.time && schedule.time !== 'Closed' ? '#26a37e' : '#DC2626' }} />
                                                 </div>
-                                                <span className="text-sm font-semibold text-gray-700">{schedule.day || schedule.days}</span>
+                                                <span className="text-sm font-semibold text-surface-700">{schedule.day || schedule.days}</span>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <span className="text-sm text-gray-600 font-medium">{schedule.time || schedule.hours || 'Not set'}</span>
+                                                <span className="text-sm text-surface-600 font-medium">{schedule.time || schedule.hours || 'Not set'}</span>
                                                 <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
                                                     schedule.time && schedule.time !== 'Closed'
                                                         ? 'text-white'
                                                         : 'bg-red-100 text-red-700'
-                                                }`} style={schedule.time && schedule.time !== 'Closed' ? { backgroundColor: '#3DBEA3' } : {}}>
+                                                }`} style={schedule.time && schedule.time !== 'Closed' ? { backgroundColor: '#26a37e' } : {}}>
                                                     {schedule.time && schedule.time !== 'Closed' ? 'Open' : 'Closed'}
                                                 </span>
                                             </div>
@@ -398,9 +379,9 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                     ))
                                 ) : (
                                     <div className="text-center py-12">
-                                        <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                        <p className="text-sm text-gray-500">No working hours set.</p>
-                                        <p className="text-xs text-gray-400 mt-1">Click Edit Profile to add your schedule.</p>
+                                        <Calendar className="w-12 h-12 mx-auto mb-3 text-surface-300" />
+                                        <p className="text-sm text-surface-500">No working hours set.</p>
+                                        <p className="text-xs text-surface-400 mt-1">Click Edit Profile to add your schedule.</p>
                                     </div>
                                 )}
                             </div>
@@ -409,13 +390,8 @@ export function ProfilePage({ token }: ProfilePageProps) {
 
                     {/* Messages */}
                     {error && (
-                        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2">
+                        <div className="p-4 bg-danger-50 border border-danger-200 text-danger-600 rounded-lg flex items-center gap-2">
                             <span className="font-bold">Error:</span> {error}
-                        </div>
-                    )}
-                    {success && (
-                        <div className="p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg flex items-center gap-2">
-                            <span className="font-bold">Success:</span> {success}
                         </div>
                     )}
                 </div>
@@ -455,15 +431,15 @@ export function ProfilePage({ token }: ProfilePageProps) {
                     {/* Working Hours Editor - Only for Doctors */}
                     {user?.role === 'DOCTOR' && (
                         <div className="mt-6">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Working Hours</h4>
+                            <h4 className="text-sm font-semibold text-surface-700 mb-3">Working Hours</h4>
                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {Array.isArray(workingHours) && workingHours.length > 0 ? (
                                     workingHours.map((schedule, index) => (
                                         <div key={index} className="flex items-center gap-3">
-                                            <label className="w-24 text-sm text-gray-600">{schedule.day}</label>
+                                            <label className="w-24 text-sm text-surface-600">{schedule.day}</label>
                                             <input
                                                 type="text"
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="flex-1 px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 value={schedule.time}
                                                 onChange={(e) => handleWorkingHourChange(index, e.target.value)}
                                                 placeholder="e.g., 08:00 AM - 06:00 PM or Closed"
@@ -471,10 +447,10 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-gray-500">Loading working hours...</p>
+                                    <p className="text-sm text-surface-500">Loading working hours...</p>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">Enter time ranges (e.g., "08:00 AM - 06:00 PM") or "Closed" for days off</p>
+                            <p className="text-xs text-surface-500 mt-2">Enter time ranges (e.g., "08:00 AM - 06:00 PM") or "Closed" for days off</p>
                         </div>
                     )}
                     

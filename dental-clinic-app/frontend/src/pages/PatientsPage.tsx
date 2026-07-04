@@ -9,6 +9,7 @@ import { PatientDetailPanel } from './PatientDetailPage';
 import { downloadCSV, formatPatientsForExport } from '../utils/export.utils';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { decodeToken } from '../utils/jwt';
+import { toast } from '../components/ui/Toaster';
 import {
     Plus,
     Search,
@@ -94,13 +95,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
     // Handle initial patient ID - open detail panel for specific patient
     useEffect(() => {
-        console.log('PatientsPage useEffect - initialPatientId:', initialPatientId);
-        console.log('PatientsPage useEffect - patients.length:', patients.length);
-        console.log('PatientsPage useEffect - initialPatientHandled:', initialPatientHandled);
-        
         if (initialPatientId && patients.length > 0 && !initialPatientHandled) {
             const patient = patients.find(p => p.id === initialPatientId);
-            console.log('Found patient:', patient);
             if (patient) {
                 setDetailPatient(patient);
                 setViewingDetail(true);
@@ -183,7 +179,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             if (modalMode === 'add') {
                 const response = await createPatient(data, token);
                 setPatients(prev => [...prev, response.data]);
-                alert('Patient created successfully');
+                toast.success('Patient created successfully');
             } else {
                 if (!selectedPatient) {
                     setError('No patient selected for update');
@@ -193,7 +189,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                 setPatients(prev =>
                     prev.map(p => p.id === response.data.id ? response.data : p)
                 );
-                alert('Patient updated successfully');
+                toast.success('Patient updated successfully');
             }
             setIsModalOpen(false);
             setError('');
@@ -201,7 +197,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             // Show permission or other errors clearly
             const msg = err.message || 'Failed to save patient';
             setError(msg);
-            alert(msg);
+            toast.error(msg);
         }
     };
 
@@ -211,7 +207,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             setPatients(prev => prev.filter(p => p.id !== id));
             setDeleteConfirmId(null);
             setError('');
-            alert('Patient deleted successfully');
+            toast.success('Patient deleted successfully');
         } catch (err: any) {
             setError(err.message || 'Failed to delete patient');
         }
@@ -319,7 +315,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     if (loading) {
         return (
             <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#26a37e' }}></div>
             </div>
         );
     }
@@ -327,7 +323,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     // Show detail page if viewing patient
     if (viewingDetail && detailPatient) {
         return (
-            <div className="bg-gray-50 min-h-full p-8">
+            <div className="bg-surface-50 min-h-full p-8">
                 <PatientDetailPanel
                     patient={detailPatient}
                     token={token}
@@ -345,9 +341,9 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                             setPatients(prev => prev.filter(p => p.id !== patient.id));
                             setViewingDetail(false);
                             setDetailPatient(null);
-                            alert('Patient deleted successfully');
+                            toast.success('Patient deleted successfully');
                         } catch (err: any) {
-                            alert(err.message || 'Failed to delete patient');
+                            toast.error(err.message || 'Failed to delete patient');
                         }
                     }}
                 />
@@ -356,12 +352,12 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     }
 
     return (
-        <div className="bg-gray-50 min-h-full p-8">
+        <div className="bg-surface-50 min-h-full p-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Patients</h1>
-                    <p className="text-gray-500 mt-1">Manage your patient records and history</p>
+                    <h1 className="text-2xl font-bold text-surface-900">Patients</h1>
+                    <p className="text-surface-500 mt-1">Manage your patient records and history</p>
                 </div>
                 <Button onClick={handleAddPatient} className="shadow-sm">
                     <Plus className="w-4 h-4 mr-2" />
@@ -378,18 +374,18 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             )}
 
             {/* Controls */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-surface-100 mb-6">
                 <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-3">
                     <div className="relative w-full sm:w-96">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-gray-400" />
+                            <Search className="h-4 w-4 text-surface-400" />
                         </div>
                         <input
                             ref={searchInputRef}
                             type="text"
                             placeholder="Search by name or email... (Ctrl+K)"
-                            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
-                            style={{ '--tw-ring-color': '#3DBEA3' } as React.CSSProperties}
+                            className="block w-full pl-10 pr-3 py-2 border border-surface-200 rounded-lg leading-5 bg-surface-50 placeholder-surface-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
+                            style={{ '--tw-ring-color': '#26a37e' } as React.CSSProperties}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -411,7 +407,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                 <div className="flex gap-2 flex-wrap">
                     {/* Status Filter */}
                     <select
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
                     >
@@ -422,7 +418,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
                     {/* Age Filter */}
                     <select
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={ageFilter}
                         onChange={(e) => setAgeFilter(e.target.value)}
                     >
@@ -435,7 +431,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
                     {/* Date Filter */}
                     <select
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={dateFilter}
                         onChange={(e) => setDateFilter(e.target.value)}
                     >
@@ -447,7 +443,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
                     {/* Sort By */}
                     <select
-                        className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
                     >
@@ -472,37 +468,37 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             </div>
 
             {/* Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-xl shadow-sm border border-surface-100 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
+                    <table className="min-w-full divide-y divide-surface-200">
+                        <thead className="bg-surface-50">
                             <tr>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Patient Name
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Contact Info
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Date of Birth
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Last Updated
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Status
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-surface-500 uppercase tracking-wider">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
+                        <tbody className="bg-white divide-y divide-surface-200">
                             {paginatedPatients.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                                    <td colSpan={6} className="px-6 py-12 text-center text-surface-500">
                                         <div className="flex flex-col items-center justify-center">
-                                            <UserIcon className="w-12 h-12 text-gray-300 mb-3" />
+                                            <UserIcon className="w-12 h-12 text-surface-300 mb-3" />
                                             <p className="text-lg font-medium">No patients found</p>
                                             <p className="text-sm">Try adjusting your search terms or add a new patient.</p>
                                         </div>
@@ -510,44 +506,44 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                 </tr>
                             ) : (
                                 paginatedPatients.map((patient) => (
-                                    <tr key={patient.id} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => handleViewPatientDetails(patient)}>
+                                    <tr key={patient.id} className="hover:bg-surface-50 transition-colors cursor-pointer" onClick={() => handleViewPatientDetails(patient)}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10">
-                                                    <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: '#E8F5F0', color: '#3DBEA3' }}>
+                                                    <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: '#effcf6', color: '#26a37e' }}>
                                                                                                 {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
                                                     </div>
                                                 </div>
                                                 <div className="ml-4">
-                                                    <div className="text-sm font-medium text-gray-900">{patient.firstName} {patient.lastName}</div>
-                                                    <div className="text-xs text-gray-500">ID: #{patient.id ? patient.id.slice(0, 8) : ''}</div>
+                                                    <div className="text-sm font-medium text-surface-900">{patient.firstName} {patient.lastName}</div>
+                                                    <div className="text-xs text-surface-500">ID: #{patient.id ? patient.id.slice(0, 8) : ''}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex flex-col gap-1">
-                                                <div className="flex items-center text-sm text-gray-600">
-                                                    <Mail className="w-3 h-3 mr-2 text-gray-400" />
+                                                <div className="flex items-center text-sm text-surface-600">
+                                                    <Mail className="w-3 h-3 mr-2 text-surface-400" />
                                                     {patient.email || 'N/A'}
                                                 </div>
-                                                <div className="flex items-center text-sm text-gray-600">
-                                                    <Phone className="w-3 h-3 mr-2 text-gray-400" />
+                                                <div className="flex items-center text-sm text-surface-600">
+                                                    <Phone className="w-3 h-3 mr-2 text-surface-400" />
                                                     {patient.phone || 'N/A'}
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center text-sm text-gray-600">
-                                                <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                                            <div className="flex items-center text-sm text-surface-600">
+                                                <Calendar className="w-4 h-4 mr-2 text-surface-400" />
                                                 {patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'N/A'}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center text-sm text-gray-600">
-                                                <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                            <div className="flex items-center text-sm text-surface-600">
+                                                <Clock className="w-4 h-4 mr-2 text-surface-400" />
                                                 <div className="flex flex-col">
                                                     <span>{patient.updatedAt ? formatDate(patient.updatedAt) : 'N/A'}</span>
-                                                    <span className="text-xs text-gray-400">
+                                                    <span className="text-xs text-surface-400">
                                                         {patient.updatedAt ? new Date(patient.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
                                                     </span>
                                                 </div>
@@ -563,7 +559,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                                 <button
                                                     onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
                                                     className="transition-colors"
-                                                    style={{ color: '#3DBEA3' }}
+                                                    style={{ color: '#26a37e' }}
                                                     title="Edit"
                                                 >
                                                     <Edit className="w-4 h-4" />
@@ -578,7 +574,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                                         </button>
                                                         <button
                                                             onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
-                                                            className="text-gray-500 hover:text-gray-700"
+                                                            className="text-surface-500 hover:text-surface-700"
                                                         >
                                                             Cancel
                                                         </button>
@@ -586,7 +582,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                                 ) : (
                                                     <button
                                                         onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }}
-                                                        className="text-gray-400 hover:text-red-600 transition-colors"
+                                                        className="text-surface-400 hover:text-red-600 transition-colors"
                                                         title="Delete"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
@@ -603,10 +599,10 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
                 {/* Pagination */}
                 {filteredPatients.length > 0 && (
-                    <div className="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
+                    <div className="bg-white px-4 py-3 border-t border-surface-200 flex items-center justify-between sm:px-6">
                         <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                             <div>
-                                <p className="text-sm text-gray-700">
+                                <p className="text-sm text-surface-700">
                                     Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * itemsPerPage, filteredPatients.length)}</span> of <span className="font-medium">{filteredPatients.length}</span> results
                                 </p>
                             </div>
@@ -615,7 +611,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-300"
+                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-surface-300 bg-white text-sm font-medium text-surface-500 hover:bg-surface-50 disabled:bg-surface-100 disabled:text-surface-300"
                                     >
                                         <span className="sr-only">Previous</span>
                                         <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -625,10 +621,10 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             key={i}
                                             onClick={() => setCurrentPage(i + 1)}
                                             className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${currentPage === i + 1
-                                                ? 'z-10 border-[#3DBEA3]'
-                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                ? 'z-10 border-[#26a37e]'
+                                                : 'bg-white border-surface-300 text-surface-500 hover:bg-surface-50'
                                                 }`}
-                                            style={currentPage === i + 1 ? { backgroundColor: '#E8F5F0', color: '#3DBEA3' } : {}}
+                                            style={currentPage === i + 1 ? { backgroundColor: '#effcf6', color: '#26a37e' } : {}}
                                         >
                                             {i + 1}
                                         </button>
@@ -636,7 +632,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-300"
+                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-surface-300 bg-white text-sm font-medium text-surface-500 hover:bg-surface-50 disabled:bg-surface-100 disabled:text-surface-300"
                                     >
                                         <span className="sr-only">Next</span>
                                         <ChevronRight className="h-5 w-5" aria-hidden="true" />

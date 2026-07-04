@@ -55,7 +55,7 @@ export function AppointmentsTable({
             case AppointmentStatus.CANCELLED:
                 return 'bg-red-100 text-red-800';
             default:
-                return 'bg-gray-100 text-gray-800';
+                return 'bg-surface-100 text-surface-800';
         }
     };
 
@@ -65,10 +65,10 @@ export function AppointmentsTable({
 
     if (appointments.length === 0) {
         return (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="px-6 py-12 text-center text-gray-500">
+            <div className="bg-white rounded-xl shadow-sm border border-surface-100 overflow-hidden">
+                <div className="px-6 py-12 text-center text-surface-500">
                     <div className="flex flex-col items-center justify-center">
-                        <Calendar className="w-12 h-12 text-gray-300 mb-3" />
+                        <Calendar className="w-12 h-12 text-surface-300 mb-3" />
                         <p className="text-lg font-medium">No appointments found</p>
                         <p className="text-sm">
                             {userRole === 'ASSISTANT' || userRole === 'MANAGER'
@@ -82,46 +82,46 @@ export function AppointmentsTable({
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-surface-100 overflow-hidden">
             <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-surface-200">
+                    <thead className="bg-surface-50">
                         <tr>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                 Date
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                 Time
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                 Patient
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                 Doctor
                             </th>
-                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-surface-500 uppercase tracking-wider">
                                 Status
                             </th>
                         </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-white divide-y divide-surface-200">
                         {currentAppointments.map((appointment) => (
                             <tr 
                                 key={appointment.id} 
                                 onClick={() => onAppointmentClick(appointment)}
-                                className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                                className={`hover:bg-surface-50 transition-colors cursor-pointer ${
                                     selectedAppointmentId === appointment.id ? 'bg-blue-50' : ''
                                 }`}
                             >
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center text-sm text-gray-900">
-                                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                                    <div className="flex items-center text-sm text-surface-900">
+                                        <Calendar className="w-4 h-4 mr-2 text-surface-400" />
                                         {formatDate(appointment.dateOfTreatment)}
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="flex items-center text-sm text-gray-900">
-                                        <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                    <div className="flex items-center text-sm text-surface-900">
+                                        <Clock className="w-4 h-4 mr-2 text-surface-400" />
                                         {formatTime(appointment.dateOfTreatment)}
                                     </div>
                                 </td>
@@ -133,14 +133,14 @@ export function AppointmentsTable({
                                             </div>
                                         </div>
                                         <div className="ml-3">
-                                            <div className="text-sm font-medium text-gray-900">
+                                            <div className="text-sm font-medium text-surface-900">
                                                 {appointment.patient?.firstName} {appointment.patient?.lastName}
                                             </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">
+                                    <div className="text-sm text-surface-900">
                                         Dr. {appointment.doctor?.user.firstName} {appointment.doctor?.user.lastName}
                                     </div>
                                 </td>
@@ -156,8 +156,8 @@ export function AppointmentsTable({
             </div>
         {/* Pagination */}
             {totalPages > 1 && (
-                <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                    <div className="text-sm text-gray-700">
+                <div className="bg-white px-6 py-4 border-t border-surface-200 flex items-center justify-between">
+                    <div className="text-sm text-surface-700">
                         Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
                         <span className="font-medium">{Math.min(endIndex, appointments.length)}</span> of{' '}
                         <span className="font-medium">{appointments.length}</span> appointments
@@ -166,7 +166,7 @@ export function AppointmentsTable({
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                             disabled={currentPage === 1}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            className="px-3 py-2 border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
                             <ChevronLeft className="w-4 h-4" />
                             Previous
@@ -179,7 +179,7 @@ export function AppointmentsTable({
                                     className={`px-3 py-2 rounded-lg text-sm font-medium ${
                                         currentPage === page
                                             ? 'bg-blue-600 text-white'
-                                            : 'text-gray-700 hover:bg-gray-50'
+                                            : 'text-surface-700 hover:bg-surface-50'
                                     }`}
                                 >
                                     {page}
@@ -189,7 +189,7 @@ export function AppointmentsTable({
                         <button
                             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                             disabled={currentPage === totalPages}
-                            className="px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            className="px-3 py-2 border border-surface-300 rounded-lg text-sm font-medium text-surface-700 hover:bg-surface-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                         >
                             Next
                             <ChevronRight className="w-4 h-4" />

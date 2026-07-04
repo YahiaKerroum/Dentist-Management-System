@@ -44,7 +44,7 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ token }) =
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-96">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-96">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -52,21 +52,21 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ token }) =
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="text-blue-600" size={20} />
-          <h3 className="font-semibold text-gray-800">Revenue vs Expenses Trend</h3>
+          <h3 className="font-semibold text-surface-800">Revenue vs Expenses Trend</h3>
         </div>
 
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
           {[6, 12].map((m) => (
             <button
               key={m}
@@ -74,7 +74,7 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ token }) =
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 months === m
                   ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  : 'text-surface-600 hover:text-surface-800'
               }`}
             >
               {m}M
@@ -86,15 +86,15 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ token }) =
       {/* Summary Stats */}
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div className="text-center">
-          <div className="text-xs text-gray-500">Total Revenue</div>
+          <div className="text-xs text-surface-500">Total Revenue</div>
           <div className="text-lg font-semibold text-green-600">{formatCurrency(totalRevenue)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-500">Total Expenses</div>
+          <div className="text-xs text-surface-500">Total Expenses</div>
           <div className="text-lg font-semibold text-red-600">{formatCurrency(totalExpenses)}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-gray-500">Net Profit</div>
+          <div className="text-xs text-surface-500">Net Profit</div>
           <div className={`text-lg font-semibold ${totalProfit >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
             {formatCurrency(totalProfit)}
           </div>
@@ -127,7 +127,7 @@ export const RevenueTrendChart: React.FC<RevenueTrendChartProps> = ({ token }) =
           </LineChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No trend data available
         </div>
       )}

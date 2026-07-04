@@ -228,36 +228,36 @@ export function PatientDetailPanel({
       case 'CANCELLED':
         return 'bg-red-100 text-red-800';
       case 'NO_SHOW':
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface-100 text-surface-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface-100 text-surface-800';
     }
   };
 
   return (
     <div>
       {/* Back Button Header */}
-      <div className="mb-6 pb-4 border-b border-gray-200">
+      <div className="mb-6 pb-4 border-b border-surface-200">
         <div className="flex justify-between items-start">
           <div>
             <button 
               onClick={onClose}
               className="mb-4 font-medium flex items-center gap-2 text-sm"
-              style={{ color: '#3DBEA3' }}
+              style={{ color: '#26a37e' }}
             >
               ← Back to Patients
             </button>
             <h2 className="text-3xl font-bold">
               {patient.firstName} {patient.lastName}
             </h2>
-            <p className="text-gray-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
+            <p className="text-surface-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
           </div>
           <div className="flex gap-2">
             {canEditPatient && onEdit && (
               <button
                 onClick={() => onEdit(patient)}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: '#3DBEA3' }}
+                style={{ backgroundColor: '#26a37e' }}
               >
                 <Edit className="w-4 h-4" />
                 Edit Patient
@@ -275,7 +275,7 @@ export function PatientDetailPanel({
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="px-4 py-2 bg-surface-200 text-surface-700 rounded-lg hover:bg-surface-300 transition-colors"
                     >
                       Cancel
                     </button>
@@ -299,7 +299,7 @@ export function PatientDetailPanel({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar - Patient Info */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-white rounded-lg border border-surface-200 p-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <UserIcon className="w-5 h-5" />
               Patient Information
@@ -308,7 +308,7 @@ export function PatientDetailPanel({
             <div className="space-y-4">
               {/* Basic Info */}
               <div>
-                <p className="text-xs text-gray-600 font-semibold">DATE OF BIRTH</p>
+                <p className="text-xs text-surface-600 font-semibold">DATE OF BIRTH</p>
                 <p className="text-sm">
                   {patient.dateOfBirth
                     ? new Date(patient.dateOfBirth).toLocaleDateString()
@@ -317,7 +317,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold flex items-center gap-2">
+                <p className="text-xs text-surface-600 font-semibold flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   PHONE
                 </p>
@@ -325,7 +325,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold flex items-center gap-2">
+                <p className="text-xs text-surface-600 font-semibold flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   EMAIL
                 </p>
@@ -333,7 +333,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold">PATIENT SINCE</p>
+                <p className="text-xs text-surface-600 font-semibold">PATIENT SINCE</p>
                 <p className="text-sm">
                   {new Date(patient.createdAt).toLocaleDateString()}
                 </p>
@@ -341,13 +341,13 @@ export function PatientDetailPanel({
 
               {/* Primary Dentist */}
               <div>
-                <p className="text-xs text-gray-600 font-semibold">PRIMARY DENTIST</p>
+                <p className="text-xs text-surface-600 font-semibold">PRIMARY DENTIST</p>
                 {patient.primaryDentist ? (
                   <p className="text-sm font-medium text-blue-600">
                     Dr. {patient.primaryDentist.user.firstName} {patient.primaryDentist.user.lastName}
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-500">Not assigned</p>
+                  <p className="text-sm text-surface-500">Not assigned</p>
                 )}
               </div>
             </div>
@@ -359,13 +359,13 @@ export function PatientDetailPanel({
         {/* Main Content - Tabs */}
         <div className="lg:col-span-2">
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <div className="flex gap-2 mb-6 border-b border-surface-200">
             <button
               onClick={() => setActiveTab('info')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'info'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Overview
@@ -374,8 +374,8 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('treatments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'treatments'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Treatments
@@ -384,8 +384,8 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('appointments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'appointments'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Appointments
@@ -395,7 +395,7 @@ export function PatientDetailPanel({
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'documents'
                   ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Documents
@@ -408,17 +408,17 @@ export function PatientDetailPanel({
               {/* Patient Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Total Treatments */}
-                <div className="bg-gradient-to-br from-[#3DBEA3]/10 to-[#3DBEA3]/5 rounded-xl p-5 border border-[#3DBEA3]/20">
+                <div className="bg-gradient-to-br from-[#26a37e]/10 to-[#26a37e]/5 rounded-xl p-5 border border-[#26a37e]/20">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-[#3DBEA3]/20 rounded-lg flex items-center justify-center">
-                      <Stethoscope size={20} className="text-[#3DBEA3]" />
+                    <div className="w-10 h-10 bg-[#26a37e]/20 rounded-lg flex items-center justify-center">
+                      <Stethoscope size={20} className="text-[#26a37e]" />
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Total</span>
+                    <span className="text-xs text-surface-500 font-medium">Total</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
                     {treatments.length}
                   </h3>
-                  <p className="text-sm text-gray-600">Treatments Completed</p>
+                  <p className="text-sm text-surface-600">Treatments Completed</p>
                 </div>
 
                 {/* Upcoming Appointments */}
@@ -427,12 +427,12 @@ export function PatientDetailPanel({
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <Calendar size={20} className="text-blue-600" />
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Upcoming</span>
+                    <span className="text-xs text-surface-500 font-medium">Upcoming</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
                     {appointments.filter(a => a.status === 'SCHEDULED').length}
                   </h3>
-                  <p className="text-sm text-gray-600">Appointments Scheduled</p>
+                  <p className="text-sm text-surface-600">Appointments Scheduled</p>
                 </div>
 
                 {/* Last Visit */}
@@ -441,46 +441,46 @@ export function PatientDetailPanel({
                     <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                       <Clock size={20} className="text-purple-600" />
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Recent</span>
+                    <span className="text-xs text-surface-500 font-medium">Recent</span>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
                     {appointments.filter(a => a.status === 'COMPLETED').length > 0
                       ? new Date(
                           Math.max(...appointments.filter(a => a.status === 'COMPLETED').map(a => new Date(a.dateOfTreatment).getTime()))
                         ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                       : 'Never'}
                   </h3>
-                  <p className="text-sm text-gray-600">Last Visit Date</p>
+                  <p className="text-sm text-surface-600">Last Visit Date</p>
                 </div>
               </div>
 
               {/* Patient Information Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Contact Information */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-surface-200 p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <UserIcon size={16} className="text-gray-600" />
+                    <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
+                      <UserIcon size={16} className="text-surface-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">Contact Information</h3>
+                    <h3 className="font-semibold text-surface-900">Contact Information</h3>
                   </div>
                   <div className="space-y-3">
                     {patient.email && (
                       <div className="flex items-center gap-3 text-sm">
-                        <Mail size={16} className="text-gray-400" />
-                        <span className="text-gray-700">{patient.email}</span>
+                        <Mail size={16} className="text-surface-400" />
+                        <span className="text-surface-700">{patient.email}</span>
                       </div>
                     )}
                     {patient.phone && (
                       <div className="flex items-center gap-3 text-sm">
-                        <Phone size={16} className="text-gray-400" />
-                        <span className="text-gray-700">{patient.phone}</span>
+                        <Phone size={16} className="text-surface-400" />
+                        <span className="text-surface-700">{patient.phone}</span>
                       </div>
                     )}
                     {patient.dateOfBirth && (
                       <div className="flex items-center gap-3 text-sm">
-                        <Calendar size={16} className="text-gray-400" />
-                        <span className="text-gray-700">
+                        <Calendar size={16} className="text-surface-400" />
+                        <span className="text-surface-700">
                           Born: {new Date(patient.dateOfBirth).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
@@ -493,20 +493,20 @@ export function PatientDetailPanel({
                 </div>
 
                 {/* Recent Activity */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-surface-200 p-6">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Activity size={16} className="text-gray-600" />
+                    <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
+                      <Activity size={16} className="text-surface-600" />
                     </div>
-                    <h3 className="font-semibold text-gray-900">Recent Activity</h3>
+                    <h3 className="font-semibold text-surface-900">Recent Activity</h3>
                   </div>
                   <div className="space-y-3">
                     {treatments.length > 0 && (
                       <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[#3DBEA3] mt-2"></div>
+                        <div className="w-2 h-2 rounded-full bg-[#26a37e] mt-2"></div>
                         <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Latest Treatment</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm text-surface-700 font-medium">Latest Treatment</p>
+                          <p className="text-xs text-surface-500">
                             {treatments[0]?.typeOfTreatment || 'N/A'} - {new Date(treatments[0]?.dateOfTreatment || Date.now()).toLocaleDateString()}
                           </p>
                         </div>
@@ -516,8 +516,8 @@ export function PatientDetailPanel({
                       <div className="flex items-start gap-3">
                         <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
                         <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Last Appointment</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm text-surface-700 font-medium">Last Appointment</p>
+                          <p className="text-xs text-surface-500">
                             {new Date(
                               appointments.filter(a => a.status === 'COMPLETED')[0]?.dateOfTreatment || Date.now()
                             ).toLocaleDateString()}
@@ -529,8 +529,8 @@ export function PatientDetailPanel({
                       <div className="flex items-start gap-3">
                         <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
                         <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Next Scheduled</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-sm text-surface-700 font-medium">Next Scheduled</p>
+                          <p className="text-xs text-surface-500">
                             {new Date(
                               appointments
                                 .filter(a => a.status === 'SCHEDULED')
@@ -541,40 +541,40 @@ export function PatientDetailPanel({
                       </div>
                     )}
                     {treatments.length === 0 && appointments.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">No recent activity</p>
+                      <p className="text-sm text-surface-500 italic">No recent activity</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <div className="bg-white rounded-xl border border-surface-200 p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={16} className="text-gray-600" />
+                  <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp size={16} className="text-surface-600" />
                   </div>
-                  <h3 className="font-semibold text-gray-900">Treatment Summary</h3>
+                  <h3 className="font-semibold text-surface-900">Treatment Summary</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{treatments.length}</p>
-                    <p className="text-xs text-gray-600 mt-1">Total Treatments</p>
+                  <div className="text-center p-3 bg-surface-50 rounded-lg">
+                    <p className="text-2xl font-bold text-surface-900">{treatments.length}</p>
+                    <p className="text-xs text-surface-600 mt-1">Total Treatments</p>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{appointments.length}</p>
-                    <p className="text-xs text-gray-600 mt-1">All Appointments</p>
+                  <div className="text-center p-3 bg-surface-50 rounded-lg">
+                    <p className="text-2xl font-bold text-surface-900">{appointments.length}</p>
+                    <p className="text-xs text-surface-600 mt-1">All Appointments</p>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="text-center p-3 bg-surface-50 rounded-lg">
+                    <p className="text-2xl font-bold text-surface-900">
                       {appointments.filter(a => a.status === 'COMPLETED').length}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Completed Visits</p>
+                    <p className="text-xs text-surface-600 mt-1">Completed Visits</p>
                   </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">
+                  <div className="text-center p-3 bg-surface-50 rounded-lg">
+                    <p className="text-2xl font-bold text-surface-900">
                       {documents.length}
                     </p>
-                    <p className="text-xs text-gray-600 mt-1">Documents</p>
+                    <p className="text-xs text-surface-600 mt-1">Documents</p>
                   </div>
                 </div>
               </div>
@@ -582,31 +582,31 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'treatments' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-surface-200 p-6">
               {loadingTreatments ? (
                 <div className="flex flex-col justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-gray-500">Loading treatments...</p>
+                  <p className="text-sm text-surface-500">Loading treatments...</p>
                 </div>
               ) : treatmentsError ? (
                 <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
                   {treatmentsError}
                 </div>
               ) : treatments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-surface-500">
                   <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No treatment records found for this patient</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {treatments.map((treatment) => (
-                    <div key={treatment.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
+                    <div key={treatment.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <p className="font-semibold text-sm">
                             {treatment.typeOfTreatment.replace(/_/g, ' ')}
                           </p>
-                          <p className="text-xs text-gray-600 flex items-center gap-1">
+                          <p className="text-xs text-surface-600 flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {new Date(treatment.dateOfTreatment).toLocaleDateString()}
                           </p>
@@ -620,14 +620,14 @@ export function PatientDetailPanel({
                         </span>
                       </div>
                       {treatment.notes && (
-                        <p className="text-sm text-gray-700 mb-2">{treatment.notes}</p>
+                        <p className="text-sm text-surface-700 mb-2">{treatment.notes}</p>
                       )}
                       {treatment.procedure && (
-                        <p className="text-xs text-gray-600 mb-2">
+                        <p className="text-xs text-surface-600 mb-2">
                           <span className="font-semibold">Procedure:</span> {treatment.procedure}
                         </p>
                       )}
-                      <div className="flex justify-between text-xs text-gray-600">
+                      <div className="flex justify-between text-xs text-surface-600">
                         <span>
                           Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
                         </span>
@@ -649,18 +649,18 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'appointments' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-surface-200 p-6">
               {loadingAppointments ? (
                 <div className="flex flex-col justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-gray-500">Loading appointments...</p>
+                  <p className="text-sm text-surface-500">Loading appointments...</p>
                 </div>
               ) : appointmentsError ? (
                 <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
                   {appointmentsError}
                 </div>
               ) : appointments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-surface-500">
                   <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No appointments found for this patient</p>
                 </div>
@@ -669,20 +669,20 @@ export function PatientDetailPanel({
                   {appointments.map((appt) => {
                     const isPast = new Date(appt.dateOfTreatment) < new Date();
                     return (
-                      <div key={appt.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
+                      <div key={appt.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <p className="font-semibold text-sm">
                               {appt.typeOfTreatment ? appt.typeOfTreatment.replace(/_/g, ' ') : 'Appointment'}
                             </p>
-                            <p className="text-xs text-gray-600 flex items-center gap-1">
+                            <p className="text-xs text-surface-600 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {new Date(appt.dateOfTreatment).toLocaleDateString()} at{' '}
                               {new Date(appt.dateOfTreatment).toLocaleTimeString([], { 
                                 hour: '2-digit', 
                                 minute: '2-digit' 
                               })}
-                              {isPast && <span className="ml-2 text-gray-500">(Past)</span>}
+                              {isPast && <span className="ml-2 text-surface-500">(Past)</span>}
                             </p>
                           </div>
                           <span className={`px-2 py-1 text-xs rounded font-medium ${getStatusColor(appt.status)}`}>
@@ -690,9 +690,9 @@ export function PatientDetailPanel({
                           </span>
                         </div>
                         {appt.notes && (
-                          <p className="text-sm text-gray-700 mb-2">{appt.notes}</p>
+                          <p className="text-sm text-surface-700 mb-2">{appt.notes}</p>
                         )}
-                        <div className="flex justify-between text-xs text-gray-600">
+                        <div className="flex justify-between text-xs text-surface-600">
                           {appt.doctor && (
                             <span>
                               Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}
@@ -711,7 +711,7 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'documents' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white rounded-lg border border-surface-200 p-6">
 
               {documentsError && (
                 <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded flex gap-2">
@@ -740,10 +740,10 @@ export function PatientDetailPanel({
               </div>
 
               {showUploadForm && (
-                <form onSubmit={handleUploadDocument} className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <form onSubmit={handleUploadDocument} className="mb-6 p-4 bg-surface-50 rounded-lg border border-surface-200">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         Document Name
                       </label>
                       <input
@@ -751,17 +751,17 @@ export function PatientDetailPanel({
                         placeholder="e.g., X-ray report, Prescription"
                         value={uploadData.name}
                         onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         Document Type
                       </label>
                       <select
                         value={uploadData.type}
                         onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="">Select a type</option>
                         <option value="X-RAY">X-Ray</option>
@@ -772,7 +772,7 @@ export function PatientDetailPanel({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         File
                       </label>
                       <input
@@ -786,14 +786,14 @@ export function PatientDetailPanel({
                       <button
                         type="button"
                         onClick={() => setShowUploadForm(false)}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                        className="px-4 py-2 bg-surface-200 text-surface-700 rounded-lg hover:bg-surface-300 transition-colors text-sm"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={uploading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors text-sm"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-surface-400 transition-colors text-sm"
                       >
                         {uploading ? 'Uploading...' : 'Upload'}
                       </button>
@@ -803,12 +803,12 @@ export function PatientDetailPanel({
               )}
 
               {documentsLoading ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-surface-500">
                   <div className="animate-spin inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mb-2"></div>
                   <p className="text-sm">Loading documents...</p>
                 </div>
               ) : documents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-surface-500">
                   <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No documents uploaded yet</p>
                   <p className="text-xs mt-2">Upload medical documents, X-rays, prescriptions, and reports here</p>
@@ -816,7 +816,7 @@ export function PatientDetailPanel({
               ) : (
                 <div className="space-y-3">
                   {documents.map((doc) => (
-                    <div key={doc.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
+                    <div key={doc.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-3 flex-1">
                           <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
@@ -830,7 +830,7 @@ export function PatientDetailPanel({
                                 {doc.name}
                                 <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                               </a>
-                            <p className="text-xs text-gray-600 flex items-center gap-1">
+                            <p className="text-xs text-surface-600 flex items-center gap-1">
                               <Calendar className="w-3 h-3" />
                               {new Date(doc.createdAt).toLocaleDateString()}
                             </p>
@@ -851,7 +851,7 @@ export function PatientDetailPanel({
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">
+                      <p className="text-xs text-surface-600 mb-2">
                         Uploaded by: {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}
                       </p>
                       
@@ -866,7 +866,7 @@ export function PatientDetailPanel({
                           </button>
                           <button
                             onClick={() => setDeleteConfirmDocId(null)}
-                            className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 transition-colors"
+                            className="px-2 py-1 bg-surface-300 text-surface-700 text-xs rounded hover:bg-surface-400 transition-colors"
                           >
                             Cancel
                           </button>

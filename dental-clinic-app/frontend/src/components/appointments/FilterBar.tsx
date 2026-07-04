@@ -11,7 +11,7 @@ interface FilterBarProps {
 
 export const FilterBar: React.FC<FilterBarProps> = ({ showHolidays, setShowHolidays, showReminders, setShowReminders, selectedDate }) => {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 flex items-center justify-between">
+    <div className="bg-white rounded-lg border border-surface-200 p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button className="px-3 py-2 bg-blue-50 text-blue-600 rounded-lg flex items-center gap-2">
           <CalendarIcon />
@@ -30,10 +30,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({ showHolidays, setShowHolid
       </div>
 
       <div className="flex items-center gap-3">
-        <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <button className="p-2 text-surface-600 hover:bg-surface-50 rounded-lg">
           <Bell />
         </button>
-        <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+        <button className="p-2 text-surface-600 hover:bg-surface-50 rounded-lg">
           <Settings />
         </button>
       </div>

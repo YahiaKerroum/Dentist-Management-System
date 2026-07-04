@@ -53,7 +53,7 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
         <Loader2 className="animate-spin text-blue-600" size={24} />
       </div>
     );
@@ -61,7 +61,7 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
         <p className="text-red-500 text-sm">{error}</p>
       </div>
     );
@@ -70,12 +70,12 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
   const totalTreatments = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Stethoscope className="text-green-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Most Common Treatments</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <h3 className="font-semibold text-surface-800">Most Common Treatments</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full">
           Total: {totalTreatments}
         </span>
       </div>
@@ -108,12 +108,12 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
             <Legend
               verticalAlign="bottom"
               height={36}
-              formatter={(value: any) => <span className="text-xs text-gray-600">{value}</span>}
+              formatter={(value: any) => <span className="text-xs text-surface-600">{value}</span>}
             />
           </PieChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No treatment data available
         </div>
       )}
