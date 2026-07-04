@@ -17,12 +17,16 @@ import {
     Search,
 } from 'lucide-react';
 import { SuccessDialog, ErrorDialog } from '../components/appointments/Dialogs';
-import { Filter, ChevronDown, X } from 'lucide-react';
-import { getPatients } from '../services/patient.service';
-import { getAllStaff, getUserProfile } from '../services/user.service';
+import { Filter, X } from 'lucide-react';
+import { getUserProfile } from '../services/user.service';
 import { Patient } from '../types/patient';
 import { User } from '../types/user';
 import { decodeToken } from '../utils/jwt';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '../components/ui/DropdownMenu';
 
 interface AppointmentsPageProps {
     token: string;
@@ -34,7 +38,6 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
-    const [showFilters, setShowFilters] = useState(false);
     const [patientFilter, setPatientFilter] = useState('all');
     const [doctorFilter, setDoctorFilter] = useState('all');
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
@@ -294,125 +297,115 @@ const hasActiveFilters =
             )}
 
             {/* Search and Filter Bar */}
-            <div className="bg-white rounded-xl shadow-sm border border-surface-100 mb-6">
-                <div className="p-4 flex items-center gap-4">
-                    <div className="flex-1 relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-surface-400" />
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search by patient or doctor name..."
-                            className="block w-full pl-10 pr-3 py-2.5 border border-surface-200 rounded-lg leading-5 bg-white placeholder-surface-400 focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e] transition duration-150 ease-in-out sm:text-sm"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div className="relative w-full sm:w-96">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-surface-400" />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by patient or doctor name..."
+                        className="block w-full pl-10 pr-3 py-2 border border-surface-300 rounded-md bg-white placeholder-surface-400 focus:outline-none focus:border-primary-500 focus:shadow-focus transition sm:text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="inline-flex flex-wrap rounded-md border border-surface-200 bg-surface-100 p-0.5">
+                        {(['all', ...Object.values(AppointmentStatus)] as const).map((option) => (
+                            <button
+                                key={option}
+                                onClick={() => setStatusFilter(option as AppointmentStatus | 'all')}
+                                className={`rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    statusFilter === option
+                                        ? 'bg-white text-surface-900 shadow-xs'
+                                        : 'text-surface-500 hover:text-surface-700'
+                                }`}
+                            >
+                                {option === 'all' ? 'All' : option.replace(/_/g, ' ')}
+                            </button>
+                        ))}
                     </div>
 
-                    <button
-                        onClick={() => setShowFilters(!showFilters)}
-                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
-                            showFilters || hasActiveFilters
-                                ? 'border-[#26a37e] text-[#26a37e]'
-                                : 'border-surface-200 text-surface-600 hover:bg-surface-50'
-                        }`}
-                        style={showFilters || hasActiveFilters ? { backgroundColor: '#effcf6' } : {}}
-                    >
-                        <Filter className="w-4 h-4" />
-                        Filters
-                        {hasActiveFilters && (
-                            <span className="w-5 h-5 text-white text-xs rounded-full flex items-center justify-center" style={{ backgroundColor: '#26a37e' }}>
-                                !
-                            </span>
-                        )}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                    </button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                                    hasActiveFilters
+                                        ? 'border-primary-300 bg-primary-50 text-primary-700'
+                                        : 'border-surface-300 text-surface-600 hover:bg-surface-50'
+                                }`}
+                            >
+                                <Filter className="h-4 w-4" />
+                                Filters
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-64 p-3">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Patient</label>
+                                    <select
+                                        value={patientFilter}
+                                        onChange={(e) => setPatientFilter(e.target.value)}
+                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                    >
+                                        <option value="all">All Patients</option>
+                                        {patients.map((patient) => (
+                                            <option key={patient.id} value={patient.id}>
+                                                {patient.firstName} {patient.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Doctor</label>
+                                    <select
+                                        value={doctorFilter}
+                                        onChange={(e) => setDoctorFilter(e.target.value)}
+                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                    >
+                                        <option value="all">All Doctors</option>
+                                        {doctors.map((doc) => (
+                                            <option key={doc.id} value={doc.doctorProfile?.id || ''}>
+                                                Dr. {doc.firstName} {doc.lastName}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">From</label>
+                                        <input
+                                            type="date"
+                                            value={dateRange.from}
+                                            onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                                            className="w-full rounded-md border border-surface-300 bg-white px-2 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">To</label>
+                                        <input
+                                            type="date"
+                                            value={dateRange.to}
+                                            onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                                            className="w-full rounded-md border border-surface-300 bg-white px-2 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                        />
+                                    </div>
+                                </div>
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={clearFilters}
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-50"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Clear all filters
+                                    </button>
+                                )}
+                            </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
-                    
-                {showFilters && (
-                    <div className="px-4 pb-4 border-t border-surface-100 pt-4">
-                        <div className="grid grid-cols-5 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">Patient</label>
-                                <select
-                                    value={patientFilter}
-                                    onChange={(e) => setPatientFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
-                                >
-                                    <option value="all">All Patients</option>
-                                    {patients.map((patient) => (
-                                        <option key={patient.id} value={patient.id}>
-                                            {patient.firstName} {patient.lastName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                                
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">Doctor</label>
-                                <select
-                                    value={doctorFilter}
-                                    onChange={(e) => setDoctorFilter(e.target.value)}
-                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
-                                >
-                                    <option value="all">All Doctors</option>
-                                    {doctors.map((doc) => (
-                                        <option key={doc.id} value={doc.doctorProfile?.id || ''}>
-                                            Dr. {doc.firstName} {doc.lastName}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                                
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">Status</label>
-                                <select
-                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value as AppointmentStatus | 'all')}
-                                >
-                                    <option value="all">All Status</option>
-                                    {Object.values(AppointmentStatus).map((status) => (
-                                        <option key={status} value={status}>
-                                            {status.replace(/_/g, ' ')}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                                
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">From Date</label>
-                                <input
-                                    type="date"
-                                    value={dateRange.from}
-                                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
-                                />
-                            </div>
-                                
-                            <div>
-                                <label className="block text-sm font-medium text-surface-700 mb-1">To Date</label>
-                                <input
-                                    type="date"
-                                    value={dateRange.to}
-                                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                                    className="w-full px-3 py-2 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#26a37e]/20 focus:border-[#26a37e]"
-                                />
-                            </div>
-                        </div>
-                        {hasActiveFilters && (
-                            <div className="mt-3 flex justify-end">
-                                <button
-                                    onClick={clearFilters}
-                                    className="text-sm font-medium hover:text-[#188467]"
-                                    style={{ color: '#26a37e' }}
-                                >
-                                    Clear all filters
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
 
             {/* Main Content: Table + Details Panel */}

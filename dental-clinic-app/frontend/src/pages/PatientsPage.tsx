@@ -23,8 +23,15 @@ import {
     ChevronRight,
     Download,
     X,
-    Clock
+    Clock,
+    SlidersHorizontal,
 } from 'lucide-react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '../components/ui/DropdownMenu';
+import { getAvatarColor } from '../utils/avatarColor';
 
 interface PatientsPageProps {
     token: string;
@@ -374,96 +381,111 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             )}
 
             {/* Controls */}
-            <div className="bg-white p-4 rounded-xl shadow-sm border border-surface-100 mb-6">
-                <div className="flex flex-col sm:flex-row gap-4 justify-between items-center mb-3">
-                    <div className="relative w-full sm:w-96">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <Search className="h-4 w-4 text-surface-400" />
-                        </div>
-                        <input
-                            ref={searchInputRef}
-                            type="text"
-                            placeholder="Search by name or email... (Ctrl+K)"
-                            className="block w-full pl-10 pr-3 py-2 border border-surface-200 rounded-lg leading-5 bg-surface-50 placeholder-surface-400 focus:outline-none focus:bg-white focus:ring-2 transition duration-150 ease-in-out sm:text-sm"
-                            style={{ '--tw-ring-color': '#26a37e' } as React.CSSProperties}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+                <div className="relative w-full sm:w-96">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-4 w-4 text-surface-400" />
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                        {/* Export Button */}
-                        <Button
-                            onClick={handleExportCSV}
-                            variant="secondary"
-                            className="text-sm"
-                            title="Export to CSV (Ctrl+E)"
-                        >
-                            <Download className="w-4 h-4 mr-2" />
-                            Export
-                        </Button>
-                    </div>
+                    <input
+                        ref={searchInputRef}
+                        type="text"
+                        placeholder="Search by name or email... (Ctrl+K)"
+                        className="block w-full pl-10 pr-3 py-2 border border-surface-300 rounded-md bg-white placeholder-surface-400 focus:outline-none focus:border-primary-500 focus:shadow-focus transition sm:text-sm"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-                
-                <div className="flex gap-2 flex-wrap">
-                    {/* Status Filter */}
-                    <select
-                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
 
-                    {/* Age Filter */}
-                    <select
-                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={ageFilter}
-                        onChange={(e) => setAgeFilter(e.target.value)}
-                    >
-                        <option value="all">All Ages</option>
-                        <option value="children">Children (0-12)</option>
-                        <option value="teens">Teens (13-17)</option>
-                        <option value="adults">Adults (18-64)</option>
-                        <option value="seniors">Seniors (65+)</option>
-                    </select>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Status segmented control */}
+                    <div className="inline-flex rounded-md border border-surface-200 bg-surface-100 p-0.5">
+                        {(['all', 'active', 'inactive'] as const).map((option) => (
+                            <button
+                                key={option}
+                                onClick={() => setStatusFilter(option)}
+                                className={`rounded px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                                    statusFilter === option
+                                        ? 'bg-white text-surface-900 shadow-xs'
+                                        : 'text-surface-500 hover:text-surface-700'
+                                }`}
+                            >
+                                {option === 'all' ? 'All' : option}
+                            </button>
+                        ))}
+                    </div>
 
-                    {/* Date Filter */}
-                    <select
-                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={dateFilter}
-                        onChange={(e) => setDateFilter(e.target.value)}
-                    >
-                        <option value="all">All Time</option>
-                        <option value="week">Last 7 Days</option>
-                        <option value="month">Last 30 Days</option>
-                        <option value="quarter">Last 90 Days</option>
-                    </select>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
+                                    ageFilter !== 'all' || dateFilter !== 'all' || sortBy !== 'name-asc'
+                                        ? 'border-primary-300 bg-primary-50 text-primary-700'
+                                        : 'border-surface-300 text-surface-600 hover:bg-surface-50'
+                                }`}
+                            >
+                                <SlidersHorizontal className="h-4 w-4" />
+                                Filters
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-64 p-3">
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Age</label>
+                                    <select
+                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                        value={ageFilter}
+                                        onChange={(e) => setAgeFilter(e.target.value)}
+                                    >
+                                        <option value="all">All Ages</option>
+                                        <option value="children">Children (0-12)</option>
+                                        <option value="teens">Teens (13-17)</option>
+                                        <option value="adults">Adults (18-64)</option>
+                                        <option value="seniors">Seniors (65+)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Registered</label>
+                                    <select
+                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                        value={dateFilter}
+                                        onChange={(e) => setDateFilter(e.target.value)}
+                                    >
+                                        <option value="all">All Time</option>
+                                        <option value="week">Last 7 Days</option>
+                                        <option value="month">Last 30 Days</option>
+                                        <option value="quarter">Last 90 Days</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Sort By</label>
+                                    <select
+                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                    >
+                                        <option value="name-asc">Name (A-Z)</option>
+                                        <option value="name-desc">Name (Z-A)</option>
+                                        <option value="date-newest">Newest First</option>
+                                        <option value="date-oldest">Oldest First</option>
+                                    </select>
+                                </div>
+                                {hasActiveFilters() && (
+                                    <button
+                                        onClick={handleClearFilters}
+                                        className="flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium text-primary-700 hover:bg-primary-50"
+                                    >
+                                        <X className="h-3.5 w-3.5" />
+                                        Clear all filters
+                                    </button>
+                                )}
+                            </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
-                    {/* Sort By */}
-                    <select
-                        className="px-4 py-2 border border-surface-200 rounded-lg text-sm font-medium text-surface-600 hover:bg-surface-50 bg-white cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                    >
-                        <option value="name-asc">Name (A-Z)</option>
-                        <option value="name-desc">Name (Z-A)</option>
-                        <option value="date-newest">Newest First</option>
-                        <option value="date-oldest">Oldest First</option>
-                    </select>
-
-                    {/* Clear Filters Button */}
-                    {hasActiveFilters() && (
-                        <Button
-                            onClick={handleClearFilters}
-                            variant="secondary"
-                            className="text-sm flex items-center gap-2"
-                        >
-                            <X className="w-4 h-4" />
-                            Clear Filters
-                        </Button>
-                    )}
+                    <Button onClick={handleExportCSV} variant="secondary" title="Export to CSV (Ctrl+E)">
+                        <Download className="w-4 h-4" />
+                        Export
+                    </Button>
                 </div>
             </div>
 
@@ -505,13 +527,15 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                     </td>
                                 </tr>
                             ) : (
-                                paginatedPatients.map((patient) => (
+                                paginatedPatients.map((patient) => {
+                                    const avatar = getAvatarColor(`${patient.firstName}${patient.lastName}`);
+                                    return (
                                     <tr key={patient.id} className="hover:bg-surface-50 transition-colors cursor-pointer" onClick={() => handleViewPatientDetails(patient)}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
                                                 <div className="flex-shrink-0 h-10 w-10">
-                                                    <div className="h-10 w-10 rounded-full flex items-center justify-center font-bold" style={{ backgroundColor: '#effcf6', color: '#26a37e' }}>
-                                                                                                {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
+                                                    <div className={`h-10 w-10 rounded-full flex items-center justify-center font-bold ${avatar.bg} ${avatar.text}`}>
+                                                        {(patient.firstName?.[0] ?? '')}{(patient.lastName?.[0] ?? '')}
                                                     </div>
                                                 </div>
                                                 <div className="ml-4">
@@ -591,7 +615,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                             </div>
                                         </td>
                                     </tr>
-                                ))
+                                    );
+                                })
                             )}
                         </tbody>
                     </table>

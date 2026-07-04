@@ -3,7 +3,8 @@ import { getExpenses, deleteExpense, searchExpenses, approveExpense } from '../.
 import { Expense } from '../../types/expense.types';
 import { ExpenseFormModal } from './ExpenseFormModal';
 import { ExpenseDetailModal } from './ExpenseDetailModal';
-import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Filter } from 'lucide-react';
+import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Filter, TrendingDown } from 'lucide-react';
+import { Button } from '../ui/Button';
 
 interface ExpenseTableProps {
   token: string;
@@ -255,15 +256,22 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       )}
 
       {/* Header with title and create button */}
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-2xl font-semibold text-surface-800">Expenses</h2>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Plus size={20} />
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-2xl font-semibold text-surface-800">Expenses</h2>
+          {!loading && (
+            <div className="flex items-center gap-2 rounded-full bg-danger-50 px-3.5 py-1.5 text-sm font-semibold text-danger-700">
+              <TrendingDown className="h-4 w-4" />
+              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(
+                filteredExpenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
+              )} spent
+            </div>
+          )}
+        </div>
+        <Button onClick={handleCreate}>
+          <Plus size={16} />
           Add Expense
-        </button>
+        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -380,7 +388,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
                   >
                     <td className="p-3">{expense.category}</td>
                     <td className="p-3">{expense.paidTo || 'N/A'}</td>
-                    <td className="p-3 font-medium">{formatCurrency(Number(expense.amount))}</td>
+                    <td className="p-3 font-semibold text-danger-700 tabular-nums">-{formatCurrency(Number(expense.amount))}</td>
                     <td className="p-3">{formatDate(expense.date)}</td>
                     <td className="p-3 max-w-xs truncate">{expense.notes || 'N/A'}</td>
                     <td className="p-3">
