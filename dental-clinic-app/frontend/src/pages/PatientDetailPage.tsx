@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Patient } from '../types/patient';
 import { Appointment } from '../types/appointment';
-import { Treatment } from '../types/treatment';
+import { Treatment, TREATMENT_STATUS_CONFIG } from '../types/treatment';
 import { getDocumentsByPatientId, deleteDocument, Document, uploadDocument } from '../services/document.service';
 import { getTreatments } from '../services/treatment.service';
+import { getPatientOdontogram, upsertToothStatus } from '../services/tooth.service';
+import { PatientToothRecord, ToothStatus } from '../types/tooth';
+import { Odontogram } from '../components/patients/Odontogram';
 import {
   Calendar,
   Phone,
@@ -42,7 +45,7 @@ export function PatientDetailPanel({
   onEdit,
   onDelete,
 }: PatientDetailPanelProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'treatments' | 'appointments' | 'documents'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'treatments' | 'appointments' | 'documents' | 'odontogram'>('info');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
@@ -63,6 +66,11 @@ export function PatientDetailPanel({
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [treatmentsError, setTreatmentsError] = useState('');
+
+  // State for odontogram
+  const [odontogram, setOdontogram] = useState<PatientToothRecord[]>([]);
+  const [loadingOdontogram, setLoadingOdontogram] = useState(false);
+  const [odontogramError, setOdontogramError] = useState('');
 
   // Permission checks
   const canEditPatient = userPermissions.includes('patients.update');
@@ -159,6 +167,36 @@ export function PatientDetailPanel({
       fetchTreatments();
     }
   }, [activeTab, patient.id]);
+
+  // Fetch odontogram when the odontogram tab is active
+  useEffect(() => {
+    if (activeTab === 'odontogram') {
+      fetchOdontogram();
+    }
+  }, [activeTab, patient.id]);
+
+  const fetchOdontogram = async () => {
+    setLoadingOdontogram(true);
+    setOdontogramError('');
+
+    try {
+      const response = await getPatientOdontogram(patient.id, token);
+      setOdontogram(response.data);
+    } catch (error: any) {
+      setOdontogramError(error.message || 'Failed to load odontogram');
+    } finally {
+      setLoadingOdontogram(false);
+    }
+  };
+
+  const handleToothSave = async (toothNumber: number, status: ToothStatus, notes: string) => {
+    const response = await upsertToothStatus(patient.id, toothNumber, status, notes || undefined, token);
+    setOdontogram((prev) => {
+      const next = prev.filter((t) => t.toothNumber !== toothNumber);
+      next.push(response.data);
+      return next;
+    });
+  };
 
   const fetchAppointments = async () => {
     setLoadingAppointments(true);
@@ -400,6 +438,16 @@ export function PatientDetailPanel({
             >
               Documents
             </button>
+            <button
+              onClick={() => setActiveTab('odontogram')}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'odontogram'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
+              }`}
+            >
+              Odontogram
+            </button>
           </div>
 
           {/* Tab Content */}
@@ -611,12 +659,11 @@ export function PatientDetailPanel({
                             {new Date(treatment.dateOfTreatment).toLocaleDateString()}
                           </p>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded font-medium ${
-                          treatment.completed 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {treatment.completed ? 'Completed' : 'In Progress'}
+                        <span
+                          className="px-2 py-1 text-xs rounded font-medium"
+                          style={{ backgroundColor: TREATMENT_STATUS_CONFIG[treatment.status].bgColor, color: TREATMENT_STATUS_CONFIG[treatment.status].color }}
+                        >
+                          {TREATMENT_STATUS_CONFIG[treatment.status].label}
                         </span>
                       </div>
                       {treatment.notes && (
@@ -631,8 +678,8 @@ export function PatientDetailPanel({
                         <span>
                           Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
                         </span>
-                        {treatment.teethInvolved && treatment.teethInvolved.length > 0 && (
-                          <span>Teeth: {treatment.teethInvolved.join(', ')}</span>
+                        {treatment.teeth.length > 0 && (
+                          <span>Teeth: {treatment.teeth.map((t) => t.toothNumber).join(', ')}</span>
                         )}
                       </div>
                       {treatment.followUpRequired && (
@@ -877,6 +924,15 @@ export function PatientDetailPanel({
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'odontogram' && (
+            <Odontogram
+              teeth={odontogram}
+              loading={loadingOdontogram}
+              error={odontogramError}
+              onSave={handleToothSave}
+            />
           )}
         </div>
       </div>

@@ -4,6 +4,7 @@ import {
     CreateTreatmentDTO,
     UpdateTreatmentDTO,
     TreatmentFilters,
+    TreatmentStatus,
 } from '../types/treatment';
 import { apiClient, ApiError, authHeader } from '../lib/apiClient';
 
@@ -23,7 +24,7 @@ export const getTreatments = async (
     const params: Record<string, string> = {};
     if (filters?.doctorId) params.doctorId = filters.doctorId;
     if (filters?.patientId) params.patientId = filters.patientId;
-    if (filters?.completed !== undefined) params.completed = String(filters.completed);
+    if (filters?.status) params.status = filters.status;
     if (filters?.dateFrom) params.dateFrom = filters.dateFrom;
     if (filters?.dateTo) params.dateTo = filters.dateTo;
 
@@ -74,12 +75,16 @@ export const updateTreatment = async (
     }
 };
 
-export const markTreatmentCompleted = async (id: string, token: string): Promise<SingleTreatmentResponse> => {
+export const updateTreatmentStatus = async (
+    id: string,
+    status: TreatmentStatus,
+    token: string
+): Promise<SingleTreatmentResponse> => {
     try {
-        const { data } = await apiClient.patch(`${RESOURCE}/${id}/complete`, undefined, { headers: authHeader(token) });
+        const { data } = await apiClient.patch(`${RESOURCE}/${id}/status`, { status }, { headers: authHeader(token) });
         return data;
     } catch (err) {
-        return rethrow(err, 'Failed to mark treatment as completed', 'You do not have permission to complete treatments');
+        return rethrow(err, 'Failed to update treatment status', 'You do not have permission to update treatments');
     }
 };
 

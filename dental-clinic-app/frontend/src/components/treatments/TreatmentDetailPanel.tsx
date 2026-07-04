@@ -14,7 +14,7 @@ import {
     ClipboardList,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Treatment, TreatmentType, TREATMENT_TYPE_CONFIG, TEETH_QUADRANTS } from '../../types/treatment';
+import { Treatment, TreatmentType, TREATMENT_TYPE_CONFIG, TREATMENT_STATUS_CONFIG, TEETH_QUADRANTS } from '../../types/treatment';
 
 // Helper component for treatment type icon
 const TreatmentTypeIcon = ({ type, size = 'md' }: { type: TreatmentType; size?: 'sm' | 'md' | 'lg' | 'xl' }) => {
@@ -48,6 +48,8 @@ export function TreatmentDetailPanel({
     onNavigateToPatient,
 }: TreatmentDetailPanelProps) {
     const typeConfig = TREATMENT_TYPE_CONFIG[treatment.typeOfTreatment];
+    const statusConfig = TREATMENT_STATUS_CONFIG[treatment.status];
+    const teethNumbers = treatment.teeth.map((t) => t.toothNumber);
 
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleDateString('en-US', {
@@ -123,17 +125,17 @@ export function TreatmentDetailPanel({
 
                     {/* Status Badge */}
                     <div className="flex items-center gap-3">
-                        {treatment.completed ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+                        <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
+                            style={{ backgroundColor: statusConfig.bgColor, color: statusConfig.color }}
+                        >
+                            {treatment.status === 'COMPLETED' || treatment.status === 'BILLED' ? (
                                 <CheckCircle2 className="w-4 h-4" />
-                                Completed
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                            ) : (
                                 <Clock className="w-4 h-4" />
-                                In Progress
-                            </span>
-                        )}
+                            )}
+                            {statusConfig.label}
+                        </span>
                         {treatment.followUpRequired && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-100 text-rose-700 rounded-full text-sm font-medium">
                                 <AlertCircle className="w-4 h-4" />
@@ -227,7 +229,7 @@ export function TreatmentDetailPanel({
                     </div>
 
                     {/* Teeth Involved */}
-                    {treatment.teethInvolved.length > 0 && (
+                    {teethNumbers.length > 0 && (
                         <div className="mb-6">
                             <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 🦷 Teeth Involved
@@ -241,7 +243,7 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
                                                             : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
@@ -256,7 +258,7 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
                                                             : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
@@ -274,7 +276,7 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
                                                             : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
@@ -289,7 +291,7 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
                                                             : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
@@ -301,7 +303,7 @@ export function TreatmentDetailPanel({
                                     </div>
                                 </div>
                                 <p className="text-center text-sm text-surface-500 mt-3">
-                                    {treatment.teethInvolved.length} tooth/teeth treated: {treatment.teethInvolved.join(', ')}
+                                    {teethNumbers.length} tooth/teeth treated: {teethNumbers.join(', ')}
                                 </p>
                             </div>
                         </div>

@@ -8,6 +8,22 @@ export type TreatmentType =
     | 'ORTHODONTICS'
     | 'OTHER';
 
+export type TreatmentStatus =
+    | 'PLANNED'
+    | 'IN_PROGRESS'
+    | 'NEEDS_FOLLOW_UP'
+    | 'COMPLETED'
+    | 'BILLED'
+    | 'ARCHIVED';
+
+export interface TreatmentToothRecord {
+    id: string;
+    treatmentId: string;
+    toothNumber: number;
+    notes: string | null;
+    createdAt: string;
+}
+
 export interface Treatment {
     id: string;
     doctorId: string;
@@ -16,9 +32,9 @@ export interface Treatment {
     typeOfTreatment: TreatmentType;
     notes: string | null;
     procedure: string | null;
-    teethInvolved: number[];
+    teeth: TreatmentToothRecord[];
     followUpRequired: boolean;
-    completed: boolean;
+    status: TreatmentStatus;
     appointmentId: string | null;
     createdAt: string;
     updatedAt: string;
@@ -46,6 +62,11 @@ export interface Treatment {
     } | null;
 }
 
+export interface ToothInput {
+    toothNumber: number;
+    notes?: string;
+}
+
 export interface CreateTreatmentDTO {
     doctorId: string;
     patientId: string;
@@ -53,7 +74,7 @@ export interface CreateTreatmentDTO {
     typeOfTreatment: TreatmentType;
     notes?: string;
     procedure?: string;
-    teethInvolved?: number[];
+    teeth?: ToothInput[];
     followUpRequired?: boolean;
     appointmentId?: string;
 }
@@ -61,9 +82,8 @@ export interface CreateTreatmentDTO {
 export interface UpdateTreatmentDTO {
     notes?: string;
     procedure?: string;
-    teethInvolved?: number[];
+    teeth?: ToothInput[];
     followUpRequired?: boolean;
-    completed?: boolean;
 }
 
 export interface TreatmentResponse {
@@ -81,10 +101,29 @@ export interface SingleTreatmentResponse {
 export interface TreatmentFilters {
     doctorId?: string;
     patientId?: string;
-    completed?: boolean;
+    status?: TreatmentStatus;
     dateFrom?: string;
     dateTo?: string;
 }
+
+// Treatment status display configuration — one entry per Kanban board column
+export const TREATMENT_STATUS_CONFIG: Record<TreatmentStatus, { label: string; color: string; bgColor: string }> = {
+    PLANNED: { label: 'Planned', color: '#64756f', bgColor: '#f0f3f2' },
+    IN_PROGRESS: { label: 'In Progress', color: '#2563eb', bgColor: '#dbeafe' },
+    NEEDS_FOLLOW_UP: { label: 'Needs Follow-up', color: '#d97706', bgColor: '#fef3c7' },
+    COMPLETED: { label: 'Completed', color: '#16a34a', bgColor: '#dcfce7' },
+    BILLED: { label: 'Billed', color: '#188467', bgColor: '#d7f6e8' },
+    ARCHIVED: { label: 'Archived', color: '#495650', bgColor: '#e2e8e6' },
+};
+
+export const TREATMENT_STATUS_ORDER: TreatmentStatus[] = [
+    'PLANNED',
+    'IN_PROGRESS',
+    'NEEDS_FOLLOW_UP',
+    'COMPLETED',
+    'BILLED',
+    'ARCHIVED',
+];
 
 // Treatment type display configuration with custom dental icons
 export const TREATMENT_TYPE_CONFIG: Record<TreatmentType, { label: string; description: string; color: string; bgColor: string; iconPath: string }> = {

@@ -12,6 +12,7 @@ const ROLE_GRADIENT: Record<Role, string> = {
   MANAGER: 'from-danger-600 to-danger-700',
   DOCTOR: 'from-primary-600 to-primary-700',
   ASSISTANT: 'from-success-600 to-success-700',
+  RECEPTIONIST: 'from-surface-600 to-surface-700',
 };
 
 export const StaffProfileView: React.FC<StaffProfileViewProps> = ({ isOpen, onClose, staff }) => {
