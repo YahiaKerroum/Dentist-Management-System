@@ -1,5 +1,11 @@
 # Product Redesign — Status & Handoff
 
+> **⚠️ Update (2026-07-04): this file describes an earlier, superseded plan.** The `claude/product-redesign-v1` branch below became `claude/clinic-pulse-redesign`, which shipped its own roadmap (Clinic Pulse dashboard, Chair/Day Planner, per-tooth data model + Treatment Kanban board + odontogram, then a Finances/Staff/Profile visual-polish pass) — all done as of this date. In particular:
+> - **The "Phase 1 — Interactive odontogram" plan below did not happen as written.** What shipped instead: `Treatment.status` (`TreatmentStatus` enum: PLANNED/IN_PROGRESS/NEEDS_FOLLOW_UP/COMPLETED/BILLED/ARCHIVED) replacing the old boolean `completed`; a `TreatmentTooth` join table (per-tooth notes on a treatment) replacing the flat `teethInvolved: Int[]`; a `PatientTooth` table (10-value `ToothStatus` enum) as the odontogram's current-state chart, starting empty per patient (no fabricated history); a `TreatmentBoard.tsx` Kanban (native HTML5 drag-and-drop, no new dependency) as the Treatments page's default view; and a graphical `Odontogram.tsx` component wired into a new Patient Detail tab. See `docs/database.md` (Treatment/TreatmentTooth/PatientTooth) and `docs/api.md` (Treatments + Odontogram endpoints) for the current shape.
+> - **`OdontogramDisplay.tsx`** (the "interesting find for later" noted below) was confirmed dead/unreferenced code — the mock component whose usage was stripped from `PatientDetailPage.tsx` (leaving a `// Mock teeth states for odontogram - REMOVED` comment) — and has been deleted. `Odontogram.tsx` is its real, wired-up replacement.
+> - Phases 2–4 below (treatment plans/e-signature, online booking, patient portal) were **not** touched and are not superseded — they're still accurate as future work if picked back up.
+> - The historical content below (Phase 0 details, database recovery, outstanding code-review items) is preserved as-is for context; just don't treat "Remaining roadmap" as current without cross-checking this note first.
+
 This document exists so a new chat session can pick up this work without re-deriving context. It covers the product-relaunch effort (design system overhaul + new features) that turns this from a CRUD demo into something sellable to dentists.
 
 ## The goal

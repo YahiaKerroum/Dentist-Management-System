@@ -101,6 +101,7 @@ Represents patients receiving dental care.
 - One-to-Many with Appointments
 - One-to-Many with Treatments
 - One-to-Many with Payments
+- One-to-Many with PatientTooth (odontogram chart)
 
 ---
 
@@ -131,7 +132,7 @@ Represents scheduled appointments between doctors and patients.
 ---
 
 ### Treatment
-Records of completed dental treatments.
+Records of dental treatments, tracked through a multi-stage lifecycle.
 
 **Fields:**
 - `id` (String, UUID, PK)
@@ -141,9 +142,10 @@ Records of completed dental treatments.
 - `typeOfTreatment` (Enum: CONSULTATION, FILLING, EXTRACTION, ROOT_CANAL, CLEANING, IMPLANT, ORTHODONTICS, OTHER)
 - `notes` (String, Optional)
 - `procedure` (String, Optional)
-- `teethInvolved` (Int[], Default: [])
+- `status` (Enum: PLANNED, IN_PROGRESS, NEEDS_FOLLOW_UP, COMPLETED, BILLED, ARCHIVED, Default: PLANNED)
 - `followUpRequired` (Boolean, Default: false)
-- `completed` (Boolean, Default: false)
+- `followUpDate` (DateTime, Optional)
+- `cost` (Decimal, Optional)
 - `appointmentId` (String, FK → Appointment, Optional)
 - `createdAt` (DateTime)
 - `updatedAt` (DateTime)
@@ -152,6 +154,41 @@ Records of completed dental treatments.
 - Many-to-One with Doctor
 - Many-to-One with Patient
 - Many-to-One with Appointment (optional)
+- One-to-Many with TreatmentTooth (which teeth this treatment involved)
+
+---
+
+### TreatmentTooth
+Join table recording which specific teeth were involved in a treatment, with optional per-tooth notes. Replaces the old flat `teethInvolved: Int[]` array so treatment history is queryable per tooth.
+
+**Fields:**
+- `id` (String, UUID, PK)
+- `treatmentId` (String, FK → Treatment, cascade delete)
+- `toothNumber` (Int, Universal Numbering System 1-32)
+- `notes` (String, Optional)
+- `createdAt` (DateTime)
+
+**Relations:**
+- Many-to-One with Treatment
+
+---
+
+### PatientTooth
+A patient's current per-tooth condition — the odontogram chart. One row per tooth the patient has had a condition recorded for; a tooth with no row is simply unrecorded (not assumed healthy). Never seeded with fabricated data.
+
+**Fields:**
+- `id` (String, UUID, PK)
+- `patientId` (String, FK → Patient, cascade delete)
+- `toothNumber` (Int, Universal Numbering System 1-32)
+- `status` (Enum: HEALTHY, DECAYED, FILLED, CROWNED, ROOT_CANAL, MISSING, IMPLANT, EXTRACTION_NEEDED, SEALANT, OTHER, Default: HEALTHY)
+- `notes` (String, Optional)
+- `updatedAt` (DateTime)
+- `updatedById` (String, FK → User, Optional)
+
+**Relations:**
+- Many-to-One with Patient
+- Many-to-One with User (who last updated it)
+- Unique constraint on (`patientId`, `toothNumber`)
 
 ---
 

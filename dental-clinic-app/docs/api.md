@@ -61,7 +61,7 @@ Content-Type: application/json
 | **Users** | Manager | All | Manager | Manager | - |
 | **Patients** | Manager, Assistant | All | Manager, Assistant | Manager | View History (Manager, Doctor) |
 | **Appointments** | All Staff | All Staff | All Staff | Manager, Assistant | Update Status (All Staff) |
-| **Treatments** | Manager, Doctor | Manager, Doctor | Manager, Doctor | - | Mark Complete (Manager, Doctor) |
+| **Treatments** | Manager, Doctor | Manager, Doctor | Manager, Doctor | - | Update Status (Manager, Doctor) |
 | **Payments** | Manager, Assistant | Manager, Assistant | - | - | - |
 | **Expenses** | Manager | Manager | - | - | Approve (Manager) |
 | **Reports** | - | Manager (Financial), Manager+Doctor (Dashboard) | - | - | - |
@@ -246,12 +246,70 @@ PATCH /api/appointments/:id/status
 ```http
 POST /api/treatments
 Roles: MANAGER, DOCTOR
+
+{
+  "doctorId": "uuid",
+  "patientId": "uuid",
+  "dateOfTreatment": "2025-01-01T10:00:00Z",
+  "typeOfTreatment": "CONSULTATION",
+  "notes": "string",
+  "teeth": [{ "toothNumber": 14, "notes": "MOD cavity" }]
+}
 ```
 
-#### Mark Treatment as Completed
+#### Get All Treatments
 ```http
-PATCH /api/treatments/:id/complete
+GET /api/treatments?doctorId=uuid&patientId=uuid&status=PLANNED&dateFrom=2025-01-01
 ```
+
+#### Update Treatment
+```http
+PUT /api/treatments/:id
+
+{
+  "notes": "string",
+  "procedure": "string",
+  "teeth": [{ "toothNumber": 14, "notes": "filled" }],
+  "followUpRequired": true
+}
+```
+
+#### Update Treatment Status
+```http
+PATCH /api/treatments/:id/status
+
+{
+  "status": "PLANNED | IN_PROGRESS | NEEDS_FOLLOW_UP | COMPLETED | BILLED | ARCHIVED"
+}
+```
+
+#### Delete Treatment
+```http
+DELETE /api/treatments/:id
+Roles: MANAGER, DOCTOR
+```
+
+---
+
+### Odontogram
+Per-patient tooth chart. Read/write access follows the Treatments `view`/`update` permissions.
+
+#### Get Patient Odontogram
+```http
+GET /api/patients/:patientId/odontogram
+```
+Returns the patient's recorded `PatientTooth` rows. A tooth with no row has no condition recorded yet — the odontogram does not assume every unrecorded tooth is healthy.
+
+#### Update a Tooth
+```http
+PUT /api/patients/:patientId/odontogram/:toothNumber
+
+{
+  "status": "HEALTHY | DECAYED | FILLED | CROWNED | ROOT_CANAL | MISSING | IMPLANT | EXTRACTION_NEEDED | SEALANT | OTHER",
+  "notes": "string"
+}
+```
+Upserts the tooth's current status/notes.
 
 ---
 
