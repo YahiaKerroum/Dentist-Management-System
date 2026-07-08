@@ -162,7 +162,7 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
         <div>
           <div className="flex items-center gap-2">
             <BarChart3 className="text-primary-600" size={22} />
-            <h1 className="text-xl font-semibold text-surface-900">Reports & Analytics</h1>
+            <h1 className="font-display text-xl font-semibold tracking-tight text-surface-900">Reports & Analytics</h1>
           </div>
           <p className="mt-1 text-sm text-surface-500">
             {userRole === 'DOCTOR' && 'View your appointments, patients, and performance metrics'}

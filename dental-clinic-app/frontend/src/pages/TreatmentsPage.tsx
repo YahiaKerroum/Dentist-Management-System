@@ -231,7 +231,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                         <Stethoscope className="h-5 w-5" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-semibold text-surface-900">Treatment Records</h1>
+                        <h1 className="font-display text-xl font-semibold tracking-tight text-surface-900">Treatment Records</h1>
                         <p className="mt-0.5 text-sm text-surface-500">Manage and track all dental procedures</p>
                     </div>
                 </div>
@@ -249,7 +249,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             <Stethoscope className="h-5 w-5 text-surface-600" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-surface-900">{stats.total}</p>
+                            <p className="font-display text-2xl font-semibold tracking-tight text-surface-900 tabular-nums">{stats.total}</p>
                             <p className="text-xs text-surface-500">Total Records</p>
                         </div>
                     </div>
@@ -260,7 +260,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             <CheckCircle2 className="h-5 w-5 text-success-700" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-success-700">{stats.completed}</p>
+                            <p className="font-display text-2xl font-semibold tracking-tight text-success-700 tabular-nums">{stats.completed}</p>
                             <p className="text-xs text-success-700">Completed</p>
                         </div>
                     </div>
@@ -271,7 +271,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             <Clock className="h-5 w-5 text-warning-700" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-warning-700">{stats.active}</p>
+                            <p className="font-display text-2xl font-semibold tracking-tight text-warning-700 tabular-nums">{stats.active}</p>
                             <p className="text-xs text-warning-700">Active</p>
                         </div>
                     </div>
@@ -282,7 +282,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             <Calendar className="h-5 w-5 text-info-700" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-info-700">{stats.thisMonth}</p>
+                            <p className="font-display text-2xl font-semibold tracking-tight text-info-700 tabular-nums">{stats.thisMonth}</p>
                             <p className="text-xs text-info-700">This Month</p>
                         </div>
                     </div>
@@ -293,7 +293,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
                             <AlertCircle className="h-5 w-5 text-danger-700" />
                         </div>
                         <div>
-                            <p className="text-2xl font-bold text-danger-700">{stats.followUp}</p>
+                            <p className="font-display text-2xl font-semibold tracking-tight text-danger-700 tabular-nums">{stats.followUp}</p>
                             <p className="text-xs text-danger-700">Need Follow-up</p>
                         </div>
                     </div>

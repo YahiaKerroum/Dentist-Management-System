@@ -278,7 +278,7 @@ export function PatientDetailPanel({
             >
               ← Back to Patients
             </button>
-            <h2 className="text-3xl font-bold">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
               {patient.firstName} {patient.lastName}
             </h2>
             <p className="text-surface-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>

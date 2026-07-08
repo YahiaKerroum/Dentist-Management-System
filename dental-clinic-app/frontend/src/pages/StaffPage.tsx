@@ -162,7 +162,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     <Users className="h-5 w-5" />
                 </div>
                 <div>
-                    <h1 className="text-xl font-semibold text-surface-900">Staff Management</h1>
+                    <h1 className="font-display text-xl font-semibold tracking-tight text-surface-900">Staff Management</h1>
                     <p className="mt-0.5 text-sm text-surface-500">Manage your clinic staff members, roles, and access</p>
                 </div>
             </div>

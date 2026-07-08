@@ -311,7 +311,7 @@ const hasActiveFilters =
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-surface-900">Appointments</h1>
+                    <h1 className="font-display text-2xl font-semibold tracking-tight text-surface-900">Appointments</h1>
                     <p className="text-surface-500 mt-1">
                         {userRole === 'DOCTOR' ? 'Manage your appointments' : 'Manage clinic appointments'}
                     </p>

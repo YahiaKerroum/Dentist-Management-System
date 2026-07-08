@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { TrendingDown, Loader2 } from 'lucide-react';
 import { getExpenseTrends } from '../../../services/report.service';
+import { CHART_STATUS, chartTooltip, CHART_GRID_COLOR, CHART_AXIS_TICK } from '../../../lib/chartTheme';
 
 interface ExpenseTrendsChartProps {
   token: string;
@@ -52,7 +53,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-96">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
@@ -60,7 +61,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
   if (error) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
@@ -70,14 +71,14 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <TrendingDown className="text-red-600" size={20} />
-          <h3 className="font-semibold text-surface-800">Expense Trends</h3>
+          <TrendingDown className="text-primary-600" size={20} />
+          <h3 className="font-display font-semibold tracking-tight text-surface-900">Expense Trends</h3>
           {trendPercentage !== 0 && (
             <span
-              className={`text-xs px-2 py-1 rounded-full ${
+              className={`text-xs px-2 py-1 rounded-full tabular-nums ${
                 trendPercentage > 0
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-green-100 text-green-800'
+                  ? 'bg-danger-100 text-danger-700'
+                  : 'bg-success-100 text-success-700'
               }`}
             >
               {trendPercentage > 0 ? '+' : ''}{trendPercentage.toFixed(1)}%
@@ -93,7 +94,7 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
               onClick={() => setMonths(m)}
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 months === m
-                  ? 'bg-white text-red-600 shadow-sm'
+                  ? 'bg-white text-primary-700 shadow-sm'
                   : 'text-surface-600 hover:text-surface-800'
               }`}
             >
@@ -107,19 +108,19 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
       <div className="grid grid-cols-4 gap-4 mb-4">
         <div className="text-center">
           <div className="text-xs text-surface-500">Total</div>
-          <div className="text-sm font-semibold text-surface-800">{formatCurrency(totalExpenses)}</div>
+          <div className="text-sm font-semibold text-surface-800 tabular-nums">{formatCurrency(totalExpenses)}</div>
         </div>
         <div className="text-center">
           <div className="text-xs text-surface-500">Average</div>
-          <div className="text-sm font-semibold text-surface-800">{formatCurrency(avgExpenses)}</div>
+          <div className="text-sm font-semibold text-surface-800 tabular-nums">{formatCurrency(avgExpenses)}</div>
         </div>
         <div className="text-center">
           <div className="text-xs text-surface-500">Highest</div>
-          <div className="text-sm font-semibold text-red-600">{formatCurrency(maxExpense)}</div>
+          <div className="text-sm font-semibold text-danger-600 tabular-nums">{formatCurrency(maxExpense)}</div>
         </div>
         <div className="text-center">
           <div className="text-xs text-surface-500">Lowest</div>
-          <div className="text-sm font-semibold text-green-600">{formatCurrency(minExpense)}</div>
+          <div className="text-sm font-semibold text-success-700 tabular-nums">{formatCurrency(minExpense)}</div>
         </div>
       </div>
 
@@ -129,36 +130,28 @@ export const ExpenseTrendsChart: React.FC<ExpenseTrendsChartProps> = ({ token })
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                <stop offset="5%" stopColor={CHART_STATUS.negative} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_STATUS.negative} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
             <XAxis
               dataKey="month"
-              fontSize={12}
+              tick={CHART_AXIS_TICK}
               tickLine={false}
               axisLine={false}
             />
             <YAxis
-              fontSize={12}
+              tick={CHART_AXIS_TICK}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
-            <Tooltip
-              formatter={(value: any) => [formatCurrency(value), 'Expenses']}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-              labelStyle={{ fontWeight: 'bold' }}
-            />
+            <Tooltip formatter={(value: any) => [formatCurrency(value), 'Expenses']} {...chartTooltip} />
             <Area
               type="monotone"
               dataKey="total"
-              stroke="#EF4444"
+              stroke={CHART_STATUS.negative}
               strokeWidth={2}
               fill="url(#expenseGradient)"
             />

@@ -45,12 +45,12 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
       {/* Header with Stat Card */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-red-50 text-red-600">
+          <div className="p-3 rounded-lg bg-danger-50 text-danger-600">
             <XCircle size={24} />
           </div>
           <div>
             <div className="text-sm text-surface-500">Cancellations</div>
-            <div className="text-2xl font-semibold text-surface-800">{count}</div>
+            <div className="font-display text-2xl font-semibold tracking-tight text-surface-900 tabular-nums">{count}</div>
             <div className="text-xs text-surface-400">
               {period === 'today' ? 'Today' : 'This week'}
             </div>
@@ -63,7 +63,7 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
             onClick={() => setPeriod('today')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
               period === 'today'
-                ? 'bg-white text-red-600 shadow-sm'
+                ? 'bg-white text-primary-700 shadow-sm'
                 : 'text-surface-600 hover:text-surface-800'
             }`}
           >
@@ -73,7 +73,7 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
             onClick={() => setPeriod('week')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
               period === 'week'
-                ? 'bg-white text-red-600 shadow-sm'
+                ? 'bg-white text-primary-700 shadow-sm'
                 : 'text-surface-600 hover:text-surface-800'
             }`}
           >
@@ -85,13 +85,13 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="animate-spin text-red-600" size={24} />
+          <Loader2 className="animate-spin text-primary-600" size={24} />
         </div>
       )}
 
       {/* Error */}
       {error && !loading && (
-        <div className="text-red-500 text-sm py-4">{error}</div>
+        <div className="text-danger-600 text-sm py-4">{error}</div>
       )}
 
       {/* Empty State */}
@@ -99,7 +99,7 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
         <div className="text-center py-8 text-surface-500">
           <AlertTriangle size={32} className="mx-auto mb-2 text-surface-300" />
           <p>No cancellations {period === 'today' ? 'today' : 'this week'}</p>
-          <p className="text-xs text-green-600 mt-1">Great news!</p>
+          <p className="text-xs text-success-700 mt-1">Great news!</p>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export const CancellationsReport: React.FC<CancellationsReportProps> = ({ token 
           {cancellations.map((cancellation) => (
             <div
               key={cancellation.id}
-              className="flex items-center justify-between p-3 bg-red-50 rounded-lg"
+              className="flex items-center justify-between p-3 bg-danger-50 rounded-lg"
             >
               <div>
                 <div className="font-medium text-surface-800">

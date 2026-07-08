@@ -49,13 +49,13 @@ export const MyAppointmentsTable: React.FC<MyAppointmentsTableProps> = ({ token 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'SCHEDULED':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-info-100 text-info-700';
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-100 text-success-700';
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
+        return 'bg-danger-100 text-danger-700';
       case 'NO_SHOW':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning-100 text-warning-700';
       default:
         return 'bg-surface-100 text-surface-800';
     }
@@ -66,9 +66,9 @@ export const MyAppointmentsTable: React.FC<MyAppointmentsTableProps> = ({ token 
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className="text-blue-600" size={20} />
-          <h3 className="font-semibold text-surface-800">My Appointments</h3>
-          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+          <Calendar className="text-primary-600" size={20} />
+          <h3 className="font-display font-semibold tracking-tight text-surface-900">My Appointments</h3>
+          <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full tabular-nums">
             {count}
           </span>
         </div>
@@ -79,7 +79,7 @@ export const MyAppointmentsTable: React.FC<MyAppointmentsTableProps> = ({ token 
             onClick={() => setPeriod('today')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
               period === 'today'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-primary-700 shadow-sm'
                 : 'text-surface-600 hover:text-surface-800'
             }`}
           >
@@ -89,7 +89,7 @@ export const MyAppointmentsTable: React.FC<MyAppointmentsTableProps> = ({ token 
             onClick={() => setPeriod('week')}
             className={`px-3 py-1 text-sm rounded-md transition-colors ${
               period === 'week'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-primary-700 shadow-sm'
                 : 'text-surface-600 hover:text-surface-800'
             }`}
           >
@@ -101,13 +101,13 @@ export const MyAppointmentsTable: React.FC<MyAppointmentsTableProps> = ({ token 
       {/* Loading */}
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <Loader2 className="animate-spin text-blue-600" size={24} />
+          <Loader2 className="animate-spin text-primary-600" size={24} />
         </div>
       )}
 
       {/* Error */}
       {error && !loading && (
-        <div className="text-red-500 text-sm py-4">{error}</div>
+        <div className="text-danger-600 text-sm py-4">{error}</div>
       )}
 
       {/* Empty State */}

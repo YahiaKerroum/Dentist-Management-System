@@ -3,12 +3,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Users, Loader2 } from 'lucide-react';
 import { getStaffPerformance } from '../../../services/report.service';
 import { StaffMember } from '../../../types/report.types';
+import { categoricalColor, chartTooltip, CHART_GRID_COLOR, CHART_AXIS_TICK } from '../../../lib/chartTheme';
 
 interface StaffPerformanceChartProps {
   token: string;
 }
-
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
 export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ token }) => {
   const [data, setData] = useState<StaffMember[]>([]);
@@ -65,7 +64,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
@@ -73,7 +72,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
   if (error) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
@@ -82,8 +81,8 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
     <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Users className="text-blue-600" size={20} />
-          <h3 className="font-semibold text-surface-800">Staff Performance</h3>
+          <Users className="text-primary-600" size={20} />
+          <h3 className="font-display font-semibold tracking-tight text-surface-900">Staff Performance</h3>
         </div>
 
         <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
@@ -93,7 +92,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
               onClick={() => setView(v)}
               className={`px-3 py-1 text-sm rounded-md transition-colors capitalize ${
                 view === v
-                  ? 'bg-white text-blue-600 shadow-sm'
+                  ? 'bg-white text-primary-700 shadow-sm'
                   : 'text-surface-600 hover:text-surface-800'
               }`}
             >
@@ -106,24 +105,17 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
       {data.length > 0 ? (
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 100, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} horizontal={true} vertical={false} />
             <XAxis
               type="number"
-              fontSize={12}
+              tick={CHART_AXIS_TICK}
               tickFormatter={(value) => (view === 'revenue' ? `$${(value / 1000).toFixed(0)}k` : value.toString())}
             />
-            <YAxis type="category" dataKey="name" fontSize={12} width={95} />
-            <Tooltip
-              formatter={(value: any) => [view === 'revenue' ? formatCurrency(value) : value, getLabel()]}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            />
+            <YAxis type="category" dataKey="name" tick={CHART_AXIS_TICK} width={95} />
+            <Tooltip formatter={(value: any) => [view === 'revenue' ? formatCurrency(value) : value, getLabel()]} {...chartTooltip} />
             <Bar dataKey={getDataKey()} radius={[0, 4, 4, 0]}>
               {data.map((_entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={categoricalColor(index)} />
               ))}
             </Bar>
           </BarChart>
@@ -152,13 +144,13 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
                   <td className="py-2 flex items-center gap-2">
                     <div
                       className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      style={{ backgroundColor: categoricalColor(index) }}
                     />
                     {staff.name}
                   </td>
-                  <td className="py-2 text-right font-medium">{formatCurrency(staff.revenue)}</td>
-                  <td className="py-2 text-right">{staff.completedAppointments}</td>
-                  <td className="py-2 text-right">{staff.treatments}</td>
+                  <td className="py-2 text-right font-medium tabular-nums">{formatCurrency(staff.revenue)}</td>
+                  <td className="py-2 text-right tabular-nums">{staff.completedAppointments}</td>
+                  <td className="py-2 text-right tabular-nums">{staff.treatments}</td>
                 </tr>
               ))}
             </tbody>

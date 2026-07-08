@@ -30,7 +30,7 @@ export const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({ toke
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-24">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
@@ -38,19 +38,19 @@ export const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({ toke
   if (error) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
     <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center gap-4">
-      <div className="p-3 rounded-lg bg-blue-50 text-blue-600">
+      <div className="p-3 rounded-lg bg-info-50 text-info-600">
         <CalendarClock size={24} />
       </div>
       <div>
         <div className="text-sm text-surface-500">Upcoming Appointments</div>
-        <div className="text-2xl font-semibold text-surface-800">{count}</div>
+        <div className="font-display text-2xl font-semibold tracking-tight text-surface-900 tabular-nums">{count}</div>
         <div className="text-xs text-surface-400">Next 7 days</div>
       </div>
     </div>

@@ -2,21 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Stethoscope, Loader2 } from 'lucide-react';
 import { getCommonTreatments } from '../../../services/report.service';
+import { categoricalColor, chartTooltip } from '../../../lib/chartTheme';
 
 interface CommonTreatmentsChartProps {
   token: string;
 }
-
-const COLORS = [
-  '#3B82F6', // Blue
-  '#10B981', // Green
-  '#F59E0B', // Yellow
-  '#EF4444', // Red
-  '#8B5CF6', // Purple
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#84CC16', // Lime
-];
 
 export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ token }) => {
   const [data, setData] = useState<{ name: string; value: number }[]>([]);
@@ -54,7 +44,7 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
@@ -62,7 +52,7 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
   if (error) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
@@ -73,9 +63,9 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
     <div className="bg-white border border-surface-200 rounded-lg p-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <Stethoscope className="text-green-600" size={20} />
-        <h3 className="font-semibold text-surface-800">Most Common Treatments</h3>
-        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full">
+        <Stethoscope className="text-primary-600" size={20} />
+        <h3 className="font-display font-semibold tracking-tight text-surface-900">Most Common Treatments</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full tabular-nums">
           Total: {totalTreatments}
         </span>
       </div>
@@ -94,17 +84,10 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
               label={renderLabel}
             >
               {data.map((_entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill={categoricalColor(index)} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={(value: any, name: any) => [value, name]}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            />
+            <Tooltip formatter={(value: any, name: any) => [value, name]} {...chartTooltip} />
             <Legend
               verticalAlign="bottom"
               height={36}

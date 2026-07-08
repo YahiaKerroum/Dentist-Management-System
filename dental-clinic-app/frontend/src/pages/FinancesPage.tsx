@@ -13,7 +13,7 @@ const FinancesPage: React.FC = () => {
   return (
     <div className="min-h-full bg-surface-50 p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-surface-900">Finances</h1>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-surface-900">Finances</h1>
         <p className="mt-1 text-surface-500">Track payments received and expenses paid out</p>
       </div>
 

@@ -4,6 +4,7 @@ import { getUserPermissions } from '../services/user.service';
 import { Patient, CreatePatientDTO } from '../types/patient';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { Skeleton } from '../components/ui/Skeleton';
 import { PatientForm } from '../components/patients/PatientForm';
 import { PatientDetailPanel } from './PatientDetailPage';
 import { downloadCSV, formatPatientsForExport } from '../utils/export.utils';
@@ -323,8 +324,23 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600"></div>
+            <div className="min-h-full bg-surface-50 p-8">
+                <div className="mb-8 flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                        <Skeleton className="h-8 w-40" />
+                        <Skeleton className="h-4 w-64" />
+                    </div>
+                    <Skeleton className="h-10 w-40" />
+                </div>
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+                    <Skeleton className="h-10 w-full sm:w-96" />
+                    <Skeleton className="h-9 w-52" />
+                </div>
+                <div className="space-y-2">
+                    {Array.from({ length: 8 }).map((_, i) => (
+                        <Skeleton key={i} className="h-[72px] w-full" />
+                    ))}
+                </div>
             </div>
         );
     }
@@ -365,7 +381,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-surface-900">Patients</h1>
+                    <h1 className="font-display text-2xl font-semibold tracking-tight text-surface-900">Patients</h1>
                     <p className="text-surface-500 mt-1">Manage your patient records and history</p>
                 </div>
                 <Button onClick={handleAddPatient} className="shadow-sm">

@@ -42,13 +42,13 @@ export const AppointmentHeatmap: React.FC<AppointmentHeatmapProps> = ({ token })
 
   const getColor = (count: number): string => {
     if (count === 0) return 'bg-surface-100';
-    
+
     const intensity = count / maxCount;
-    
-    if (intensity <= 0.25) return 'bg-blue-200';
-    if (intensity <= 0.5) return 'bg-blue-400';
-    if (intensity <= 0.75) return 'bg-blue-600';
-    return 'bg-blue-800';
+
+    if (intensity <= 0.25) return 'bg-primary-200';
+    if (intensity <= 0.5) return 'bg-primary-400';
+    if (intensity <= 0.75) return 'bg-primary-600';
+    return 'bg-primary-800';
   };
 
   const getTextColor = (count: number): string => {
@@ -69,7 +69,7 @@ export const AppointmentHeatmap: React.FC<AppointmentHeatmapProps> = ({ token })
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-96">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
@@ -77,7 +77,7 @@ export const AppointmentHeatmap: React.FC<AppointmentHeatmapProps> = ({ token })
   if (error) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
@@ -93,12 +93,12 @@ export const AppointmentHeatmap: React.FC<AppointmentHeatmapProps> = ({ token })
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Calendar className="text-blue-600" size={20} />
-          <h3 className="font-semibold text-surface-800">Appointment Heatmap</h3>
+          <Calendar className="text-primary-600" size={20} />
+          <h3 className="font-display font-semibold tracking-tight text-surface-900">Appointment Heatmap</h3>
         </div>
         {busiestCell.count > 0 && (
           <div className="text-xs text-surface-500">
-            Busiest: <span className="font-medium text-blue-600">
+            Busiest: <span className="font-medium text-primary-700">
               {DAYS[busiestCell.day]} at {formatHour(busiestCell.hour)}
             </span>
           </div>
@@ -152,10 +152,10 @@ export const AppointmentHeatmap: React.FC<AppointmentHeatmapProps> = ({ token })
         <span>Less busy</span>
         <div className="flex gap-1">
           <div className="w-4 h-4 rounded bg-surface-100" />
-          <div className="w-4 h-4 rounded bg-blue-200" />
-          <div className="w-4 h-4 rounded bg-blue-400" />
-          <div className="w-4 h-4 rounded bg-blue-600" />
-          <div className="w-4 h-4 rounded bg-blue-800" />
+          <div className="w-4 h-4 rounded bg-primary-200" />
+          <div className="w-4 h-4 rounded bg-primary-400" />
+          <div className="w-4 h-4 rounded bg-primary-600" />
+          <div className="w-4 h-4 rounded bg-primary-800" />
         </div>
         <span>More busy</span>
       </div>

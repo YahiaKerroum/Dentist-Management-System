@@ -238,7 +238,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
                             {user.firstName.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold text-surface-900">
+                            <h1 className="font-display text-2xl font-semibold tracking-tight text-surface-900">
                                 {user.firstName} {user.lastName}
                             </h1>
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-surface-500">
