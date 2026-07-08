@@ -5,11 +5,12 @@ import { Expense } from '../../types/expense.types';
 import { queryKeys } from '../../lib/queryKeys';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseDetailModal } from './ExpenseDetailModal';
-import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Clock, Receipt } from 'lucide-react';
+import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Clock, Receipt, CalendarDays, Tag } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Modal } from '../ui/Modal';
 import { EmptyState } from '../ui/EmptyState';
 import { toast } from '../ui/Toaster';
+import { SummaryCard, categoryStyle, formatCurrency, groupByDay } from './financeUi';
 
 interface ExpenseTableProps {
   token: string;
@@ -25,12 +26,6 @@ const SORT_OPTIONS = [
   { value: 'amount-desc', label: 'Amount (Highest First)' },
   { value: 'amount-asc', label: 'Amount (Lowest First)' },
 ];
-
-const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-
-const formatShortDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
   const {
@@ -96,13 +91,25 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
     }
   });
 
-  let cumulative = 0;
-  const withRunningTotal = filteredExpenses.map((expense) => {
-    cumulative += Number(expense.amount || 0);
-    return { expense, runningTotal: cumulative };
-  });
-
-  const maxAmount = Math.max(1, ...filteredExpenses.map((e) => Number(e.amount || 0)));
+  // Summary metrics over the filtered set
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+  const totalSpent = filteredExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const pendingList = filteredExpenses.filter((e) => !e.approved);
+  const pendingAmount = pendingList.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const thisMonthTotal = filteredExpenses
+    .filter((e) => new Date(e.date).getTime() >= monthStart)
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
+  const lastMonthTotal = filteredExpenses
+    .filter((e) => {
+      const t = new Date(e.date).getTime();
+      return t >= lastMonthStart && t < monthStart;
+    })
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
+  const catTotals = new Map<string, number>();
+  filteredExpenses.forEach((e) => catTotals.set(e.category, (catTotals.get(e.category) || 0) + Number(e.amount || 0)));
+  const topCategory = [...catTotals.entries()].sort((a, b) => b[1] - a[1])[0];
 
   const handleClearFilters = () => {
     setSearchQuery('');
@@ -163,17 +170,25 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
     setDetailExpense(null);
   };
 
-  const totalPages = Math.ceil(withRunningTotal.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredExpenses.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentRows = withRunningTotal.slice(startIndex, endIndex);
-  const pageTotal = currentRows.reduce((sum, r) => sum + Number(r.expense.amount || 0), 0);
+  const pageExpenses = filteredExpenses.slice(startIndex, endIndex);
+  const dayGroups = groupByDay(pageExpenses, (e) => e.date);
 
   const hasActiveFilters =
     searchQuery !== '' || categoryFilter !== 'All' || statusFilter !== 'All' || sortBy !== 'date-desc';
 
   return (
     <div>
+      {/* Summary strip */}
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SummaryCard label="Total spent" value={formatCurrency(totalSpent)} sub={`${filteredExpenses.length} expenses`} icon={Receipt} tone="danger" />
+        <SummaryCard label="Pending approval" value={formatCurrency(pendingAmount)} sub={`${pendingList.length} awaiting`} icon={Clock} tone="warning" />
+        <SummaryCard label="This month" value={formatCurrency(thisMonthTotal)} sub={`vs ${formatCurrency(lastMonthTotal)} last month`} icon={CalendarDays} />
+        <SummaryCard label="Top category" value={topCategory ? topCategory[0] : '—'} sub={topCategory ? formatCurrency(topCategory[1]) : undefined} icon={Tag} />
+      </div>
+
       {/* Toolbar */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:w-80">
@@ -256,24 +271,7 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
       )}
 
       {!loading && !error && (
-        <div className="overflow-hidden rounded-lg border border-surface-200 bg-white shadow-sm">
-          {/* Letterhead */}
-          <div className="flex items-center justify-between gap-3 border-b border-surface-100 bg-gradient-to-r from-danger-50 via-danger-50/40 to-white px-5 py-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-danger-600 text-white shadow-sm">
-                <Receipt className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-surface-900">Expense Ledger</p>
-                <p className="text-xs text-surface-500">{filteredExpenses.length} entries</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="font-mono text-lg font-bold tabular-nums text-danger-700">-{formatCurrency(cumulative)}</p>
-              <p className="text-xs text-surface-400">total spent</p>
-            </div>
-          </div>
-
+        <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
           {filteredExpenses.length === 0 ? (
             <EmptyState
               icon={Receipt}
@@ -281,107 +279,81 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
               description={expenses.length === 0 ? 'Click "Add Expense" to create one.' : 'Try adjusting your filters.'}
             />
           ) : (
-            <>
-              <div className="hidden grid-cols-[80px_1fr_100px_130px_130px_60px] gap-3 border-b border-surface-100 bg-surface-50 px-5 py-2 text-[11px] font-semibold uppercase tracking-wide text-surface-400 lg:grid">
-                <span>Date</span>
-                <span>Category / Paid To</span>
-                <span>Status</span>
-                <span className="text-right">Amount</span>
-                <span className="text-right">Running Total</span>
-                <span />
-              </div>
+            dayGroups.map((group) => {
+              const daySum = group.rows.reduce((s, e) => s + Number(e.amount || 0), 0);
+              return (
+                <div key={group.key}>
+                  {/* Day divider */}
+                  <div className="flex items-center justify-between border-b border-surface-100 bg-surface-50/70 px-5 py-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-surface-400">{group.label}</span>
+                    <span className="text-xs font-medium tabular-nums text-surface-500">-{formatCurrency(daySum)}</span>
+                  </div>
 
-              <div className="divide-y divide-surface-100">
-                {currentRows.map(({ expense, runningTotal }) => {
-                  const barPct = Math.max(4, (Number(expense.amount || 0) / maxAmount) * 100);
-                  return (
-                    <div
-                      key={expense.id}
-                      onClick={() => handleViewDetail(expense)}
-                      className="group grid cursor-pointer grid-cols-1 gap-2 px-5 py-3 transition-colors hover:bg-surface-50 lg:grid-cols-[80px_1fr_100px_130px_130px_60px] lg:items-center lg:gap-3"
-                    >
-                      <span className="font-mono text-xs text-surface-500">{formatShortDate(expense.date)}</span>
-
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-surface-900">
-                          {expense.category}
-                          <span className="text-surface-400"> · {expense.paidTo || 'N/A'}</span>
-                        </p>
-                        {expense.notes && <p className="truncate text-xs text-surface-400">{expense.notes}</p>}
-                      </div>
-
-                      <span
-                        className={`inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                          expense.approved ? 'bg-success-100 text-success-700' : 'bg-warning-100 text-warning-700'
-                        }`}
-                      >
-                        {expense.approved ? <CheckCircle size={11} /> : <Clock size={11} />}
-                        {expense.approved ? 'Approved' : 'Pending'}
-                      </span>
-
-                      <div className="relative flex items-center justify-end overflow-hidden rounded">
-                        <div className="absolute inset-y-0 right-0 bg-danger-100/70" style={{ width: `${barPct}%` }} />
-                        <span className="relative px-1.5 font-mono text-sm font-semibold tabular-nums text-danger-700">
-                          -{formatCurrency(Number(expense.amount))}
-                        </span>
-                      </div>
-
-                      <span className="text-right font-mono text-xs tabular-nums text-surface-400">
-                        -{formatCurrency(runningTotal)}
-                      </span>
-
-                      <div
-                        className="flex justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {!expense.approved && (
-                          <button
-                            onClick={() => handleApprove(expense.id)}
-                            className="text-success-600 transition-colors hover:text-success-700"
-                            title="Approve"
-                          >
-                            <CheckCircle size={16} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleEdit(expense)}
-                          className="text-primary-600 transition-colors hover:text-primary-700"
-                          title="Edit"
+                  <div className="divide-y divide-surface-100">
+                    {group.rows.map((expense) => {
+                      const cat = categoryStyle(expense.category);
+                      return (
+                        <div
+                          key={expense.id}
+                          onClick={() => handleViewDetail(expense)}
+                          className={`group flex cursor-pointer items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-50 ${
+                            expense.approved ? '' : 'bg-warning-50/40'
+                          }`}
                         >
-                          <Edit size={16} />
-                        </button>
-                        {deleteConfirmId === expense.id ? (
-                          <div className="flex items-center gap-1.5 opacity-100">
-                            <button
-                              onClick={() => handleDelete(expense.id)}
-                              className="rounded bg-danger-600 px-1.5 py-0.5 text-[11px] text-white hover:bg-danger-700"
-                            >
-                              Confirm
-                            </button>
-                            <button onClick={() => setDeleteConfirmId(null)} className="text-surface-500 hover:text-surface-700">
-                              Cancel
-                            </button>
+                          {/* Vendor + category chip */}
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <p className="truncate font-medium text-surface-900">{expense.paidTo || 'Unspecified vendor'}</p>
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${cat.chip}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${cat.dot}`} />
+                              {expense.category}
+                            </span>
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => setDeleteConfirmId(expense.id)}
-                            className="text-surface-400 transition-colors hover:text-danger-600"
-                            title="Delete"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
 
-              <div className="flex items-center justify-between border-t border-surface-200 bg-surface-50 px-5 py-2.5">
-                <span className="text-xs font-semibold uppercase tracking-wide text-surface-500">Page subtotal</span>
-                <span className="font-mono text-sm font-bold tabular-nums text-danger-700">-{formatCurrency(pageTotal)}</span>
-              </div>
-            </>
+                          {/* Status pill */}
+                          <span
+                            className={`hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium sm:inline-flex ${
+                              expense.approved ? 'bg-success-50 text-success-700' : 'bg-warning-50 text-warning-700'
+                            }`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${expense.approved ? 'bg-success-500' : 'bg-warning-500'}`} />
+                            {expense.approved ? 'Approved' : 'Pending'}
+                          </span>
+
+                          {/* Amount */}
+                          <span className="w-28 shrink-0 text-right font-display text-base font-semibold tabular-nums text-danger-600">
+                            -{formatCurrency(Number(expense.amount))}
+                          </span>
+
+                          {/* Actions */}
+                          <div className="flex w-24 shrink-0 items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            {deleteConfirmId === expense.id ? (
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => handleDelete(expense.id)} className="rounded-md bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700">Delete</button>
+                                <button onClick={() => setDeleteConfirmId(null)} className="rounded-md px-1.5 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100">Cancel</button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-0.5 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
+                                {!expense.approved && (
+                                  <button onClick={() => handleApprove(expense.id)} title="Approve" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-success-50 hover:text-success-600">
+                                    <CheckCircle size={16} />
+                                  </button>
+                                )}
+                                <button onClick={() => handleEdit(expense)} title="Edit" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-600">
+                                  <Edit size={16} />
+                                </button>
+                                <button onClick={() => setDeleteConfirmId(expense.id)} title="Delete" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
       )}
