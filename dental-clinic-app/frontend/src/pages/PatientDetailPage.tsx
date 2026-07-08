@@ -4,6 +4,9 @@ import { Appointment } from '../types/appointment';
 import { Treatment, TREATMENT_STATUS_CONFIG } from '../types/treatment';
 import { getDocumentsByPatientId, deleteDocument, Document, uploadDocument } from '../services/document.service';
 import { getTreatments } from '../services/treatment.service';
+import { getAllAppointments } from '../services/appointment.service';
+import { getPaymentsByPatient } from '../services/payment.service';
+import { Payment } from '../types/payment.types';
 import { getPatientOdontogram, upsertToothStatus } from '../services/tooth.service';
 import { PatientToothRecord, ToothStatus } from '../types/tooth';
 import { Odontogram } from '../components/patients/Odontogram';
@@ -13,6 +16,7 @@ import {
   Mail,
   User as UserIcon,
   AlertCircle,
+  AlertTriangle,
   FileText,
   Edit,
   Trash2,
@@ -21,7 +25,10 @@ import {
   Activity,
   Stethoscope,
   Clock,
-  TrendingUp,
+  Wallet,
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
 } from 'lucide-react';
 
 interface PatientDetailPanelProps {
@@ -65,6 +72,8 @@ export function PatientDetailPanel({
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [treatmentsError, setTreatmentsError] = useState('');
+
+  const [payments, setPayments] = useState<Payment[]>([]);
 
   // State for odontogram
   const [odontogram, setOdontogram] = useState<PatientToothRecord[]>([]);
@@ -141,10 +150,13 @@ export function PatientDetailPanel({
     }
   };
 
-  // Fetch appointments and treatments when component loads (for overview tab)
+  // Fetch appointments, treatments and payments when the record opens (for the overview)
   useEffect(() => {
     fetchAppointments();
     fetchTreatments();
+    getPaymentsByPatient(patient.id)
+      .then(setPayments)
+      .catch(() => setPayments([]));
   }, [patient.id]);
 
   // Fetch appointments when the appointments tab is active
@@ -196,20 +208,8 @@ export function PatientDetailPanel({
     setAppointmentsError('');
     
     try {
-      const response = await fetch('http://localhost:4000/api/appointments', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const allAppointments = await getAllAppointments();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch appointments');
-      }
-
-      const data = await response.json();
-      const allAppointments = data.data || data;
-      
       // Filter appointments for this specific patient
       const patientAppointments = allAppointments.filter(
         (apt: Appointment) => apt.patientId === patient.id
@@ -264,6 +264,65 @@ export function PatientDetailPanel({
         return 'bg-surface-100 text-surface-800';
     }
   };
+
+  // ---- Derived clinical/financial signal (all from real, loaded data) ----
+  const currency = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const fullDate = (d: string | number) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const titleType = (t: string | null) => (t ? t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Visit');
+
+  const billed = treatments.reduce((s, t) => s + (Number((t as any).cost) || 0), 0);
+  const paidTotal = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const balance = billed - paidTotal;
+
+  const nowMs = Date.now();
+  const upcomingStatuses = ['SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS'];
+  const nextAppt = appointments
+    .filter((a) => upcomingStatuses.includes(a.status) && new Date(a.dateOfTreatment).getTime() >= nowMs)
+    .sort((a, b) => new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime())[0];
+  const completedAppts = appointments.filter((a) => a.status === 'COMPLETED');
+  const lastVisit = completedAppts.length
+    ? Math.max(...completedAppts.map((a) => new Date(a.dateOfTreatment).getTime()))
+    : null;
+  const missedCount = appointments.filter((a) => a.status === 'NO_SHOW' || a.status === 'CANCELLED').length;
+  const resolvedAppts = appointments.filter((a) =>
+    ['COMPLETED', 'NO_SHOW', 'CANCELLED'].includes(a.status)
+  ).length;
+  const attendanceRate = resolvedAppts > 0 ? Math.round((completedAppts.length / resolvedAppts) * 100) : null;
+
+  // Reverse-chronological activity feed merged across sources
+  type FeedItem = { id: string; date: number; icon: typeof Wallet; tone: string; title: string; detail: string };
+  const activity: FeedItem[] = [
+    ...payments.map((p) => ({
+      id: `pay-${p.id}`,
+      date: new Date(p.date).getTime(),
+      icon: Wallet,
+      tone: 'text-success-600 bg-success-50',
+      title: `Payment received · ${currency(Number(p.amount))}`,
+      detail: p.method ? titleType(p.method) : 'Payment',
+    })),
+    ...treatments.map((t) => ({
+      id: `tr-${t.id}`,
+      date: new Date(t.dateOfTreatment).getTime(),
+      icon: Stethoscope,
+      tone: 'text-primary-600 bg-primary-50',
+      title: `${titleType(t.typeOfTreatment)} logged`,
+      detail: TREATMENT_STATUS_CONFIG[t.status]?.label ?? t.status,
+    })),
+    ...appointments.map((a) => {
+      const completed = a.status === 'COMPLETED';
+      const missed = a.status === 'NO_SHOW' || a.status === 'CANCELLED';
+      return {
+        id: `apt-${a.id}`,
+        date: new Date(a.dateOfTreatment).getTime(),
+        icon: missed ? XCircle : completed ? CheckCircle2 : CalendarClock,
+        tone: missed ? 'text-danger-600 bg-danger-50' : completed ? 'text-info-600 bg-info-50' : 'text-surface-500 bg-surface-100',
+        title: `Appointment ${a.status.replace('_', ' ').toLowerCase()}`,
+        detail: titleType(a.typeOfTreatment),
+      };
+    }),
+  ]
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 8);
 
   return (
     <div>
@@ -329,7 +388,34 @@ export function PatientDetailPanel({
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar - Patient Info */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-4">
+          {/* Status + balance + quick action */}
+          <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-success-500" />
+                Active
+              </span>
+              {patient.phone && (
+                <a
+                  href={`tel:${patient.phone}`}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-surface-300 px-2.5 py-1 text-xs font-medium text-surface-700 transition-colors hover:bg-surface-100"
+                >
+                  <Phone className="h-3.5 w-3.5" /> Call
+                </a>
+              )}
+            </div>
+            <div className="mt-3 border-t border-surface-100 pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-surface-400">Outstanding balance</p>
+              <p className={`mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums ${balance > 0.5 ? 'text-danger-600' : 'text-surface-900'}`}>
+                {balance > 0.5 ? currency(balance) : '$0'}
+              </p>
+              <p className="mt-0.5 text-xs text-surface-400 tabular-nums">
+                {currency(paidTotal)} paid of {currency(billed)} billed
+              </p>
+            </div>
+          </div>
+
           <div className="bg-white rounded-lg border border-surface-200 p-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <UserIcon className="w-5 h-5" />
@@ -446,178 +532,83 @@ export function PatientDetailPanel({
           {/* Tab Content */}
           {activeTab === 'info' && (
             <div className="space-y-6">
-              {/* Patient Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Total Treatments */}
-                <div className="bg-gradient-to-br from-[#26a37e]/10 to-[#26a37e]/5 rounded-xl p-5 border border-[#26a37e]/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-[#26a37e]/20 rounded-lg flex items-center justify-center">
-                      <Stethoscope size={20} className="text-[#26a37e]" />
+              {/* Alerts — surfaced from real signal only */}
+              {(balance > 0.5 || missedCount >= 2) && (
+                <div className="space-y-2">
+                  {balance > 0.5 && (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-danger-100 bg-danger-50 px-4 py-2.5 text-sm text-danger-700">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>Outstanding balance of <span className="font-semibold tabular-nums">{currency(balance)}</span></span>
                     </div>
-                    <span className="text-xs text-surface-500 font-medium">Total</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
-                    {treatments.length}
-                  </h3>
-                  <p className="text-sm text-surface-600">Treatments Completed</p>
+                  )}
+                  {missedCount >= 2 && (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-warning-100 bg-warning-50 px-4 py-2.5 text-sm text-warning-700">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span><span className="font-semibold tabular-nums">{missedCount}</span> missed or cancelled appointments — possible no-show risk</span>
+                    </div>
+                  )}
                 </div>
+              )}
 
-                {/* Upcoming Appointments */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-50/50 rounded-xl p-5 border border-blue-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Calendar size={20} className="text-blue-600" />
-                    </div>
-                    <span className="text-xs text-surface-500 font-medium">Upcoming</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
-                    {appointments.filter(a => a.status === 'SCHEDULED').length}
-                  </h3>
-                  <p className="text-sm text-surface-600">Appointments Scheduled</p>
+              {/* Flat metric cards */}
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><Wallet className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Balance</span></div>
+                  <p className={`mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums ${balance > 0.5 ? 'text-danger-600' : 'text-surface-900'}`}>
+                    {balance > 0.5 ? currency(balance) : '$0'}
+                  </p>
                 </div>
-
-                {/* Last Visit */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-xl p-5 border border-purple-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Clock size={20} className="text-purple-600" />
-                    </div>
-                    <span className="text-xs text-surface-500 font-medium">Recent</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-surface-900 mb-1">
-                    {appointments.filter(a => a.status === 'COMPLETED').length > 0
-                      ? new Date(
-                          Math.max(...appointments.filter(a => a.status === 'COMPLETED').map(a => new Date(a.dateOfTreatment).getTime()))
-                        ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                      : 'Never'}
-                  </h3>
-                  <p className="text-sm text-surface-600">Last Visit Date</p>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><CalendarClock className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Next appt</span></div>
+                  {nextAppt ? (
+                    <>
+                      <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-primary-700 tabular-nums">{fullDate(nextAppt.dateOfTreatment)}</p>
+                      <p className="text-xs text-surface-400">{titleType(nextAppt.typeOfTreatment)}</p>
+                    </>
+                  ) : (
+                    <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-surface-300">None</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><Clock className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Last visit</span></div>
+                  <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-surface-900 tabular-nums">{lastVisit ? fullDate(lastVisit) : 'Never'}</p>
+                </div>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><CheckCircle2 className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Attendance</span></div>
+                  <p className={`mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums ${attendanceRate !== null && attendanceRate < 70 ? 'text-warning-600' : 'text-surface-900'}`}>
+                    {attendanceRate !== null ? `${attendanceRate}%` : '—'}
+                  </p>
+                  {missedCount > 0 && <p className="text-xs text-surface-400 tabular-nums">{missedCount} missed</p>}
                 </div>
               </div>
 
-              {/* Patient Information Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Contact Information */}
-                <div className="bg-white rounded-xl border border-surface-200 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
-                      <UserIcon size={16} className="text-surface-600" />
-                    </div>
-                    <h3 className="font-semibold text-surface-900">Contact Information</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {patient.email && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Mail size={16} className="text-surface-400" />
-                        <span className="text-surface-700">{patient.email}</span>
-                      </div>
-                    )}
-                    {patient.phone && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone size={16} className="text-surface-400" />
-                        <span className="text-surface-700">{patient.phone}</span>
-                      </div>
-                    )}
-                    {patient.dateOfBirth && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Calendar size={16} className="text-surface-400" />
-                        <span className="text-surface-700">
-                          Born: {new Date(patient.dateOfBirth).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              {/* Activity feed */}
+              <div className="rounded-xl border border-surface-200 bg-white">
+                <div className="flex items-center gap-2 border-b border-surface-100 px-5 py-3">
+                  <Activity size={16} className="text-surface-500" />
+                  <h3 className="font-display font-semibold tracking-tight text-surface-900">Activity</h3>
                 </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white rounded-xl border border-surface-200 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
-                      <Activity size={16} className="text-surface-600" />
-                    </div>
-                    <h3 className="font-semibold text-surface-900">Recent Activity</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {treatments.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[#26a37e] mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-surface-700 font-medium">Latest Treatment</p>
-                          <p className="text-xs text-surface-500">
-                            {treatments[0]?.typeOfTreatment || 'N/A'} - {new Date(treatments[0]?.dateOfTreatment || Date.now()).toLocaleDateString()}
-                          </p>
+                {activity.length === 0 ? (
+                  <div className="px-5 py-10 text-center text-sm text-surface-400">No activity recorded yet.</div>
+                ) : (
+                  <div className="divide-y divide-surface-100">
+                    {activity.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={item.id} className="flex items-center gap-3 px-5 py-3">
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}>
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-surface-800">{item.title}</p>
+                            <p className="truncate text-xs text-surface-400">{item.detail}</p>
+                          </div>
+                          <span className="shrink-0 text-xs text-surface-400 tabular-nums">{fullDate(item.date)}</span>
                         </div>
-                      </div>
-                    )}
-                    {appointments.filter(a => a.status === 'COMPLETED').length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-surface-700 font-medium">Last Appointment</p>
-                          <p className="text-xs text-surface-500">
-                            {new Date(
-                              appointments.filter(a => a.status === 'COMPLETED')[0]?.dateOfTreatment || Date.now()
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {appointments.filter(a => a.status === 'SCHEDULED').length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-surface-700 font-medium">Next Scheduled</p>
-                          <p className="text-xs text-surface-500">
-                            {new Date(
-                              appointments
-                                .filter(a => a.status === 'SCHEDULED')
-                                .sort((a, b) => new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime())[0]?.dateOfTreatment || Date.now()
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {treatments.length === 0 && appointments.length === 0 && (
-                      <p className="text-sm text-surface-500 italic">No recent activity</p>
-                    )}
+                      );
+                    })}
                   </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white rounded-xl border border-surface-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-surface-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={16} className="text-surface-600" />
-                  </div>
-                  <h3 className="font-semibold text-surface-900">Treatment Summary</h3>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-surface-50 rounded-lg">
-                    <p className="text-2xl font-bold text-surface-900">{treatments.length}</p>
-                    <p className="text-xs text-surface-600 mt-1">Total Treatments</p>
-                  </div>
-                  <div className="text-center p-3 bg-surface-50 rounded-lg">
-                    <p className="text-2xl font-bold text-surface-900">{appointments.length}</p>
-                    <p className="text-xs text-surface-600 mt-1">All Appointments</p>
-                  </div>
-                  <div className="text-center p-3 bg-surface-50 rounded-lg">
-                    <p className="text-2xl font-bold text-surface-900">
-                      {appointments.filter(a => a.status === 'COMPLETED').length}
-                    </p>
-                    <p className="text-xs text-surface-600 mt-1">Completed Visits</p>
-                  </div>
-                  <div className="text-center p-3 bg-surface-50 rounded-lg">
-                    <p className="text-2xl font-bold text-surface-900">
-                      {documents.length}
-                    </p>
-                    <p className="text-xs text-surface-600 mt-1">Documents</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
