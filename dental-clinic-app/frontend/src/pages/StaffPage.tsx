@@ -250,6 +250,11 @@ export const StaffPage: React.FC<StaffPageProps> = ({ token }) => {
                     setSelectedStaff(null);
                 }}
                 staff={selectedStaff}
+                token={token}
+                onEdit={(staffMember) => {
+                    setIsProfileViewOpen(false);
+                    handleEdit(staffMember);
+                }}
             />
         </div>
     );

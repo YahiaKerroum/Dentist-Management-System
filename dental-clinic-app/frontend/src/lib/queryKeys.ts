@@ -15,4 +15,5 @@ export const queryKeys = {
   treatments: (filters?: unknown) =>
     filters ? (['treatments', filters] as const) : (['treatments'] as const),
   clinicPulse: ['clinic-pulse'] as const,
+  staffPerformance: ['staff-performance'] as const,
 };
