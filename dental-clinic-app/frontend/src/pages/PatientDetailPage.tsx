@@ -38,7 +38,6 @@ interface PatientDetailPanelProps {
 export function PatientDetailPanel({
   patient,
   token,
-  userRole = '',
   currentUserId = '',
   userPermissions = [],
   onClose,
@@ -141,12 +140,6 @@ export function PatientDetailPanel({
       setDocumentsSuccess('');
     }
   };
-
-  // Mock teeth states for odontogram - REMOVED
-  // const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = { ... };
-
-  // Check if current user is the primary dentist (for medical documents access)
-  const canViewMedicalDocs = true;
 
   // Fetch appointments and treatments when component loads (for overview tab)
   useEffect(() => {

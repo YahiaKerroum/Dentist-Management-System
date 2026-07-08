@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Lock, LogIn, Stethoscope, ChevronDown } from 'lucide-react';
+import { User, Lock, LogIn, ChevronDown } from 'lucide-react';
 import { login } from '../services/auth.service';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { BrandMark } from './ui/BrandMark';
+import { easeOutExpo } from '../lib/motion';
 
 interface LoginProps {
   onLoginSuccess: (token: string) => void;
@@ -14,6 +16,33 @@ const DEMO_ACCOUNTS = [
   { role: 'Doctor', user: 'doctor', pass: 'password123' },
   { role: 'Assistant', user: 'assistant', pass: 'password123' },
 ];
+
+/** Slow-drawing ECG trace across the brand panel. */
+function PulseTrace() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-x-0 top-[28%] h-24 w-full -translate-y-1/2"
+      viewBox="0 0 600 100"
+      preserveAspectRatio="none"
+      fill="none"
+      aria-hidden
+    >
+      <motion.path
+        d="M0,55 H120 L138,20 L158,88 L176,40 L188,55 H320 L338,10 L358,92 L376,55 H600"
+        stroke="rgba(125, 218, 184, 0.35)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{
+          pathLength: { duration: 2.4, ease: 'easeInOut', repeat: Infinity, repeatDelay: 4 },
+          opacity: { duration: 0.4 },
+        }}
+      />
+    </svg>
+  );
+}
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState('');
@@ -51,33 +80,47 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               'radial-gradient(circle at 15% 20%, rgba(38,163,126,0.35), transparent 40%), radial-gradient(circle at 85% 80%, rgba(38,163,126,0.25), transparent 45%)',
           }}
         />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
+            backgroundSize: '26px 26px',
+          }}
+        />
+        <PulseTrace />
+
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
           className="relative z-10 flex items-center gap-3"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-500">
-            <Stethoscope className="h-5 w-5 text-white" />
+          <BrandMark className="h-10 w-10" />
+          <div>
+            <span className="font-display text-lg font-semibold tracking-tight text-white">
+              Clinic<span className="text-primary-400">Pulse</span>
+            </span>
+            <p className="text-[11px] leading-tight text-surface-500">Dental Practice OS</p>
           </div>
-          <span className="text-lg font-semibold text-white">DentalCare</span>
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: easeOutExpo }}
           className="relative z-10 max-w-md"
         >
-          <h1 className="text-3xl font-semibold leading-tight text-white">
-            Run your practice with one clear view.
+          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight text-white">
+            Run your practice by its pulse.
           </h1>
           <p className="mt-4 text-surface-400">
-            Patients, appointments, treatment history and finances — organized for a modern dental team.
+            Every chair, every patient, every payment — one live view for the whole dental team.
           </p>
         </motion.div>
 
-        <p className="relative z-10 text-xs text-surface-500">© {new Date().getFullYear()} DentalCare Practice Management</p>
+        <p className="relative z-10 text-xs text-surface-500">
+          © {new Date().getFullYear()} Clinic Pulse — Dental Practice Management
+        </p>
       </div>
 
       {/* Form panel */}
@@ -90,15 +133,15 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
         >
           <div className="mb-8 lg:hidden">
             <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary-600">
-                <Stethoscope className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-base font-semibold text-surface-900">DentalCare</span>
+              <BrandMark className="h-9 w-9" />
+              <span className="font-display text-base font-semibold tracking-tight text-surface-900">
+                Clinic<span className="text-primary-600">Pulse</span>
+              </span>
             </div>
           </div>
 
-          <h2 className="text-2xl font-semibold text-surface-900">Welcome back</h2>
-          <p className="mt-1.5 text-sm text-surface-500">Sign in to access your dashboard</p>
+          <h2 className="font-display text-2xl font-semibold tracking-tight text-surface-900">Welcome back</h2>
+          <p className="mt-1.5 text-sm text-surface-500">Sign in to see today's pulse</p>
 
           {error && (
             <motion.div

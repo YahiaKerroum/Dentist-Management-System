@@ -23,6 +23,8 @@ import { Badge } from '../components/ui/Badge';
 import { Skeleton } from '../components/ui/Skeleton';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Button } from '../components/ui/Button';
+import { AnimatedNumber } from '../components/ui/AnimatedNumber';
+import { riseIn, staggerContainer } from '../lib/motion';
 
 const currency = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -44,6 +46,8 @@ const getGreeting = () => {
     return 'Good evening';
 };
 
+const capitalize = (s?: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '');
+
 const STATUS_STYLE: Record<ClinicPulseScheduleItem['status'], { label: string; variant: 'info' | 'warning' | 'success' | 'danger' | 'neutral'; bar: string }> = {
     SCHEDULED: { label: 'Scheduled', variant: 'info', bar: 'bg-info-500' },
     CHECKED_IN: { label: 'Waiting', variant: 'warning', bar: 'bg-warning-500' },
@@ -62,21 +66,26 @@ function PulseLine() {
             preserveAspectRatio="none"
             fill="none"
         >
-            <path
+            <motion.path
                 d="M0,55 H95 L112,20 L130,85 L148,55 H300 L317,12 L335,90 L353,55 H500 L517,28 L535,78 L553,55 H800"
                 stroke="white"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 2.2, ease: 'easeInOut', repeat: Infinity, repeatDelay: 6 }}
             />
         </svg>
     );
 }
 
-function HeroFigure({ value, label, delta }: { value: string | number; label: string; delta?: { direction: 'up' | 'down'; positive: boolean; text: string } | null }) {
+function HeroFigure({ value, label, format, delta }: { value: number; label: string; format?: (n: number) => string; delta?: { direction: 'up' | 'down'; positive: boolean; text: string } | null }) {
     return (
         <div>
-            <p className="text-3xl font-semibold leading-none text-white">{value}</p>
+            <p className="font-display text-3xl font-semibold leading-none tracking-tight text-white tabular-nums">
+                <AnimatedNumber value={value} format={format} />
+            </p>
             <div className="mt-2 flex items-center gap-1.5">
                 <p className="text-xs text-primary-200">{label}</p>
                 {delta && (
@@ -93,20 +102,23 @@ function HeroFigure({ value, label, delta }: { value: string | number; label: st
 interface StatCardProps {
     icon: React.ReactNode;
     label: string;
-    value: string | number;
+    value: number;
+    format?: (n: number) => string;
     tone?: 'default' | 'warning' | 'danger';
 }
 
-function StatCard({ icon, label, value, tone = 'default' }: StatCardProps) {
+function StatCard({ icon, label, value, format, tone = 'default' }: StatCardProps) {
     const barClass = tone === 'warning' ? 'bg-warning-500' : tone === 'danger' ? 'bg-danger-500' : 'bg-primary-300';
     const iconClass = tone === 'warning' ? 'bg-warning-50 text-warning-700' : tone === 'danger' ? 'bg-danger-50 text-danger-700' : 'bg-primary-50 text-primary-700';
     return (
-        <Card className="overflow-hidden p-0">
+        <Card className="overflow-hidden p-0 transition-shadow duration-200 hover:shadow-md">
             <div className={`h-1 w-full ${barClass}`} />
             <div className="flex items-center gap-3 p-5">
                 <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${iconClass}`}>{icon}</div>
                 <div className="min-w-0">
-                    <p className="text-2xl font-semibold text-surface-900">{value}</p>
+                    <p className="font-display text-2xl font-semibold tracking-tight text-surface-900 tabular-nums">
+                        <AnimatedNumber value={value} format={format} />
+                    </p>
                     <p className="text-xs font-medium text-surface-500">{label}</p>
                 </div>
             </div>
@@ -259,34 +271,39 @@ export function ClinicPulsePage() {
     })();
 
     return (
-        <div className="space-y-6 p-8">
+        <motion.div variants={staggerContainer(0.07)} initial="hidden" animate="show" className="space-y-6 p-8">
             {/* Hero header */}
             <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
+                variants={riseIn}
                 className="relative overflow-hidden rounded-lg bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 px-8 py-7 shadow-md"
             >
                 <PulseLine />
                 <div className="relative flex flex-wrap items-end justify-between gap-8">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wider text-primary-200">
-                            {getGreeting()}, {user?.username}
+                        <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary-200">
+                            <span className="relative flex h-2 w-2">
+                                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-300 opacity-75" />
+                                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary-300" />
+                            </span>
+                            Clinic Pulse — Live
                         </p>
-                        <h1 className="mt-1 text-2xl font-semibold text-white">Clinic Pulse</h1>
+                        <h1 className="mt-1.5 font-display text-2xl font-semibold tracking-tight text-white">
+                            {getGreeting()}, {capitalize(user?.username)}
+                        </h1>
                         <p className="mt-1 text-sm text-primary-200">
                             {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
                         </p>
                     </div>
                     <div className="flex flex-wrap gap-8">
                         <HeroFigure value={summary.totalToday} label="appointments today" />
-                        <HeroFigure value={currency(summary.revenueToday)} label="collected today" delta={revenueDelta} />
+                        <HeroFigure value={summary.revenueToday} format={currency} label="collected today" delta={revenueDelta} />
                         <HeroFigure value={summary.waiting + summary.inTreatment} label="patients in clinic now" />
                     </div>
                 </div>
             </motion.div>
 
             {/* Clinic Status Strip */}
-            <div className="flex flex-wrap items-center gap-2">
+            <motion.div variants={riseIn} className="flex flex-wrap items-center gap-2">
                 <StatusChip icon={<Users className="h-4 w-4" />} value={summary.totalToday} label="appointments today" />
                 <StatusChip icon={<Clock className="h-4 w-4" />} value={summary.waiting} label="waiting" tone={summary.waiting > 0 ? 'warning' : 'default'} />
                 <StatusChip icon={<Activity className="h-4 w-4" />} value={summary.inTreatment} label="in treatment" tone={summary.inTreatment > 0 ? 'warning' : 'default'} />
@@ -298,17 +315,17 @@ export function ClinicPulsePage() {
                     label="expenses awaiting approval"
                     tone={summary.expensesAwaitingApproval > 0 ? 'warning' : 'default'}
                 />
-            </div>
+            </motion.div>
 
             {/* Chair / Room status */}
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <motion.div variants={riseIn} className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                 {roomStatus.map((room) => (
                     <RoomStatusCard key={room.roomId} room={room} />
                 ))}
-            </div>
+            </motion.div>
 
             {/* Top operational summary cards */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <motion.div variants={riseIn} className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                 <StatCard icon={<CheckCircle2 size={18} />} label="Completed today" value={summary.completed} />
                 <StatCard
                     icon={<AlertTriangle size={18} />}
@@ -317,11 +334,12 @@ export function ClinicPulsePage() {
                     tone={summary.delayed > 0 ? 'warning' : 'default'}
                 />
                 <StatCard icon={<UserX size={18} />} label="No-shows today" value={summary.noShow} tone={summary.noShow > 0 ? 'danger' : 'default'} />
-                <StatCard icon={<Wallet size={18} />} label="Collected this week" value={currency(summary.revenueThisWeek)} />
+                <StatCard icon={<Wallet size={18} />} label="Collected this week" value={summary.revenueThisWeek} format={currency} />
                 <StatCard
                     icon={<DollarSign size={18} />}
                     label="Pending balances"
-                    value={currency(summary.totalPendingBalance)}
+                    value={summary.totalPendingBalance}
+                    format={currency}
                     tone={summary.totalPendingBalance > 0 ? 'danger' : 'default'}
                 />
                 <StatCard
@@ -330,10 +348,10 @@ export function ClinicPulsePage() {
                     value={summary.treatmentsNeedingAttentionCount}
                     tone={summary.treatmentsNeedingAttentionCount > 0 ? 'warning' : 'default'}
                 />
-            </div>
+            </motion.div>
 
             {/* Schedule + Action Required */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <motion.div variants={riseIn} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <Card className="lg:col-span-2">
                     <CardHeader>
                         <CardTitle>Today's Schedule</CardTitle>
@@ -399,10 +417,10 @@ export function ClinicPulsePage() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+            </motion.div>
 
             {/* Revenue snapshot + treatment activity + recent patient activity */}
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <motion.div variants={riseIn} className="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 <Card>
                     <CardHeader>
                         <CardTitle>Revenue Snapshot</CardTitle>
@@ -460,8 +478,8 @@ export function ClinicPulsePage() {
                         )}
                     </CardContent>
                 </Card>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  LayoutDashboard,
+  Activity,
   Users,
   Calendar,
   Stethoscope,
@@ -11,15 +11,17 @@ import {
   Wallet,
   PanelLeftClose,
   PanelLeftOpen,
+  type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../utils/cn';
+import { BrandMark } from '../ui/BrandMark';
 
 interface SidebarProps {
   userRole?: string;
 }
 
 interface NavItem {
-  icon: typeof LayoutDashboard;
+  icon: LucideIcon;
   label: string;
   path: string;
   roles: string[];
@@ -33,7 +35,7 @@ interface NavSection {
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { icon: LayoutDashboard, label: 'Clinic Pulse', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
+      { icon: Activity, label: 'Today', path: '/dashboard', roles: ['MANAGER', 'DOCTOR', 'ASSISTANT'] },
     ],
   },
   {
@@ -80,16 +82,13 @@ export function Sidebar({ userRole = 'DOCTOR' }: SidebarProps) {
       )}
     >
       <div className={cn('flex items-center gap-2.5 px-5 py-6', collapsed && 'justify-center px-0')}>
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-tight text-primary-400 ring-1 ring-inset ring-primary-400/40">
-          D
-        </span>
+        <BrandMark className="h-8 w-8 shrink-0" />
         {!collapsed && (
           <div className="min-w-0">
-            <h1 className="truncate text-[15px] font-semibold leading-tight tracking-tight">
-              <span className="text-white">Dental</span>
-              <span className="text-primary-400">Care</span>
+            <h1 className="truncate font-display text-[15px] font-semibold leading-tight tracking-tight text-white">
+              Clinic<span className="text-primary-400">Pulse</span>
             </h1>
-            <p className="truncate text-[11px] text-surface-500">Practice Management</p>
+            <p className="truncate text-[11px] text-surface-500">Dental Practice OS</p>
           </div>
         )}
       </div>

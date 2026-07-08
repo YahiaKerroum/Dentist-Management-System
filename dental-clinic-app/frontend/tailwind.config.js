@@ -8,6 +8,9 @@ export default {
     extend: {
       fontFamily: {
         sans: ['InterVariable', 'Inter', 'system-ui', 'sans-serif'],
+        // Display face for the wordmark, page titles, and big numerals only —
+        // body copy stays on Inter.
+        display: ['Space Grotesk Variable', 'InterVariable', 'system-ui', 'sans-serif'],
       },
       colors: {
         // Primary brand accent — a deeper, more confident teal than the old "mint" scale.

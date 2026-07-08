@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { MotionConfig } from 'framer-motion';
 import { Login } from './components/Login';
 import { AppRoutes } from './routes/AppRoutes';
 import { useAuth } from './contexts/AuthContext';
@@ -8,7 +9,7 @@ function App() {
   const { token, login } = useAuth();
 
   return (
-    <>
+    <MotionConfig reducedMotion="user">
       <Toaster />
       <Routes>
         <Route
@@ -17,7 +18,7 @@ function App() {
         />
         <Route path="/*" element={<AppRoutes />} />
       </Routes>
-    </>
+    </MotionConfig>
   );
 }
 

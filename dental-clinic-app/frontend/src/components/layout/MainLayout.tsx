@@ -1,11 +1,13 @@
+import { useEffect } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '../../contexts/AuthContext';
+import { pageEnter } from '../../lib/motion';
 
 const PAGE_TITLES: Record<string, string> = {
-  dashboard: 'Clinic Pulse',
+  dashboard: 'Today',
   profile: 'Profile',
   patients: 'Patients',
   appointments: 'Appointments',
@@ -20,6 +22,11 @@ export function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const activeSegment = location.pathname.split('/')[1] || 'dashboard';
+  const title = PAGE_TITLES[activeSegment] ?? 'Dashboard';
+
+  useEffect(() => {
+    document.title = `${title} · Clinic Pulse`;
+  }, [title]);
 
   const handleLogout = () => {
     logout();
@@ -32,7 +39,7 @@ export function MainLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header
-          title={PAGE_TITLES[activeSegment] ?? 'Dashboard'}
+          title={title}
           userName={user?.username}
           userRole={user?.role}
           onLogout={handleLogout}
@@ -40,14 +47,7 @@ export function MainLayout() {
 
         <main className="flex-1 overflow-auto">
           <AnimatePresence mode="wait">
-            <motion.div
-              key={location.pathname}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="h-full"
-            >
+            <motion.div key={location.pathname} {...pageEnter} className="h-full">
               <Outlet />
             </motion.div>
           </AnimatePresence>

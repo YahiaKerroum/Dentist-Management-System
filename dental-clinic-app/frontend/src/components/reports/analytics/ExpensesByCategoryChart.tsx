@@ -111,7 +111,7 @@ export const ExpensesByCategoryChart: React.FC<ExpensesByCategoryChartProps> = (
               labelStyle={{ fontWeight: 'bold' }}
             />
             <Bar dataKey="total" radius={[0, 4, 4, 0]}>
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>

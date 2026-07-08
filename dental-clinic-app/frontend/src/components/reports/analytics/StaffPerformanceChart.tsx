@@ -122,7 +122,7 @@ export const StaffPerformanceChart: React.FC<StaffPerformanceChartProps> = ({ to
               }}
             />
             <Bar dataKey={getDataKey()} radius={[0, 4, 4, 0]}>
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>

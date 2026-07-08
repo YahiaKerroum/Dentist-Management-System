@@ -139,7 +139,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
                   dataKey="value"
                   label={renderLabel}
                 >
-                  {ageData.map((entry, index) => (
+                  {ageData.map((_entry, index) => (
                     <Cell key={`cell-${index}`} fill={AGE_COLORS[index % AGE_COLORS.length]} />
                   ))}
                 </Pie>

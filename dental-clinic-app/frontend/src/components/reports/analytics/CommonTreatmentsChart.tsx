@@ -93,7 +93,7 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
               dataKey="value"
               label={renderLabel}
             >
-              {data.map((entry, index) => (
+              {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>

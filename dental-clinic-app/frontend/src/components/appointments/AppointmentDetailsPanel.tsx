@@ -15,7 +15,6 @@ interface AppointmentDetailsPanelProps {
 export function AppointmentDetailsPanel({
     appointment,
     onClose,
-    userRole,
     onStatusUpdate,
     onEdit,
     onDelete,
@@ -102,19 +101,6 @@ export function AppointmentDetailsPanel({
     };
 
     const { date, time } = formatDateTime(appointment.dateOfTreatment);
-
-    const getStatusColor = (status: AppointmentStatus) => {
-        switch (status) {
-            case AppointmentStatus.SCHEDULED:
-                return 'bg-[#effcf6] text-[#26a37e]';
-            case AppointmentStatus.COMPLETED:
-                return 'bg-green-100 text-green-800';
-            case AppointmentStatus.CANCELLED:
-                return 'bg-red-100 text-red-800';
-            default:
-                return 'bg-surface-100 text-surface-800';
-        }
-    };
 
     return (
         <>

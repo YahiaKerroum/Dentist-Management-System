@@ -1,6 +1,6 @@
 import React from 'react';
 import { Expense } from '../../types/expense.types';
-import { X, Calendar, DollarSign, Tag, User, FileText, CheckCircle, Clock } from 'lucide-react';
+import { X, Calendar, Tag, User, FileText, CheckCircle, Clock } from 'lucide-react';
 
 interface ExpenseDetailModalProps {
   isOpen: boolean;

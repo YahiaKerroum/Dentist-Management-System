@@ -52,8 +52,8 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [patientFilter, setPatientFilter] = useState('all');
     const [doctorFilter, setDoctorFilter] = useState('all');
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
-    const [patients, setPatients] = useState<Patient[]>([]);
-    const [doctors, setDoctors] = useState<User[]>([]);
+    const [patients] = useState<Patient[]>([]);
+    const [doctors] = useState<User[]>([]);
     const [rooms, setRooms] = useState<Room[]>([]);
     const [viewMode, setViewMode] = useState<'chair' | 'table'>('chair');
     const [plannerDate, setPlannerDate] = useState(() => {
@@ -77,12 +77,10 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
 
     // User role (extract from token)
     const [userRole, setUserRole] = useState<string>('');
-    const [userId, setUserId] = useState<string>('');
 
     useEffect(() => {
         const payload = decodeToken(token);
         setUserRole(payload?.role || '');
-        setUserId(payload?.userId || '');
     }, [token]);
 
     useEffect(() => {
