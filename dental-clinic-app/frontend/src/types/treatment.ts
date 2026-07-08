@@ -35,6 +35,7 @@ export interface Treatment {
     teeth: TreatmentToothRecord[];
     followUpRequired: boolean;
     status: TreatmentStatus;
+    cost: number | string | null; // Prisma Decimal — serializes to string over JSON; coerce with Number()
     appointmentId: string | null;
     createdAt: string;
     updatedAt: string;

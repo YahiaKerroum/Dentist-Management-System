@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPatients, createPatient, updatePatient, deletePatient } from '../services/patient.service';
 import { getUserPermissions } from '../services/user.service';
+import { getAllAppointments } from '../services/appointment.service';
+import { getTreatments } from '../services/treatment.service';
+import { getAllPayments } from '../services/payment.service';
+import { AppointmentStatus } from '../types/appointment';
+import type { Appointment } from '../types/appointment';
 import { queryKeys } from '../lib/queryKeys';
 import { Patient, CreatePatientDTO } from '../types/patient';
 import { Button } from '../components/ui/Button';
@@ -17,17 +22,17 @@ import {
     Plus,
     Search,
     Phone,
-    Mail,
-    Calendar,
     User as UserIcon,
     Edit,
     Trash2,
     ChevronLeft,
     ChevronRight,
+    ChevronUp,
+    ChevronDown,
+    ChevronsUpDown,
     Download,
     X,
     SlidersHorizontal,
-    Stethoscope,
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -43,6 +48,53 @@ interface PatientsPageProps {
     onPatientOpened?: () => void;
 }
 
+type SortKey = 'name' | 'dentist' | 'nextAppt' | 'balance' | 'lastVisit' | 'status';
+
+const UPCOMING_STATUSES = [AppointmentStatus.SCHEDULED, AppointmentStatus.CHECKED_IN, AppointmentStatus.IN_PROGRESS];
+// A patient counts as "active" if they have an upcoming visit or were seen within ~18 months.
+const ACTIVE_WINDOW_MS = 1000 * 60 * 60 * 24 * 30 * 18;
+
+const currencyShort = (n: number) => `$${Math.round(n).toLocaleString()}`;
+const shortDate = (iso: string | number) =>
+    new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const titleCaseType = (t: string | null) =>
+    t ? t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Visit';
+
+function SortHeader({
+    label,
+    k,
+    sortKey,
+    sortDir,
+    onSort,
+    align,
+    className,
+}: {
+    label: string;
+    k: SortKey;
+    sortKey: SortKey;
+    sortDir: 'asc' | 'desc';
+    onSort: (k: SortKey) => void;
+    align?: 'right';
+    className?: string;
+}) {
+    const active = sortKey === k;
+    return (
+        <th className={`px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-surface-400 ${align === 'right' ? 'text-right' : ''} ${className ?? ''}`}>
+            <button
+                onClick={() => onSort(k)}
+                className={`inline-flex items-center gap-1 transition-colors hover:text-surface-700 ${align === 'right' ? 'flex-row-reverse' : ''} ${active ? 'text-surface-700' : ''}`}
+            >
+                {label}
+                {active ? (
+                    sortDir === 'asc' ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />
+                ) : (
+                    <ChevronsUpDown className="h-3.5 w-3.5 opacity-40" />
+                )}
+            </button>
+        </th>
+    );
+}
+
 export function PatientsPage({ token, initialPatientId, onPatientOpened }: PatientsPageProps) {
     const queryClient = useQueryClient();
     const {
@@ -55,12 +107,64 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     });
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
     const [ageFilter, setAgeFilter] = useState('all');
     const [dateFilter, setDateFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('name-asc');
+    const [sortKey, setSortKey] = useState<SortKey>('name');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
+
+    // Per-patient signal (next appt, balance, last visit, derived status) is aggregated
+    // client-side from these cached datasets — the same billed-minus-paid method the
+    // dashboard uses. Enabled once patients load so the list paints first.
+    const { data: appointments = [], isLoading: apptLoading } = useQuery({
+        queryKey: queryKeys.appointments(),
+        queryFn: () => getAllAppointments(),
+    });
+    const { data: treatments = [], isLoading: treatmentsLoading } = useQuery({
+        queryKey: queryKeys.treatments(),
+        queryFn: async () => (await getTreatments(token)).data,
+    });
+    const { data: payments = [], isLoading: paymentsLoading } = useQuery({
+        queryKey: queryKeys.payments,
+        queryFn: getAllPayments,
+    });
+    const signalsLoading = apptLoading || treatmentsLoading || paymentsLoading;
+
+    const signals = useMemo(() => {
+        const now = Date.now();
+        const nextAppt = new Map<string, Appointment>();
+        const lastVisit = new Map<string, number>();
+        for (const a of appointments as Appointment[]) {
+            const t = new Date(a.dateOfTreatment).getTime();
+            if (UPCOMING_STATUSES.includes(a.status) && t >= now) {
+                const cur = nextAppt.get(a.patientId);
+                if (!cur || t < new Date(cur.dateOfTreatment).getTime()) nextAppt.set(a.patientId, a);
+            }
+            if (a.status === AppointmentStatus.COMPLETED && t <= now) {
+                const cur = lastVisit.get(a.patientId);
+                if (cur === undefined || t > cur) lastVisit.set(a.patientId, t);
+            }
+        }
+        const balance = new Map<string, number>();
+        for (const tr of treatments) {
+            const c = Number(tr.cost ?? 0) || 0;
+            if (c) balance.set(tr.patientId, (balance.get(tr.patientId) ?? 0) + c);
+        }
+        for (const p of payments) {
+            const amt = Number(p.amount ?? 0) || 0;
+            if (amt) balance.set(p.patientId, (balance.get(p.patientId) ?? 0) - amt);
+        }
+        return { nextAppt, lastVisit, balance, now };
+    }, [appointments, treatments, payments]);
+
+    const isActive = (id: string) => {
+        if (signals.nextAppt.has(id)) return true;
+        const last = signals.lastVisit.get(id);
+        return last !== undefined && signals.now - last <= ACTIVE_WINDOW_MS;
+    };
+    const patientBalance = (id: string) => signals.balance.get(id) ?? 0;
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -162,16 +266,26 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
         setStatusFilter('all');
         setAgeFilter('all');
         setDateFilter('all');
-        setSortBy('name-asc');
+        setSortKey('name');
+        setSortDir('asc');
         setCurrentPage(1);
     };
 
     const hasActiveFilters = () => {
-        return searchTerm !== '' || 
-               statusFilter !== 'all' || 
-               ageFilter !== 'all' || 
-               dateFilter !== 'all' ||
-               sortBy !== 'name-asc';
+        return searchTerm !== '' ||
+               statusFilter !== 'all' ||
+               ageFilter !== 'all' ||
+               dateFilter !== 'all';
+    };
+
+    const toggleSort = (key: SortKey) => {
+        if (sortKey === key) {
+            setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortKey(key);
+            // Money/recency columns are most useful high-to-low first.
+            setSortDir(key === 'balance' || key === 'lastVisit' || key === 'nextAppt' ? 'desc' : 'asc');
+        }
     };
 
     const handleFormSubmit = async (data: CreatePatientDTO) => {
@@ -227,14 +341,12 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     };
 
     // Apply all filters
-    let filteredPatients = patients.filter(patient => {
+    // Everything except the status tab — so the tab counts reflect the current search/age/date scope.
+    const scopedPatients = patients.filter(patient => {
         // Search filter
         const matchesSearch = patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (patient.email && patient.email.toLowerCase().includes(searchTerm.toLowerCase()));
-
-        // Status filter (placeholder for future isActive field)
-        const matchesStatus = statusFilter === 'all' || statusFilter === 'active';
 
         // Age filter
         let matchesAge = true;
@@ -278,20 +390,42 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             }
         }
 
-        return matchesSearch && matchesStatus && matchesAge && matchesDate;
+        return matchesSearch && matchesAge && matchesDate;
     });
 
-    // Apply sorting
-    filteredPatients = [...filteredPatients].sort((a, b) => {
-        switch (sortBy) {
-            case 'name-asc':
-                return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
-            case 'name-desc':
-                return `${b.firstName} ${b.lastName}`.localeCompare(`${a.firstName} ${a.lastName}`);
-            case 'date-newest':
-                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-            case 'date-oldest':
-                return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    // Status tab counts (over the scoped set, before the status tab is applied)
+    const statusCounts = {
+        all: scopedPatients.length,
+        active: scopedPatients.filter((p) => isActive(p.id)).length,
+        inactive: scopedPatients.filter((p) => !isActive(p.id)).length,
+    };
+
+    const dentistName = (p: Patient) =>
+        p.primaryDentist ? `${p.primaryDentist.user.lastName} ${p.primaryDentist.user.firstName}` : '';
+
+    const statusStatusApplied = scopedPatients.filter((p) =>
+        statusFilter === 'all' ? true : statusFilter === 'active' ? isActive(p.id) : !isActive(p.id)
+    );
+
+    // Apply sorting via the active column
+    const dir = sortDir === 'asc' ? 1 : -1;
+    const filteredPatients = [...statusStatusApplied].sort((a, b) => {
+        switch (sortKey) {
+            case 'name':
+                return dir * `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`);
+            case 'dentist':
+                return dir * dentistName(a).localeCompare(dentistName(b));
+            case 'balance':
+                return dir * (patientBalance(a.id) - patientBalance(b.id));
+            case 'nextAppt': {
+                const av = signals.nextAppt.get(a.id) ? new Date(signals.nextAppt.get(a.id)!.dateOfTreatment).getTime() : (sortDir === 'asc' ? Infinity : -Infinity);
+                const bv = signals.nextAppt.get(b.id) ? new Date(signals.nextAppt.get(b.id)!.dateOfTreatment).getTime() : (sortDir === 'asc' ? Infinity : -Infinity);
+                return dir * (av - bv);
+            }
+            case 'lastVisit':
+                return dir * ((signals.lastVisit.get(a.id) ?? 0) - (signals.lastVisit.get(b.id) ?? 0));
+            case 'status':
+                return dir * (Number(isActive(a.id)) - Number(isActive(b.id)));
             default:
                 return 0;
         }
@@ -304,17 +438,9 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
         currentPage * itemsPerPage
     );
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
-
     if (loading) {
         return (
-            <div className="min-h-full bg-surface-50 p-8">
+            <div className="mx-auto min-h-full max-w-7xl p-8">
                 <div className="mb-8 flex items-start justify-between gap-4">
                     <div className="space-y-2">
                         <Skeleton className="h-8 w-40" />
@@ -326,10 +452,22 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                     <Skeleton className="h-10 w-full sm:w-96" />
                     <Skeleton className="h-9 w-52" />
                 </div>
-                <div className="space-y-2">
-                    {Array.from({ length: 8 }).map((_, i) => (
-                        <Skeleton key={i} className="h-[72px] w-full" />
-                    ))}
+                <div className="overflow-hidden rounded-xl border border-surface-200 bg-white">
+                    <Skeleton className="h-10 w-full" />
+                    <div className="divide-y divide-surface-100">
+                        {Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="flex items-center gap-3 px-5 py-3">
+                                <Skeleton className="h-9 w-9 rounded-lg" />
+                                <div className="flex-1 space-y-1.5">
+                                    <Skeleton className="h-3.5 w-40" />
+                                    <Skeleton className="h-3 w-24" />
+                                </div>
+                                <Skeleton className="h-4 w-24" />
+                                <Skeleton className="h-4 w-16" />
+                                <Skeleton className="h-5 w-16 rounded-full" />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
@@ -367,7 +505,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     }
 
     return (
-        <div className="bg-surface-50 min-h-full p-8">
+        <div className="mx-auto min-h-full max-w-7xl p-8">
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                 <div>
@@ -405,19 +543,22 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
-                    {/* Status segmented control */}
+                    {/* Status tabs with live counts */}
                     <div className="inline-flex rounded-md border border-surface-200 bg-surface-100 p-0.5">
-                        {(['all', 'active', 'inactive'] as const).map((option) => (
+                        {([['all', 'All'], ['active', 'Active'], ['inactive', 'Inactive']] as const).map(([value, label]) => (
                             <button
-                                key={option}
-                                onClick={() => setStatusFilter(option)}
-                                className={`rounded px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
-                                    statusFilter === option
+                                key={value}
+                                onClick={() => { setStatusFilter(value); setCurrentPage(1); }}
+                                className={`flex items-center gap-1.5 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
+                                    statusFilter === value
                                         ? 'bg-white text-surface-900 shadow-xs'
                                         : 'text-surface-500 hover:text-surface-700'
                                 }`}
                             >
-                                {option === 'all' ? 'All' : option}
+                                {label}
+                                <span className={`tabular-nums ${statusFilter === value ? 'text-surface-400' : 'text-surface-300'}`}>
+                                    {statusCounts[value]}
+                                </span>
                             </button>
                         ))}
                     </div>
@@ -426,7 +567,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                         <DropdownMenuTrigger asChild>
                             <button
                                 className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors ${
-                                    ageFilter !== 'all' || dateFilter !== 'all' || sortBy !== 'name-asc'
+                                    ageFilter !== 'all' || dateFilter !== 'all'
                                         ? 'border-primary-300 bg-primary-50 text-primary-700'
                                         : 'border-surface-300 text-surface-600 hover:bg-surface-50'
                                 }`}
@@ -462,19 +603,6 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                                         <option value="week">Last 7 Days</option>
                                         <option value="month">Last 30 Days</option>
                                         <option value="quarter">Last 90 Days</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="mb-1 block text-xs font-medium uppercase tracking-wide text-surface-400">Sort By</label>
-                                    <select
-                                        className="w-full rounded-md border border-surface-300 bg-white px-2.5 py-1.5 text-sm text-surface-700 focus:border-primary-500 focus:outline-none focus:shadow-focus"
-                                        value={sortBy}
-                                        onChange={(e) => setSortBy(e.target.value)}
-                                    >
-                                        <option value="name-asc">Name (A-Z)</option>
-                                        <option value="name-desc">Name (Z-A)</option>
-                                        <option value="date-newest">Newest First</option>
-                                        <option value="date-oldest">Oldest First</option>
                                     </select>
                                 </div>
                                 {hasActiveFilters() && (
@@ -516,135 +644,146 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
             ) : (
                 <>
                     <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
-                        {/* List header strip */}
-                        <div className="flex items-center justify-between border-b border-surface-100 bg-surface-50/60 px-5 py-2.5">
-                            <p className="text-xs font-semibold uppercase tracking-wider text-surface-400">
-                                <span className="tabular-nums text-surface-600">{filteredPatients.length}</span> {filteredPatients.length === 1 ? 'patient' : 'patients'}
-                            </p>
-                            {hasActiveFilters() && (
-                                <button
-                                    onClick={handleClearFilters}
-                                    className="inline-flex items-center gap-1 text-xs font-medium text-primary-700 hover:text-primary-800"
-                                >
-                                    <X className="h-3.5 w-3.5" /> Clear filters
-                                </button>
-                            )}
-                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full min-w-[860px] text-sm">
+                                <thead className="sticky top-0 z-10 bg-surface-50/95 backdrop-blur">
+                                    <tr className="border-b border-surface-200 text-left">
+                                        <SortHeader label="Patient" k="name" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} className="pl-5" />
+                                        <SortHeader label="Dentist" k="dentist" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                                        <SortHeader label="Next appt" k="nextAppt" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                                        <SortHeader label="Balance" k="balance" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} align="right" />
+                                        <SortHeader label="Last visit" k="lastVisit" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                                        <SortHeader label="Status" k="status" sortKey={sortKey} sortDir={sortDir} onSort={toggleSort} />
+                                        <th className="w-20 px-3 py-2.5" />
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-surface-100">
+                                    {paginatedPatients.map((patient) => {
+                                        const dentistSeed = patient.primaryDentist
+                                            ? `${patient.primaryDentist.user.firstName} ${patient.primaryDentist.user.lastName}`
+                                            : null;
+                                        const avatar = dentistSeed
+                                            ? getAvatarColor(dentistSeed)
+                                            : { bg: 'bg-surface-100', text: 'text-surface-500' };
+                                        const age = calculateAge(patient.dateOfBirth);
+                                        const initials = `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase();
+                                        const next = signals.nextAppt.get(patient.id);
+                                        const last = signals.lastVisit.get(patient.id);
+                                        const balance = patientBalance(patient.id);
+                                        const active = isActive(patient.id);
+                                        return (
+                                            <tr
+                                                key={patient.id}
+                                                onClick={() => handleViewPatientDetails(patient)}
+                                                className="group cursor-pointer transition-colors hover:bg-surface-50"
+                                            >
+                                                {/* Patient */}
+                                                <td className="py-2.5 pl-5 pr-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg font-display text-xs font-semibold ring-1 ring-inset ring-black/5 ${avatar.bg} ${avatar.text}`}>
+                                                            {initials}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <p className="truncate font-medium text-surface-900">
+                                                                {patient.firstName} {patient.lastName}
+                                                            </p>
+                                                            <p className="text-xs text-surface-400 tabular-nums">
+                                                                {age !== null ? `${age} yrs` : '—'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </td>
 
-                        <div className="divide-y divide-surface-100">
-                            {paginatedPatients.map((patient) => {
-                                const avatar = getAvatarColor(`${patient.firstName}${patient.lastName}`);
-                                const age = calculateAge(patient.dateOfBirth);
-                                const initials = `${patient.firstName?.[0] ?? ''}${patient.lastName?.[0] ?? ''}`.toUpperCase();
-                                const sinceYear = patient.createdAt ? new Date(patient.createdAt).getFullYear() : null;
-                                return (
-                                    <div
-                                        key={patient.id}
-                                        role="button"
-                                        tabIndex={0}
-                                        onClick={() => handleViewPatientDetails(patient)}
-                                        onKeyDown={(e) => { if (e.key === 'Enter') handleViewPatientDetails(patient); }}
-                                        className="group flex cursor-pointer items-center gap-4 px-5 py-3.5 outline-none transition-colors hover:bg-surface-50 focus-visible:bg-surface-50"
-                                    >
-                                        {/* Avatar */}
-                                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl font-display text-sm font-semibold ring-1 ring-inset ring-black/5 ${avatar.bg} ${avatar.text}`}>
-                                            {initials}
-                                        </div>
+                                                {/* Dentist */}
+                                                <td className="px-3 py-2.5">
+                                                    {patient.primaryDentist ? (
+                                                        <span className="text-sm text-surface-700">
+                                                            Dr. {patient.primaryDentist.user.lastName}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm text-surface-300">Unassigned</span>
+                                                    )}
+                                                </td>
 
-                                        {/* Identity */}
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-baseline gap-2">
-                                                <p className="truncate font-display text-[15px] font-semibold tracking-tight text-surface-900">
-                                                    {patient.firstName} {patient.lastName}
-                                                </p>
-                                                {age !== null && (
-                                                    <span className="shrink-0 text-xs text-surface-400 tabular-nums">{age} yrs</span>
-                                                )}
-                                            </div>
-                                            {patient.primaryDentist ? (
-                                                <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-surface-500">
-                                                    <Stethoscope className="h-3 w-3 text-primary-500" />
-                                                    Dr. {patient.primaryDentist.user.firstName} {patient.primaryDentist.user.lastName}
-                                                </span>
-                                            ) : (
-                                                <span className="mt-0.5 inline-flex items-center gap-1.5 text-xs text-surface-400">
-                                                    <Stethoscope className="h-3 w-3" />
-                                                    No primary dentist
-                                                </span>
-                                            )}
-                                            {/* Mobile-only contact */}
-                                            <div className="mt-1.5 flex flex-col gap-0.5 text-xs text-surface-500 md:hidden">
-                                                {patient.phone && (
-                                                    <span className="flex items-center gap-1.5"><Phone className="h-3 w-3 text-surface-400" /><span className="tabular-nums">{patient.phone}</span></span>
-                                                )}
-                                                {patient.email && (
-                                                    <span className="flex items-center gap-1.5 truncate"><Mail className="h-3 w-3 text-surface-400" />{patient.email}</span>
-                                                )}
-                                            </div>
-                                        </div>
+                                                {/* Next appointment */}
+                                                <td className="px-3 py-2.5">
+                                                    {signalsLoading ? (
+                                                        <Skeleton className="h-4 w-20" />
+                                                    ) : next ? (
+                                                        <div>
+                                                            <p className="text-sm font-medium text-primary-700 tabular-nums">{shortDate(next.dateOfTreatment)}</p>
+                                                            <p className="text-xs text-surface-400">{titleCaseType(next.typeOfTreatment)}</p>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-sm text-surface-300">None scheduled</span>
+                                                    )}
+                                                </td>
 
-                                        {/* Contact (md+) */}
-                                        <div className="hidden min-w-0 shrink-0 md:block md:w-48 lg:w-60">
-                                            <div className="flex items-center gap-2 text-sm text-surface-700">
-                                                <Phone className="h-3.5 w-3.5 shrink-0 text-surface-400" />
-                                                <span className="truncate tabular-nums">{patient.phone || '—'}</span>
-                                            </div>
-                                            <div className="mt-0.5 flex items-center gap-2 text-xs text-surface-400">
-                                                <Mail className="h-3 w-3 shrink-0" />
-                                                <span className="truncate">{patient.email || '—'}</span>
-                                            </div>
-                                        </div>
+                                                {/* Balance */}
+                                                <td className="px-3 py-2.5 text-right">
+                                                    {signalsLoading ? (
+                                                        <Skeleton className="ml-auto h-4 w-14" />
+                                                    ) : balance > 0.5 ? (
+                                                        <span className="font-semibold text-danger-600 tabular-nums">{currencyShort(balance)}</span>
+                                                    ) : (
+                                                        <span className="text-surface-300 tabular-nums">$0</span>
+                                                    )}
+                                                </td>
 
-                                        {/* Right meta (lg+) */}
-                                        <div className="hidden shrink-0 text-right lg:block lg:w-40">
-                                            <p className="flex items-center justify-end gap-1.5 text-sm text-surface-700">
-                                                <Calendar className="h-3.5 w-3.5 text-surface-400" />
-                                                <span className="tabular-nums">{patient.dateOfBirth ? formatDate(patient.dateOfBirth) : '—'}</span>
-                                            </p>
-                                            {sinceYear && (
-                                                <p className="mt-0.5 text-xs text-surface-400 tabular-nums">Patient since {sinceYear}</p>
-                                            )}
-                                        </div>
+                                                {/* Last visit */}
+                                                <td className="px-3 py-2.5">
+                                                    {signalsLoading ? (
+                                                        <Skeleton className="h-4 w-20" />
+                                                    ) : last ? (
+                                                        <span className="text-sm text-surface-600 tabular-nums">{shortDate(last)}</span>
+                                                    ) : (
+                                                        <span className="text-sm text-surface-300">Never</span>
+                                                    )}
+                                                </td>
 
-                                        {/* Actions (hover-revealed on desktop, always on mobile) */}
-                                        <div className="flex shrink-0 items-center gap-0.5 lg:opacity-0 lg:transition-opacity lg:duration-150 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
-                                            {deleteConfirmId === patient.id ? (
-                                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                                    <button
-                                                        onClick={() => handleDeletePatient(patient.id)}
-                                                        className="rounded-md bg-danger-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-danger-700"
-                                                    >
-                                                        Delete
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setDeleteConfirmId(null)}
-                                                        className="rounded-md px-2 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100 hover:text-surface-700"
-                                                    >
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }}
-                                                        className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-600"
-                                                        title="Edit patient"
-                                                    >
-                                                        <Edit className="h-4 w-4" />
-                                                    </button>
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }}
-                                                        className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
-                                                        title="Delete patient"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                                {/* Status */}
+                                                <td className="px-3 py-2.5">
+                                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${active ? 'bg-success-50 text-success-700' : 'bg-surface-100 text-surface-500'}`}>
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${active ? 'bg-success-500' : 'bg-surface-400'}`} />
+                                                        {active ? 'Active' : 'Inactive'}
+                                                    </span>
+                                                </td>
+
+                                                {/* Actions */}
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center justify-end gap-0.5 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100 lg:group-focus-within:opacity-100">
+                                                        {deleteConfirmId === patient.id ? (
+                                                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                                <button onClick={() => handleDeletePatient(patient.id)} className="rounded-md bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700">Delete</button>
+                                                                <button onClick={() => setDeleteConfirmId(null)} className="rounded-md px-1.5 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100">Cancel</button>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                {patient.phone && (
+                                                                    <a
+                                                                        href={`tel:${patient.phone}`}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        title={`Call ${patient.phone}`}
+                                                                        className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-600"
+                                                                    >
+                                                                        <Phone className="h-4 w-4" />
+                                                                    </a>
+                                                                )}
+                                                                <button onClick={(e) => { e.stopPropagation(); handleEditPatient(patient); }} title="Edit patient" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-600">
+                                                                    <Edit className="h-4 w-4" />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(patient.id); }} title="Delete patient" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600">
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
