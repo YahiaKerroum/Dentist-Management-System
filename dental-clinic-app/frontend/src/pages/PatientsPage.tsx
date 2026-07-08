@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getPatients, createPatient, updatePatient, deletePatient } from '../services/patient.service';
 import { getUserPermissions } from '../services/user.service';
+import { queryKeys } from '../lib/queryKeys';
 import { Patient, CreatePatientDTO } from '../types/patient';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
@@ -43,8 +45,15 @@ interface PatientsPageProps {
 }
 
 export function PatientsPage({ token, initialPatientId, onPatientOpened }: PatientsPageProps) {
-    const [patients, setPatients] = useState<Patient[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const {
+        data: patients = [],
+        isLoading: loading,
+        error: patientsError,
+    } = useQuery({
+        queryKey: queryKeys.patients,
+        queryFn: async () => (await getPatients(token)).data,
+    });
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
@@ -69,9 +78,13 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     // Delete confirmation
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-    // User permissions
-    const [userPermissions, setUserPermissions] = useState<string[]>([]);
-    const [currentUserId, setCurrentUserId] = useState<string>('');
+    // User permissions (cached per user)
+    const currentUserId = decodeToken(token)?.userId ?? '';
+    const { data: userPermissions = [] } = useQuery({
+        queryKey: queryKeys.userPermissions(currentUserId),
+        queryFn: async () => (await getUserPermissions(currentUserId, token)).data || [],
+        enabled: !!currentUserId,
+    });
 
     // Search input ref for keyboard shortcuts
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -99,9 +112,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     ]);
 
     useEffect(() => {
-        fetchPatients();
-        fetchUserPermissions();
-    }, [token]);
+        if (patientsError) setError((patientsError as Error).message || 'Failed to load patients');
+    }, [patientsError]);
 
     // Handle initial patient ID - open detail panel for specific patient
     useEffect(() => {
@@ -121,29 +133,8 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
         }
     }, [initialPatientId, patients, initialPatientHandled]);
 
-    const fetchUserPermissions = async () => {
-        try {
-            const payload = decodeToken(token);
-            if (!payload) throw new Error('Invalid token');
-            setCurrentUserId(payload.userId);
-            const response = await getUserPermissions(payload.userId, token);
-            setUserPermissions(response.data || []);
-        } catch (err) {
-            console.error('Failed to fetch permissions:', err);
-            setUserPermissions([]);
-        }
-    };
-
-    const fetchPatients = async () => {
-        try {
-            const response = await getPatients(token);
-            setPatients(response.data);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load patients');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const setPatientsCache = (updater: (prev: Patient[]) => Patient[]) =>
+        queryClient.setQueryData<Patient[]>(queryKeys.patients, (prev = []) => updater(prev));
 
     const handleAddPatient = () => {
         setModalMode('add');
@@ -188,7 +179,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
         try {
             if (modalMode === 'add') {
                 const response = await createPatient(data, token);
-                setPatients(prev => [...prev, response.data]);
+                setPatientsCache(prev => [...prev, response.data]);
                 toast.success('Patient created successfully');
             } else {
                 if (!selectedPatient) {
@@ -196,7 +187,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                     return;
                 }
                 const response = await updatePatient(selectedPatient.id, data, token);
-                setPatients(prev =>
+                setPatientsCache(prev =>
                     prev.map(p => p.id === response.data.id ? response.data : p)
                 );
                 toast.success('Patient updated successfully');
@@ -214,7 +205,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
     const handleDeletePatient = async (id: string) => {
         try {
             await deletePatient(id, token);
-            setPatients(prev => prev.filter(p => p.id !== id));
+            setPatientsCache(prev => prev.filter(p => p.id !== id));
             setDeleteConfirmId(null);
             setError('');
             toast.success('Patient deleted successfully');
@@ -363,7 +354,7 @@ export function PatientsPage({ token, initialPatientId, onPatientOpened }: Patie
                     onDelete={async (patient) => {
                         try {
                             await deletePatient(patient.id, token);
-                            setPatients(prev => prev.filter(p => p.id !== patient.id));
+                            setPatientsCache(prev => prev.filter(p => p.id !== patient.id));
                             setViewingDetail(false);
                             setDetailPatient(null);
                             toast.success('Patient deleted successfully');

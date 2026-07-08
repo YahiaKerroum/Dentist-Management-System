@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Plus, Edit, Trash2, Loader2, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAllPayments, deletePayment } from '../../services/payment.service';
 import { Payment } from '../../types/payment.types';
+import { queryKeys } from '../../lib/queryKeys';
 import { PaymentForm } from './PaymentForm';
 import { toast } from '../ui/Toaster';
 import { Button } from '../ui/Button';
@@ -28,9 +30,16 @@ const formatShortDate = (dateString: string): string =>
   new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 const PaymentTable: React.FC<PaymentTableProps> = ({ token }) => {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+  const {
+    data: payments = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: fetchPayments,
+  } = useQuery({
+    queryKey: queryKeys.payments,
+    queryFn: getAllPayments,
+  });
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'Failed to fetch payments. Please try again.') : '';
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [methodFilter, setMethodFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date-desc');
@@ -38,25 +47,6 @@ const PaymentTable: React.FC<PaymentTableProps> = ({ token }) => {
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-
-  useEffect(() => {
-    fetchPayments();
-  }, []);
-
-  const fetchPayments = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const data = await getAllPayments();
-      setPayments(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch payments. Please try again.';
-      setError(errorMessage);
-      console.error('Error fetching payments:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   let filteredPayments = payments.filter((payment) => {
     const patientFullName = payment.patient

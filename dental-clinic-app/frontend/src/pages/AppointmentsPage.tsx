@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
     getAllAppointments,
@@ -9,7 +10,6 @@ import {
 } from '../services/appointment.service';
 import { Appointment, CreateAppointmentDTO, AppointmentStatus } from '../types/appointment';
 import { getAllRooms } from '../services/room.service';
-import type { Room } from '../types/room';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { AppointmentForm } from '../components/appointments/AppointmentForm';
@@ -28,6 +28,7 @@ import { getUserProfile } from '../services/user.service';
 import { Patient } from '../types/patient';
 import { User } from '../types/user';
 import { decodeToken } from '../utils/jwt';
+import { queryKeys } from '../lib/queryKeys';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -44,8 +45,7 @@ interface AppointmentsPageProps {
 }
 
 export function AppointmentsPage({ token }: AppointmentsPageProps) {
-    const [appointments, setAppointments] = useState<Appointment[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
     const [error, setError] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<AppointmentStatus | 'all'>('all');
@@ -54,7 +54,6 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const [dateRange, setDateRange] = useState({ from: '', to: '' });
     const [patients] = useState<Patient[]>([]);
     const [doctors] = useState<User[]>([]);
-    const [rooms, setRooms] = useState<Room[]>([]);
     const [viewMode, setViewMode] = useState<'chair' | 'table'>('chair');
     const [plannerDate, setPlannerDate] = useState(() => {
         const d = new Date();
@@ -75,60 +74,47 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     // Details panel state
     const [detailAppointment, setDetailAppointment] = useState<Appointment | null>(null);
 
-    // User role (extract from token)
-    const [userRole, setUserRole] = useState<string>('');
+    // User role (extract from token) — synchronous so it's ready for the query key
+    const userRole = decodeToken(token)?.role || '';
 
-    useEffect(() => {
-        const payload = decodeToken(token);
-        setUserRole(payload?.role || '');
-    }, [token]);
-
-    useEffect(() => {
-        if (userRole) {
-            fetchAppointments();
-        }
-    }, [token, userRole]);
-
-    useEffect(() => {
-        getAllRooms().then(setRooms).catch((err) => console.error('Failed to fetch rooms:', err));
-    }, [token]);
-
-    const fetchAppointments = async () => {
-        try {
-            setLoading(true);
+    const appointmentsKey = queryKeys.appointments(userRole);
+    const {
+        data: appointments = [],
+        isLoading: loading,
+        error: appointmentsError,
+    } = useQuery({
+        queryKey: appointmentsKey,
+        enabled: !!userRole,
+        queryFn: async () => {
             let doctorProfileId: string | undefined;
-
             // If user is DOCTOR, fetch their doctor profile ID for sorting (not filtering)
             if (userRole === 'DOCTOR') {
                 const userData = await getUserProfile(token);
                 doctorProfileId = userData.data?.doctorProfile?.id;
             }
-
-            // Fetch all appointments
             const data = await getAllAppointments();
-
             // Sort: doctor's own appointments first, then others by date (newest first)
-            const sortedAppointments = [...data].sort((a, b) => {
+            return [...data].sort((a, b) => {
                 const aOwn = doctorProfileId ? a.doctorId === doctorProfileId : false;
                 const bOwn = doctorProfileId ? b.doctorId === doctorProfileId : false;
-
                 if (aOwn && !bOwn) return -1;
                 if (!aOwn && bOwn) return 1;
-
-                const aDate = new Date(a.dateOfTreatment).getTime();
-                const bDate = new Date(b.dateOfTreatment).getTime();
-                return bDate - aDate;
+                return new Date(b.dateOfTreatment).getTime() - new Date(a.dateOfTreatment).getTime();
             });
+        },
+    });
 
-            setAppointments(sortedAppointments);
-            setError('');
-        } catch (err: any) {
-            setError(err.message || 'Failed to load appointments');
-            console.error('Error fetching appointments:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data: rooms = [] } = useQuery({
+        queryKey: queryKeys.rooms,
+        queryFn: getAllRooms,
+    });
+
+    useEffect(() => {
+        if (appointmentsError) setError((appointmentsError as Error).message || 'Failed to load appointments');
+    }, [appointmentsError]);
+
+    const setAppointmentsCache = (updater: (prev: Appointment[]) => Appointment[]) =>
+        queryClient.setQueryData<Appointment[]>(appointmentsKey, (prev = []) => updater(prev));
 
     const handleAddAppointment = () => {
         setModalMode('add');
@@ -150,17 +136,17 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
         try{
         if (modalMode === 'add') {
             const newAppointment = await createAppointment(data);
-            setAppointments(prev => [...prev, newAppointment]);
+            setAppointmentsCache(prev => [...prev, newAppointment]);
             setSuccessMessage('Appointment created successfully!');
         } else {
             if (!selectedAppointment) {
                 throw new Error('No appointment selected for update');
             }
             const updatedAppointment = await updateAppointment(selectedAppointment.id, data);
-            setAppointments(prev =>
+            setAppointmentsCache(prev =>
                 prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a)
             );
-            
+
             // Update detail panel if this appointment is currently displayed
             if (detailAppointment?.id === updatedAppointment.id) {
                 setDetailAppointment(updatedAppointment);
@@ -182,7 +168,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const handleMoveAppointment = async (id: string, newDateOfTreatment: string, roomId: string | null) => {
         try {
             const updatedAppointment = await updateAppointment(id, { dateOfTreatment: newDateOfTreatment, roomId });
-            setAppointments(prev => prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
+            setAppointmentsCache(prev => prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a));
             if (detailAppointment?.id === updatedAppointment.id) {
                 setDetailAppointment(updatedAppointment);
             }
@@ -198,10 +184,10 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const handleStatusUpdate = async (id: string, status: AppointmentStatus) => {
        try {
          const updatedAppointment = await updateAppointmentStatus(id, status);
-         setAppointments(prev =>
+         setAppointmentsCache(prev =>
              prev.map(a => a.id === updatedAppointment.id ? updatedAppointment : a)
          );
-         
+
          // Update detail panel
          if (detailAppointment?.id === updatedAppointment.id) {
              setDetailAppointment(updatedAppointment);
@@ -218,7 +204,7 @@ export function AppointmentsPage({ token }: AppointmentsPageProps) {
     const handleDeleteAppointment = async (id: string) => {
         try {
             await deleteAppointment(id);
-            setAppointments(prev => prev.filter(a => a.id !== id));
+            setAppointmentsCache(prev => prev.filter(a => a.id !== id));
             setDetailAppointment(null);
             setError('');
             setSuccessMessage('Appointment Deleted Successfully');

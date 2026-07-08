@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
     Search,
     Plus,
@@ -28,8 +29,6 @@ import {
     TREATMENT_STATUS_ORDER,
     TREATMENT_STATUS_CONFIG,
 } from '../types/treatment';
-import { Patient } from '../types/patient';
-import { User as UserType } from '../types/user';
 import { TreatmentForm } from '../components/treatments/TreatmentForm';
 import { TreatmentDetailPanel } from '../components/treatments/TreatmentDetailPanel';
 import { TreatmentBoard } from '../components/treatments/TreatmentBoard';
@@ -38,6 +37,7 @@ import { Modal } from '../components/ui/Modal';
 import { EmptyState } from '../components/ui/EmptyState';
 import { toast } from '../components/ui/Toaster';
 import { getAvatarColor } from '../utils/avatarColor';
+import { queryKeys } from '../lib/queryKeys';
 
 interface TreatmentsPageProps {
     token: string;
@@ -47,11 +47,27 @@ interface TreatmentsPageProps {
 const ITEMS_PER_PAGE = 10;
 
 export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPageProps) {
-    const [treatments, setTreatments] = useState<Treatment[]>([]);
-    const [patients, setPatients] = useState<Patient[]>([]);
-    const [doctors, setDoctors] = useState<UserType[]>([]);
-    const [loading, setLoading] = useState(true);
+    const queryClient = useQueryClient();
+    const {
+        data: treatments = [],
+        isLoading: loading,
+        error: treatmentsError,
+    } = useQuery({
+        queryKey: queryKeys.treatments(),
+        queryFn: async () => (await getTreatments(token)).data,
+    });
+    const { data: patients = [] } = useQuery({
+        queryKey: queryKeys.patients,
+        queryFn: async () => (await getPatients(token)).data,
+    });
+    const { data: doctors = [] } = useQuery({
+        queryKey: ['staff', 'DOCTOR'],
+        queryFn: async () => (await getAllStaff(token, { role: 'DOCTOR' })).data,
+    });
     const [error, setError] = useState('');
+
+    const setTreatmentsCache = (updater: (prev: Treatment[]) => Treatment[]) =>
+        queryClient.setQueryData<Treatment[]>(queryKeys.treatments(), (prev = []) => updater(prev));
 
     const [viewMode, setViewMode] = useState<'board' | 'table'>('board');
 
@@ -75,26 +91,8 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchData();
-    }, [token]);
-
-    const fetchData = async () => {
-        try {
-            setLoading(true);
-            const [treatmentsRes, patientsRes, staffRes] = await Promise.all([
-                getTreatments(token),
-                getPatients(token),
-                getAllStaff(token, { role: 'DOCTOR' }),
-            ]);
-            setTreatments(treatmentsRes.data);
-            setPatients(patientsRes.data);
-            setDoctors(staffRes.data);
-        } catch (err: any) {
-            setError(err.message || 'Failed to load data');
-        } finally {
-            setLoading(false);
-        }
-    };
+        if (treatmentsError) setError((treatmentsError as Error).message || 'Failed to load data');
+    }, [treatmentsError]);
 
     const filteredTreatments = useMemo(() => {
         let result = [...treatments];
@@ -151,7 +149,7 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
     const handleDeleteTreatment = async (id: string) => {
         try {
             await deleteTreatment(id, token);
-            setTreatments((prev) => prev.filter((t) => t.id !== id));
+            setTreatmentsCache((prev) => prev.filter((t) => t.id !== id));
             setDeleteConfirmId(null);
             toast.success('Treatment deleted successfully');
         } catch (err: any) {
@@ -164,19 +162,19 @@ export function TreatmentsPage({ token, onNavigateToPatient }: TreatmentsPagePro
         if (!current || current.status === status) return;
 
         // Optimistic update
-        setTreatments((prev) => prev.map((t) => (t.id === treatmentId ? { ...t, status } : t)));
+        setTreatmentsCache((prev) => prev.map((t) => (t.id === treatmentId ? { ...t, status } : t)));
 
         try {
             await updateTreatmentStatus(treatmentId, status, token);
         } catch (err: any) {
             // Revert on failure
-            setTreatments((prev) => prev.map((t) => (t.id === treatmentId ? current : t)));
+            setTreatmentsCache((prev) => prev.map((t) => (t.id === treatmentId ? current : t)));
             toast.error(err.message || 'Failed to update treatment status');
         }
     };
 
     const handleFormSuccess = (treatment: Treatment) => {
-        setTreatments((prev) => {
+        setTreatmentsCache((prev) => {
             const exists = prev.some((t) => t.id === treatment.id);
             return exists ? prev.map((t) => (t.id === treatment.id ? treatment : t)) : [treatment, ...prev];
         });

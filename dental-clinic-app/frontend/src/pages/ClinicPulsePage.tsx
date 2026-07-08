@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
     CheckCircle2,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getClinicPulse } from '../services/report.service';
-import type { ClinicPulseData, ClinicPulseScheduleItem, ClinicPulseRoomStatus } from '../types/report.types';
+import type { ClinicPulseScheduleItem, ClinicPulseRoomStatus } from '../types/report.types';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -25,6 +25,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { Button } from '../components/ui/Button';
 import { AnimatedNumber } from '../components/ui/AnimatedNumber';
 import { riseIn, staggerContainer } from '../lib/motion';
+import { queryKeys } from '../lib/queryKeys';
 
 const currency = (n: number) => `$${Math.round(n).toLocaleString()}`;
 
@@ -204,31 +205,16 @@ function ScheduleRow({ item }: { item: ClinicPulseScheduleItem }) {
 
 export function ClinicPulsePage() {
     const { token, user } = useAuth();
-    const [data, setData] = useState<ClinicPulseData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!token) {
-            setLoading(false);
-            return;
-        }
-        let cancelled = false;
-        setLoading(true);
-        getClinicPulse(token)
-            .then((res) => {
-                if (!cancelled) setData(res.data);
-            })
-            .catch((err) => {
-                if (!cancelled) setError(err?.message || 'Failed to load clinic pulse');
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [token]);
+    const {
+        data,
+        isLoading: loading,
+        error: queryError,
+    } = useQuery({
+        queryKey: queryKeys.clinicPulse,
+        queryFn: async () => (await getClinicPulse(token!)).data,
+        enabled: !!token,
+    });
+    const error = queryError ? (queryError as Error).message || 'Failed to load clinic pulse' : null;
 
     if (loading) {
         return (

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getExpenses, deleteExpense, approveExpense } from '../../services/expense.service';
 import { Expense } from '../../types/expense.types';
+import { queryKeys } from '../../lib/queryKeys';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseDetailModal } from './ExpenseDetailModal';
 import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Clock, Receipt } from 'lucide-react';
@@ -31,9 +33,21 @@ const formatShortDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    data: expenses = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: fetchExpenses,
+  } = useQuery({
+    queryKey: queryKeys.expenses,
+    queryFn: async () => {
+      const response: any = await getExpenses(token);
+      if (Array.isArray(response)) return response as Expense[];
+      if (response && response.data) return response.data as Expense[];
+      throw new Error(response?.message || 'Failed to load expenses');
+    },
+  });
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'An error occurred') : '';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
@@ -49,31 +63,6 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
   const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-
-  const fetchExpenses = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await getExpenses(token);
-      const anyRes: any = response;
-      if (Array.isArray(anyRes)) {
-        setExpenses(anyRes);
-      } else if (anyRes && anyRes.data) {
-        setExpenses(anyRes.data);
-      } else {
-        setError(anyRes?.message || 'Failed to load expenses');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchExpenses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
 
   useEffect(() => {
     setCurrentPage(1);
