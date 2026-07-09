@@ -68,20 +68,24 @@ Express + Prisma + PostgreSQL backend — with JWT auth and role-based access co
 
 <table>
   <tr>
+    <td width="50%"><img src="docs/screenshots/reports.png" alt="Reports and analytics" /><p align="center"><strong>Reports</strong> — a health snapshot: KPI strip, a no-show callout, and one unified chart system.</p></td>
+    <td width="50%"><img src="docs/screenshots/permissions.png" alt="Granular permission editor" /><p align="center"><strong>Permissions</strong> — grant/revoke View · Create · Update · Delete per feature, per staff member.</p></td>
+  </tr>
+  <tr>
     <td width="50%"><img src="docs/screenshots/patients.png" alt="Patients records table" /><p align="center"><strong>Patients</strong> — a sortable records table with next appointment, balance, last visit and status.</p></td>
     <td width="50%"><img src="docs/screenshots/patient-detail.png" alt="Patient detail" /><p align="center"><strong>Patient record</strong> — balance, alerts, next appointment and a live activity feed.</p></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/screenshots/appointments.png" alt="Appointments" /><p align="center"><strong>Appointments</strong> — chair/day planner and a date-grouped list with status pills.</p></td>
-    <td width="50%"><img src="docs/screenshots/treatments.png" alt="Treatments board" /><p align="center"><strong>Treatments</strong> — a Kanban board of treatment plans by clinical status.</p></td>
+    <td width="50%"><img src="docs/screenshots/appointments-schedule.png" alt="Chair / day schedule planner" /><p align="center"><strong>Scheduling</strong> — the chair/day planner: drag to reschedule, drag markers to zoom.</p></td>
+    <td width="50%"><img src="docs/screenshots/appointments.png" alt="Appointments table" /><p align="center"><strong>Appointments</strong> — a date-grouped table with search and status pills.</p></td>
   </tr>
   <tr>
+    <td width="50%"><img src="docs/screenshots/treatments.png" alt="Treatments board" /><p align="center"><strong>Treatments</strong> — a Kanban board of treatment plans by clinical status.</p></td>
     <td width="50%"><img src="docs/screenshots/finances-payments.png" alt="Finances payments" /><p align="center"><strong>Finances</strong> — payments and expenses as one system with summary strips.</p></td>
-    <td width="50%"><img src="docs/screenshots/reports.png" alt="Reports and analytics" /><p align="center"><strong>Reports</strong> — revenue, payment status, appointments and treatment analytics.</p></td>
   </tr>
   <tr>
     <td width="50%"><img src="docs/screenshots/staff-profile.png" alt="Staff profile" /><p align="center"><strong>Staff</strong> — a management view with per-person metrics, schedule and access.</p></td>
-    <td width="50%"><img src="docs/screenshots/login.png" alt="Login" /><p align="center"><strong>Sign in</strong> — branded, role-based login.</p></td>
+    <td width="50%"><img src="docs/screenshots/dashboard.png" alt="Clinic Pulse dashboard" /><p align="center"><strong>Clinic Pulse</strong> — the live command center that opens the app.</p></td>
   </tr>
 </table>
 
