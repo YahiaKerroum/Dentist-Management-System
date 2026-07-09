@@ -10,6 +10,8 @@ import { Payment } from '../types/payment.types';
 import { getPatientOdontogram, upsertToothStatus } from '../services/tooth.service';
 import { PatientToothRecord, ToothStatus } from '../types/tooth';
 import { Odontogram } from '../components/patients/Odontogram';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Loader2 } from 'lucide-react';
 import {
   Calendar,
   Phone,
@@ -250,18 +252,19 @@ export function PatientDetailPanel({
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const apptStatusPill = (status: string): { chip: string; dot: string } => {
     switch (status) {
       case 'SCHEDULED':
-        return 'bg-blue-100 text-blue-800';
+        return { chip: 'bg-info-50 text-info-700', dot: 'bg-info-500' };
+      case 'CHECKED_IN':
+      case 'IN_PROGRESS':
+        return { chip: 'bg-warning-50 text-warning-700', dot: 'bg-warning-500' };
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return { chip: 'bg-success-50 text-success-700', dot: 'bg-success-500' };
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
-      case 'NO_SHOW':
-        return 'bg-surface-100 text-surface-800';
+        return { chip: 'bg-danger-50 text-danger-700', dot: 'bg-danger-500' };
       default:
-        return 'bg-surface-100 text-surface-800';
+        return { chip: 'bg-surface-100 text-surface-500', dot: 'bg-surface-400' };
     }
   };
 
@@ -511,7 +514,7 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('documents')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'documents'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
+                  ? 'border-b-2 border-primary-500 text-primary-700'
                   : 'text-surface-600 hover:text-surface-900'
               }`}
             >
@@ -614,124 +617,98 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'treatments' && (
-            <div className="bg-white rounded-lg border border-surface-200 p-6">
+            <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
               {loadingTreatments ? (
-                <div className="flex flex-col justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-surface-500">Loading treatments...</p>
+                <div className="flex items-center justify-center gap-3 py-16 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading treatments…</span>
                 </div>
               ) : treatmentsError ? (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                <div className="m-4 rounded-lg border border-danger-100 bg-danger-50 p-4 text-sm text-danger-700">
                   {treatmentsError}
                 </div>
               ) : treatments.length === 0 ? (
-                <div className="text-center py-8 text-surface-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No treatment records found for this patient</p>
-                </div>
+                <EmptyState icon={Stethoscope} title="No treatments yet" description="Logged treatments for this patient will appear here." />
               ) : (
-                <div className="space-y-3">
-                  {treatments.map((treatment) => (
-                    <div key={treatment.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {treatment.typeOfTreatment.replace(/_/g, ' ')}
-                          </p>
-                          <p className="text-xs text-surface-600 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(treatment.dateOfTreatment).toLocaleDateString()}
-                          </p>
+                <div className="divide-y divide-surface-100">
+                  {treatments.map((treatment) => {
+                    const cfg = TREATMENT_STATUS_CONFIG[treatment.status];
+                    return (
+                      <div key={treatment.id} className="px-5 py-3.5 transition-colors hover:bg-surface-50">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-surface-900">{titleType(treatment.typeOfTreatment)}</p>
+                              <span
+                                className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                style={{ backgroundColor: cfg.bgColor, color: cfg.color }}
+                              >
+                                {cfg.label}
+                              </span>
+                              {treatment.followUpRequired && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-[11px] font-medium text-warning-700">
+                                  <AlertCircle className="h-3 w-3" /> Follow-up
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-xs text-surface-500">
+                              Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
+                              {treatment.teeth.length > 0 && <span> · Teeth {treatment.teeth.map((t) => t.toothNumber).join(', ')}</span>}
+                            </p>
+                            {treatment.notes && <p className="mt-1.5 text-sm text-surface-600">{treatment.notes}</p>}
+                          </div>
+                          <span className="shrink-0 text-xs text-surface-400 tabular-nums">{fullDate(treatment.dateOfTreatment)}</span>
                         </div>
-                        <span
-                          className="px-2 py-1 text-xs rounded font-medium"
-                          style={{ backgroundColor: TREATMENT_STATUS_CONFIG[treatment.status].bgColor, color: TREATMENT_STATUS_CONFIG[treatment.status].color }}
-                        >
-                          {TREATMENT_STATUS_CONFIG[treatment.status].label}
-                        </span>
                       </div>
-                      {treatment.notes && (
-                        <p className="text-sm text-surface-700 mb-2">{treatment.notes}</p>
-                      )}
-                      {treatment.procedure && (
-                        <p className="text-xs text-surface-600 mb-2">
-                          <span className="font-semibold">Procedure:</span> {treatment.procedure}
-                        </p>
-                      )}
-                      <div className="flex justify-between text-xs text-surface-600">
-                        <span>
-                          Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
-                        </span>
-                        {treatment.teeth.length > 0 && (
-                          <span>Teeth: {treatment.teeth.map((t) => t.toothNumber).join(', ')}</span>
-                        )}
-                      </div>
-                      {treatment.followUpRequired && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-blue-600">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>Follow-up required</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
 
           {activeTab === 'appointments' && (
-            <div className="bg-white rounded-lg border border-surface-200 p-6">
+            <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
               {loadingAppointments ? (
-                <div className="flex flex-col justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-surface-500">Loading appointments...</p>
+                <div className="flex items-center justify-center gap-3 py-16 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading appointments…</span>
                 </div>
               ) : appointmentsError ? (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                <div className="m-4 rounded-lg border border-danger-100 bg-danger-50 p-4 text-sm text-danger-700">
                   {appointmentsError}
                 </div>
               ) : appointments.length === 0 ? (
-                <div className="text-center py-8 text-surface-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No appointments found for this patient</p>
-                </div>
+                <EmptyState icon={Calendar} title="No appointments" description="This patient has no appointment history yet." />
               ) : (
-                <div className="space-y-3">
-                  {appointments.map((appt) => {
+                <div className="divide-y divide-surface-100">
+                  {[...appointments].reverse().map((appt) => {
+                    const pill = apptStatusPill(appt.status);
                     const isPast = new Date(appt.dateOfTreatment) < new Date();
                     return (
-                      <div key={appt.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {appt.typeOfTreatment ? appt.typeOfTreatment.replace(/_/g, ' ') : 'Appointment'}
+                      <div key={appt.id} className="flex items-start justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-surface-50">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-surface-900">
+                              {appt.typeOfTreatment ? titleType(appt.typeOfTreatment) : 'Appointment'}
                             </p>
-                            <p className="text-xs text-surface-600 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(appt.dateOfTreatment).toLocaleDateString()} at{' '}
-                              {new Date(appt.dateOfTreatment).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                              {isPast && <span className="ml-2 text-surface-500">(Past)</span>}
-                            </p>
-                          </div>
-                          <span className={`px-2 py-1 text-xs rounded font-medium ${getStatusColor(appt.status)}`}>
-                            {appt.status.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                        {appt.notes && (
-                          <p className="text-sm text-surface-700 mb-2">{appt.notes}</p>
-                        )}
-                        <div className="flex justify-between text-xs text-surface-600">
-                          {appt.doctor && (
-                            <span>
-                              Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${pill.chip}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} />
+                              {titleType(appt.status)}
                             </span>
-                          )}
-                          {appt.teethInvolved && appt.teethInvolved.length > 0 && (
-                            <span>Teeth: {appt.teethInvolved.join(', ')}</span>
-                          )}
+                          </div>
+                          <p className="mt-1 text-xs text-surface-500">
+                            {appt.doctor && <>Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}</>}
+                            {appt.teethInvolved && appt.teethInvolved.length > 0 && <span> · Teeth {appt.teethInvolved.join(', ')}</span>}
+                          </p>
+                          {appt.notes && <p className="mt-1.5 text-sm text-surface-600">{appt.notes}</p>}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm text-surface-700 tabular-nums">{fullDate(appt.dateOfTreatment)}</p>
+                          <p className="text-xs text-surface-400 tabular-nums">
+                            {new Date(appt.dateOfTreatment).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {isPast && ' · Past'}
+                          </p>
                         </div>
                       </div>
                     );
@@ -742,29 +719,29 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'documents' && (
-            <div className="bg-white rounded-lg border border-surface-200 p-6">
+            <div className="rounded-xl border border-surface-200 bg-white p-6 shadow-xs">
 
               {documentsError && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded flex gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-800">{documentsError}</p>
+                <div className="mb-4 flex gap-2 rounded-lg border border-danger-100 bg-danger-50 p-4">
+                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-danger-600" />
+                  <p className="text-sm text-danger-700">{documentsError}</p>
                 </div>
               )}
               {documentsSuccess && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded flex gap-2">
-                  <svg className="w-5 h-5 text-green-700 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" stroke="currentColor" strokeWidth="2"/></svg>
-                  <p className="text-sm text-green-800">{documentsSuccess}</p>
+                <div className="mb-4 flex gap-2 rounded-lg border border-success-100 bg-success-50 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-success-600" />
+                  <p className="text-sm text-success-700">{documentsSuccess}</p>
                 </div>
               )}
 
-              <div className="mb-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Documents</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-display text-lg font-semibold tracking-tight text-surface-900">Documents</h3>
                 {!showUploadForm && (
                   <button
                     onClick={() => setShowUploadForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    className="flex items-center gap-2 rounded-md bg-gradient-to-b from-primary-500 to-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:from-primary-600 hover:to-primary-700"
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="h-4 w-4" />
                     Upload Document
                   </button>
                 )}
@@ -782,7 +759,7 @@ export function PatientDetailPanel({
                         placeholder="e.g., X-ray report, Prescription"
                         value={uploadData.name}
                         onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:shadow-focus focus:outline-none"
                       />
                     </div>
                     <div>
@@ -792,7 +769,7 @@ export function PatientDetailPanel({
                       <select
                         value={uploadData.type}
                         onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-surface-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:shadow-focus focus:outline-none"
                       >
                         <option value="">Select a type</option>
                         <option value="X-RAY">X-Ray</option>
@@ -824,7 +801,7 @@ export function PatientDetailPanel({
                       <button
                         type="submit"
                         disabled={uploading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-surface-400 transition-colors text-sm"
+                        className="rounded-lg bg-gradient-to-b from-primary-500 to-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                       >
                         {uploading ? 'Uploading...' : 'Upload'}
                       </button>
@@ -834,73 +811,69 @@ export function PatientDetailPanel({
               )}
 
               {documentsLoading ? (
-                <div className="text-center py-8 text-surface-500">
-                  <div className="animate-spin inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mb-2"></div>
-                  <p className="text-sm">Loading documents...</p>
+                <div className="flex items-center justify-center gap-3 py-12 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading documents…</span>
                 </div>
               ) : documents.length === 0 ? (
-                <div className="text-center py-8 text-surface-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No documents uploaded yet</p>
-                  <p className="text-xs mt-2">Upload medical documents, X-rays, prescriptions, and reports here</p>
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="No documents uploaded yet"
+                  description="X-rays, prescriptions, reports and invoices for this patient will live here."
+                  action={
+                    !showUploadForm ? (
+                      <button
+                        onClick={() => setShowUploadForm(true)}
+                        className="inline-flex items-center gap-2 rounded-md border border-surface-300 px-3 py-1.5 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-100"
+                      >
+                        <Upload className="h-4 w-4" /> Upload document
+                      </button>
+                    ) : undefined
+                  }
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-surface-100 overflow-hidden rounded-lg border border-surface-200">
                   {documents.map((doc) => (
-                    <div key={doc.id} className="border border-surface-200 rounded p-4 hover:bg-surface-50 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3 flex-1">
-                          <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          <div>
-                              <a
-                                href={doc.filePath}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 group"
-                              >
-                                {doc.name}
-                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </a>
-                            <p className="text-xs text-surface-600 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(doc.createdAt).toLocaleDateString()}
+                    <div key={doc.id} className="px-4 py-3 transition-colors hover:bg-surface-50">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-info-50 text-info-600">
+                            <FileText className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <a
+                              href={doc.filePath}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center gap-1 truncate font-medium text-surface-900 hover:text-primary-700 hover:underline"
+                            >
+                              {doc.name}
+                              <ExternalLink className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+                            </a>
+                            <p className="truncate text-xs text-surface-400">
+                              <span className="tabular-nums">{fullDate(doc.createdAt)}</span> · {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium">
-                            {doc.type}
-                          </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded-full bg-info-50 px-2 py-0.5 text-[11px] font-medium text-info-700">{doc.type}</span>
                           {doc.uploadedBy.id === currentUserId && (
                             <button
                               onClick={() => setDeleteConfirmDocId(doc.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                               title="Delete document"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-surface-600 mb-2">
-                        Uploaded by: {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}
-                      </p>
-                      
+
                       {deleteConfirmDocId === doc.id && (
-                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded flex gap-2 items-center">
-                          <p className="text-xs text-red-800 flex-1">Are you sure you want to delete this document?</p>
-                          <button
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirmDocId(null)}
-                            className="px-2 py-1 bg-surface-300 text-surface-700 text-xs rounded hover:bg-surface-400 transition-colors"
-                          >
-                            Cancel
-                          </button>
+                        <div className="mt-2 flex items-center gap-2 rounded-lg border border-danger-100 bg-danger-50 p-2">
+                          <p className="flex-1 text-xs text-danger-700">Delete this document?</p>
+                          <button onClick={() => handleDeleteDocument(doc.id)} className="rounded-md bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700">Delete</button>
+                          <button onClick={() => setDeleteConfirmDocId(null)} className="rounded-md px-2 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100">Cancel</button>
                         </div>
                       )}
                     </div>
