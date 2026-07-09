@@ -35,12 +35,6 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
     fetchData();
   }, [token]);
 
-  // Custom label renderer
-  const renderLabel = (entry: any) => {
-    const percent = entry.percent || 0;
-    return percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '';
-  };
-
   if (loading) {
     return (
       <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
@@ -78,10 +72,10 @@ export const CommonTreatmentsChart: React.FC<CommonTreatmentsChartProps> = ({ to
               data={data}
               cx="50%"
               cy="50%"
+              innerRadius={55}
               outerRadius={80}
               paddingAngle={2}
               dataKey="value"
-              label={renderLabel}
             >
               {data.map((_entry, index) => (
                 <Cell key={`cell-${index}`} fill={categoricalColor(index)} />

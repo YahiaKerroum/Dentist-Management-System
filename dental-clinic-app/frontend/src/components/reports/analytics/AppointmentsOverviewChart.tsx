@@ -8,11 +8,13 @@ interface AppointmentsOverviewChartProps {
   token: string;
 }
 
+// Semantic discipline: completed = good (green), scheduled = neutral (blue),
+// cancelled = warning (amber), no-show = bad (red) so the alarming number stands out.
 const COLORS = {
   scheduled: CHART_STATUS.neutral,
   completed: CHART_STATUS.positive,
-  cancelled: CHART_STATUS.negative,
-  noShow: CHART_STATUS.attention,
+  cancelled: CHART_STATUS.attention,
+  noShow: CHART_STATUS.negative,
 };
 
 export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps> = ({ token }) => {
@@ -46,10 +48,10 @@ export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps>
     fetchData();
   }, [token]);
 
-  // Custom label renderer
+  // Short % labels only — the legend carries the names (keeps the donut clean).
   const renderLabel = (entry: any) => {
     const percent = entry.percent || 0;
-    return `${entry.name} ${(percent * 100).toFixed(0)}%`;
+    return percent > 0.05 ? `${(percent * 100).toFixed(0)}%` : '';
   };
 
   if (loading) {
@@ -87,8 +89,8 @@ export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps>
               data={data}
               cx="50%"
               cy="50%"
-              innerRadius={60}
-              outerRadius={90}
+              innerRadius={55}
+              outerRadius={80}
               paddingAngle={2}
               dataKey="value"
               label={renderLabel}
