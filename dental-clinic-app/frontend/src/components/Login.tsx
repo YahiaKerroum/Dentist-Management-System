@@ -1,11 +1,47 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { User, Lock, LogIn, ChevronDown } from 'lucide-react';
 import { login } from '../services/auth.service';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
-import { User, Lock, LogIn } from 'lucide-react';
+import { BrandMark } from './ui/BrandMark';
+import { easeOutExpo } from '../lib/motion';
 
 interface LoginProps {
   onLoginSuccess: (token: string) => void;
+}
+
+const DEMO_ACCOUNTS = [
+  { role: 'Manager', user: 'manager', pass: 'password123' },
+  { role: 'Doctor', user: 'doctor', pass: 'password123' },
+  { role: 'Assistant', user: 'assistant', pass: 'password123' },
+];
+
+/** Slow-drawing ECG trace across the brand panel. */
+function PulseTrace() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-x-0 top-[28%] h-24 w-full -translate-y-1/2"
+      viewBox="0 0 600 100"
+      preserveAspectRatio="none"
+      fill="none"
+      aria-hidden
+    >
+      <motion.path
+        d="M0,55 H120 L138,20 L158,88 L176,40 L188,55 H320 L338,10 L358,92 L376,55 H600"
+        stroke="rgba(125, 218, 184, 0.35)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{
+          pathLength: { duration: 2.4, ease: 'easeInOut', repeat: Infinity, repeatDelay: 4 },
+          opacity: { duration: 0.4 },
+        }}
+      />
+    </svg>
+  );
 }
 
 export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
@@ -13,16 +49,15 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showDemo, setShowDemo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
       const response = await login(username, password);
       if (response.success && response.data.accessToken) {
-        // Use accessToken from backend response
         onLoginSuccess(response.data.accessToken);
       } else {
         setError(response.message || 'Login failed');
@@ -34,146 +69,151 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  const fillDemoCredentials = (user: string, pass: string) => {
-    setUsername(user);
-    setPassword(pass);
-  };
-
   return (
-    <div 
-      className="min-h-screen flex items-center justify-center p-4 relative"
-      style={{
-        backgroundImage: 'url(/backgrounds/dental-implants-surgery-concept-pen-tool-created-clipping-path-included-jpeg-easy-composite.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Dark overlay for better readability */}
-      <div className="absolute inset-0 bg-black/50"></div>
+    <div className="flex min-h-screen bg-white">
+      {/* Brand panel */}
+      <div className="relative hidden w-1/2 flex-col justify-between overflow-hidden bg-surface-950 px-12 py-12 lg:flex">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(circle at 15% 20%, rgba(38,163,126,0.35), transparent 40%), radial-gradient(circle at 85% 80%, rgba(38,163,126,0.25), transparent 45%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px)',
+            backgroundSize: '26px 26px',
+          }}
+        />
+        <PulseTrace />
 
-      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-        {/* Header with gradient */}
-        <div className="bg-gradient-to-r from-mint-500 to-mint-400 px-8 py-10 text-center">
-          <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-            <img 
-              src="/icons/dental-logo.png" 
-              alt="DentalCare Logo" 
-              className="w-14 h-14 object-contain"
-            />
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative z-10 flex items-center gap-3"
+        >
+          <BrandMark className="h-10 w-10" />
+          <div>
+            <span className="font-display text-lg font-semibold tracking-tight text-white">
+              Clinic<span className="text-primary-400">Pulse</span>
+            </span>
+            <p className="text-[11px] leading-tight text-surface-500">Dental Practice OS</p>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">DentalCare</h1>
-          <p className="text-mint-100">Clinic Management System</p>
-        </div>
+        </motion.div>
 
-        {/* Form section */}
-        <div className="px-8 py-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-2 text-center">Welcome Back</h2>
-          <p className="text-gray-600 text-center mb-6">Sign in to access your dashboard</p>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: easeOutExpo }}
+          className="relative z-10 max-w-md"
+        >
+          <h1 className="font-display text-4xl font-semibold leading-tight tracking-tight text-white">
+            Run your practice by its pulse.
+          </h1>
+          <p className="mt-4 text-surface-400">
+            Every chair, every patient, every payment — one live view for the whole dental team.
+          </p>
+        </motion.div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded">
-              <p className="font-medium">Error</p>
-              <p className="text-sm">{error}</p>
+        <p className="relative z-10 text-xs text-surface-500">
+          © {new Date().getFullYear()} Clinic Pulse — Dental Practice Management
+        </p>
+      </div>
+
+      {/* Form panel */}
+      <div className="flex w-full flex-col items-center justify-center px-6 py-12 lg:w-1/2">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="w-full max-w-sm"
+        >
+          <div className="mb-8 lg:hidden">
+            <div className="flex items-center gap-2">
+              <BrandMark className="h-9 w-9" />
+              <span className="font-display text-base font-semibold tracking-tight text-surface-900">
+                Clinic<span className="text-primary-600">Pulse</span>
+              </span>
             </div>
+          </div>
+
+          <h2 className="font-display text-2xl font-semibold tracking-tight text-surface-900">Welcome back</h2>
+          <p className="mt-1.5 text-sm text-surface-500">Sign in to see today's pulse</p>
+
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-6 rounded-md border border-danger-100 bg-danger-50 px-4 py-3 text-sm text-danger-700"
+            >
+              {error}
+            </motion.div>
           )}
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Username</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mint-400 focus:border-transparent transition"
-                  placeholder="Enter your username"
-                  required
-                />
-              </div>
-            </div>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <Input
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              leadingIcon={<User size={16} />}
+              autoComplete="username"
+              required
+            />
+            <Input
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              leadingIcon={<Lock size={16} />}
+              autoComplete="current-password"
+              required
+            />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-mint-400 focus:border-transparent transition"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 text-base font-semibold flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-5 h-5" />
-                  Sign In
-                </>
-              )}
+            <Button type="submit" isLoading={loading} className="w-full" size="lg">
+              {!loading && <LogIn className="h-4 w-4" />}
+              Sign in
             </Button>
           </form>
 
-          {/* Demo Accounts */}
-          <div className="mt-8 p-5 bg-gradient-to-br from-mint-50 to-mint-100 rounded-xl border border-mint-200">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-mint-200 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-mint-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-sm font-semibold text-gray-700">Demo Accounts</p>
-            </div>
-            <div className="space-y-2">
-              {[
-                { role: 'Manager', user: 'manager', pass: 'password123' },
-                { role: 'Doctor', user: 'doctor', pass: 'password123' },
-                { role: 'Assistant', user: 'assistant', pass: 'password123' }
-              ].map((account) => (
-                <button
-                  key={account.role}
-                  type="button"
-                  onClick={() => fillDemoCredentials(account.user, account.pass)}
-                  className="w-full text-left p-3 bg-white rounded-lg hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-mint-400 group"
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{account.role}</p>
-                      <p className="text-xs text-gray-500 font-mono">{account.user} / {account.pass}</p>
-                    </div>
-                    <div className="text-mint-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
+          <div className="mt-8 border-t border-surface-100 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowDemo((v) => !v)}
+              className="flex items-center gap-1 text-xs font-medium text-surface-400 transition-colors hover:text-surface-600"
+            >
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showDemo ? 'rotate-180' : ''}`} />
+              Demo accounts
+            </button>
+            {showDemo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mt-3 space-y-1.5 overflow-hidden"
+              >
+                {DEMO_ACCOUNTS.map((account) => (
+                  <button
+                    key={account.role}
+                    type="button"
+                    onClick={() => {
+                      setUsername(account.user);
+                      setPassword(account.pass);
+                    }}
+                    className="flex w-full items-center justify-between rounded-md border border-surface-200 px-3 py-2 text-left text-xs transition-colors hover:border-primary-300 hover:bg-primary-50"
+                  >
+                    <span className="font-medium text-surface-700">{account.role}</span>
+                    <span className="font-mono text-surface-400">{account.user} / {account.pass}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
 };
-
-

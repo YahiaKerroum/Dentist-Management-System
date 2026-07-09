@@ -1,35 +1,116 @@
 import { useState, useEffect } from 'react';
-import { getUserProfile, updateUserProfile } from '../services/user.service';
+import { motion } from 'framer-motion';
+import { getUserProfile, updateUserProfile, getUserPermissions } from '../services/user.service';
 import { User, UpdateUserDTO } from '../types/user';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Modal } from '../components/ui/Modal';
-import { 
-    Camera, 
-    Edit2, 
-    Award, 
-    Phone, 
-    Mail, 
-    MapPin, 
-    Calendar, 
+import { Badge } from '../components/ui/Badge';
+import { Card } from '../components/ui/Card';
+import { Skeleton } from '../components/ui/Skeleton';
+import { DialogPanel } from '../components/ui/Dialog';
+import { toast } from '../components/ui/Toaster';
+import { cn } from '../utils/cn';
+import {
+    Pencil,
+    Calendar,
     Clock,
-    TrendingUp,
-    Users
+    ShieldCheck,
+    IdCard,
 } from 'lucide-react';
+
+const PERMISSION_GROUPS: Array<{ key: string; label: string; actions: { label: string; value: string }[] }> = [
+    {
+        key: 'patients',
+        label: 'Patients',
+        actions: [
+            { label: 'View', value: 'patients.view' },
+            { label: 'Create', value: 'patients.create' },
+            { label: 'Update', value: 'patients.update' },
+            { label: 'Delete', value: 'patients.delete' },
+        ],
+    },
+    {
+        key: 'appointments',
+        label: 'Appointments',
+        actions: [
+            { label: 'View', value: 'appointments.view' },
+            { label: 'Create', value: 'appointments.create' },
+            { label: 'Update', value: 'appointments.update' },
+            { label: 'Cancel', value: 'appointments.cancel' },
+        ],
+    },
+    {
+        key: 'treatments',
+        label: 'Treatments',
+        actions: [
+            { label: 'View', value: 'treatments.view' },
+            { label: 'Create', value: 'treatments.create' },
+            { label: 'Update', value: 'treatments.update' },
+            { label: 'Delete', value: 'treatments.delete' },
+        ],
+    },
+    {
+        key: 'payments',
+        label: 'Payments',
+        actions: [
+            { label: 'View', value: 'payment.view' },
+            { label: 'Create', value: 'payment.create' },
+            { label: 'Update', value: 'payment.update' },
+            { label: 'Delete', value: 'payment.delete' },
+        ],
+    },
+    {
+        key: 'expenses',
+        label: 'Expenses',
+        actions: [
+            { label: 'View', value: 'expenses.view' },
+            { label: 'Create', value: 'expenses.create' },
+            { label: 'Update', value: 'expenses.update' },
+            { label: 'Delete', value: 'expenses.delete' },
+        ],
+    },
+    {
+        key: 'documents',
+        label: 'Documents',
+        actions: [
+            { label: 'View', value: 'documents.view' },
+            { label: 'Create', value: 'documents.create' },
+            { label: 'Update', value: 'documents.update' },
+            { label: 'Delete', value: 'documents.delete' },
+        ],
+    },
+];
 
 interface ProfilePageProps {
     token: string;
 }
+
+const ROLE_LABEL: Record<string, string> = {
+    MANAGER: 'Manager',
+    DOCTOR: 'Doctor',
+    ASSISTANT: 'Assistant',
+    RECEPTIONIST: 'Receptionist',
+};
+
+const DEFAULT_WORKING_HOURS = [
+    { day: 'Monday', time: '08:00 AM - 06:00 PM' },
+    { day: 'Tuesday', time: '08:00 AM - 06:00 PM' },
+    { day: 'Wednesday', time: '08:00 AM - 06:00 PM' },
+    { day: 'Thursday', time: '08:00 AM - 06:00 PM' },
+    { day: 'Friday', time: '08:00 AM - 04:00 PM' },
+    { day: 'Saturday', time: 'Closed' },
+    { day: 'Sunday', time: 'Closed' },
+];
 
 export function ProfilePage({ token }: ProfilePageProps) {
     const [user, setUser] = useState<User | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState<UpdateUserDTO>({});
     const [workingHours, setWorkingHours] = useState<any[]>([]);
+    const [permissions, setPermissions] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
 
     useEffect(() => {
         fetchProfile();
@@ -47,22 +128,16 @@ export function ProfilePage({ token }: ProfilePageProps) {
                 specialization: response.data.doctorProfile?.specialization || '',
                 workingTime: response.data.doctorProfile?.workingTime || null,
             });
-            
-            // Initialize working hours for doctors
+
             if (response.data.role === 'DOCTOR' && response.data.doctorProfile?.workingTime) {
                 setWorkingHours(response.data.doctorProfile.workingTime);
             } else if (response.data.role === 'DOCTOR') {
-                // Default working hours template
-                setWorkingHours([
-                    { day: 'Monday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Tuesday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Wednesday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Thursday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Friday', time: '08:00 AM - 04:00 PM' },
-                    { day: 'Saturday', time: 'Closed' },
-                    { day: 'Sunday', time: 'Closed' },
-                ]);
+                setWorkingHours(DEFAULT_WORKING_HOURS);
             }
+
+            getUserPermissions(response.data.id, token)
+                .then((res) => setPermissions(res.data || []))
+                .catch(() => setPermissions([]));
         } catch (err: any) {
             setError(err.message || 'Failed to load profile');
         } finally {
@@ -72,8 +147,7 @@ export function ProfilePage({ token }: ProfilePageProps) {
 
     const calculateYearsExperience = () => {
         if (!user?.createdAt) return 0;
-        const years = new Date().getFullYear() - new Date(user.createdAt).getFullYear();
-        return years;
+        return new Date().getFullYear() - new Date(user.createdAt).getFullYear();
     };
 
     const formatMemberSince = () => {
@@ -82,28 +156,15 @@ export function ProfilePage({ token }: ProfilePageProps) {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData(prev => ({
-            ...prev,
-            [e.target.name]: e.target.value
-        }));
+        setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
     const handleEditClick = () => {
-        // Initialize working hours when opening edit modal
         if (user?.role === 'DOCTOR') {
             if (user.doctorProfile?.workingTime && Array.isArray(user.doctorProfile.workingTime)) {
                 setWorkingHours(user.doctorProfile.workingTime);
             } else {
-                // Default template
-                setWorkingHours([
-                    { day: 'Monday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Tuesday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Wednesday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Thursday', time: '08:00 AM - 06:00 PM' },
-                    { day: 'Friday', time: '08:00 AM - 04:00 PM' },
-                    { day: 'Saturday', time: 'Closed' },
-                    { day: 'Sunday', time: 'Closed' },
-                ]);
+                setWorkingHours(DEFAULT_WORKING_HOURS);
             }
         }
         setIsEditing(true);
@@ -112,22 +173,17 @@ export function ProfilePage({ token }: ProfilePageProps) {
     const handleSave = async () => {
         setSaving(true);
         setError('');
-        setSuccess('');
 
         try {
             const updateData = { ...formData };
-            
-            // Add working hours for doctors
             if (user?.role === 'DOCTOR') {
                 updateData.workingTime = workingHours;
             }
-            
+
             const response = await updateUserProfile(updateData, token);
             setUser(response.data);
             setIsEditing(false);
-            setSuccess('Profile updated successfully');
-            // Clear success message after 3 seconds
-            setTimeout(() => setSuccess(''), 3000);
+            toast.success('Profile updated successfully');
         } catch (err: any) {
             setError(err.message || 'Failed to update profile');
         } finally {
@@ -143,327 +199,211 @@ export function ProfilePage({ token }: ProfilePageProps) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-full">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2" style={{ borderColor: '#3DBEA3' }}></div>
+            <div className="p-8">
+                <Skeleton className="mb-6 h-32" />
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <Skeleton className="h-64 lg:col-span-1" />
+                    <Skeleton className="h-64 lg:col-span-2" />
+                </div>
             </div>
         );
     }
 
-    if (error) {
+    if (error && !user) {
         return (
-            <div className="p-6 flex flex-col items-center justify-center h-full text-center">
-                <div className="text-red-500 text-xl font-semibold mb-2">Error Loading Profile</div>
-                <p className="text-gray-600 mb-4">{error}</p>
-                <Button onClick={() => window.location.reload()}>Retry</Button>
+            <div className="p-8">
+                <Card className="border-danger-100 bg-danger-50 p-6">
+                    <p className="mb-4 text-sm text-danger-700">{error}</p>
+                    <Button variant="destructive" onClick={() => window.location.reload()}>Retry</Button>
+                </Card>
             </div>
         );
     }
 
     if (!user) return null;
 
+    const isDoctor = user.role === 'DOCTOR';
+
     return (
-        <div className="bg-gray-50 min-h-full pb-10">
-            {/* Modern Cover Section with Pattern */}
-            <div className="relative h-64 overflow-visible" style={{ 
-                background: 'linear-gradient(135deg, #1C6B5A 0%, #3DBEA3 50%, #2FA88E 100%)'
-            }}>
-                {/* Decorative Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-10 w-32 h-32 rounded-full border-4 border-white"></div>
-                    <div className="absolute bottom-10 right-20 w-48 h-48 rounded-full border-4 border-white"></div>
-                    <div className="absolute top-1/2 left-1/3 w-20 h-20 rounded-full border-4 border-white"></div>
-                </div>
-
-                {/* Edit Button */}
-                <div className="absolute top-6 right-8 z-10">
-                    <button
-                        onClick={handleEditClick}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 backdrop-blur-md text-white rounded-lg transition-all shadow-lg border border-white/20"
-                    >
-                        <Edit2 className="w-4 h-4" />
-                        <span className="font-medium">Edit Profile</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Profile Picture - Below the header */}
-            <div className="px-8 -mt-20">
-                <div className="relative inline-block">
-                    <div 
-                        className="w-40 h-40 rounded-2xl p-1.5 shadow-2xl"
-                        style={{ background: 'linear-gradient(135deg, #3DBEA3 0%, #2FA88E 100%)' }}
-                    >
-                        <div className="w-full h-full bg-white rounded-xl flex items-center justify-center">
-                            <span className="text-6xl font-bold" style={{ color: '#3DBEA3' }}>
-                                {user.firstName.charAt(0).toUpperCase()}
-                            </span>
+        <div className="mx-auto max-w-4xl p-8">
+            <motion.div
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+                {/* Bio header */}
+                <div className="flex flex-col gap-6 border-b border-surface-200 pb-8 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-5">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-primary-100 text-2xl font-semibold text-primary-700">
+                            {user.firstName.charAt(0).toUpperCase()}
                         </div>
-                    </div>
-                    <button 
-                        className="absolute -bottom-2 -right-2 p-3 rounded-xl text-white shadow-lg border-4 border-white hover:scale-105 transition-transform"
-                        style={{ backgroundColor: '#3DBEA3' }}
-                    >
-                        <Camera className="w-5 h-5" />
-                    </button>
-                </div>
-            </div>
-
-            {/* Profile Info Section */}
-            <div className="px-8 pt-6 pb-6">
-                <div className="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
-                    <div className="flex items-start justify-between mb-6">
                         <div>
-                            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                            <h1 className="font-display text-2xl font-semibold tracking-tight text-surface-900">
                                 {user.firstName} {user.lastName}
                             </h1>
-                            <div className="flex items-center gap-3 mb-4">
-                                <span 
-                                    className="px-4 py-1.5 rounded-full text-sm font-semibold text-white"
-                                    style={{ backgroundColor: '#3DBEA3' }}
-                                >
-                                    {user.role.charAt(0) + user.role.slice(1).toLowerCase()}
-                                </span>
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-surface-500">
+                                <Badge variant="primary">{ROLE_LABEL[user.role] ?? user.role}</Badge>
                                 {user.doctorProfile?.specialization && (
-                                    <span className="px-4 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-full text-sm font-medium">
-                                        {user.doctorProfile.specialization}
-                                    </span>
+                                    <Badge variant="info">{user.doctorProfile.specialization}</Badge>
                                 )}
                             </div>
-                            <div className="flex items-center gap-6 text-gray-600">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                        <Mail className="w-4 h-4" style={{ color: '#3DBEA3' }} />
-                                    </div>
-                                    <span className="text-sm">{user.email}</span>
-                                </div>
+                            <p className="mt-2 flex flex-wrap items-center gap-x-1.5 text-sm text-surface-500">
+                                <span>{user.email}</span>
                                 {user.phone && (
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                            <Phone className="w-4 h-4" style={{ color: '#3DBEA3' }} />
-                                        </div>
-                                        <span className="text-sm">{user.phone}</span>
-                                    </div>
+                                    <>
+                                        <span className="text-surface-300">·</span>
+                                        <span>{user.phone}</span>
+                                    </>
                                 )}
-                            </div>
+                                <span className="text-surface-300">·</span>
+                                <span>Member since {formatMemberSince()}</span>
+                            </p>
                         </div>
+                    </div>
 
-                        {/* Quick Stats */}
-                        {user.role === 'DOCTOR' && (
-                            <div className="flex gap-4">
-                                <div className="text-center px-6 py-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50">
-                                    <p className="text-3xl font-bold text-blue-700">{calculateYearsExperience()}</p>
-                                    <p className="text-xs text-blue-600 font-medium mt-1">Years Exp.</p>
+                    <div className="flex items-center gap-3 sm:self-start">
+                        {isDoctor && (
+                            <div className="flex divide-x divide-surface-200 rounded-md border border-surface-200">
+                                <div className="px-4 py-2 text-center">
+                                    <p className="text-lg font-semibold text-surface-900">{calculateYearsExperience()}</p>
+                                    <p className="text-xs text-surface-500">Years exp.</p>
                                 </div>
-                                <div className="text-center px-6 py-4 rounded-xl" style={{ background: 'linear-gradient(135deg, #E8F5F0 0%, #D5EDE8 100%)' }}>
-                                    <p className="text-3xl font-bold" style={{ color: '#3DBEA3' }}>{user.doctorProfile?.patientCount || 0}</p>
-                                    <p className="text-xs font-medium mt-1" style={{ color: '#2FA88E' }}>Patients</p>
+                                <div className="px-4 py-2 text-center">
+                                    <p className="text-lg font-semibold text-surface-900">{user.doctorProfile?.patientCount || 0}</p>
+                                    <p className="text-xs text-surface-500">Patients</p>
                                 </div>
                             </div>
                         )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Main Content Grid */}
-            <div className="px-8 mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                {/* Left Sidebar */}
-                <div className="space-y-6">
-                    {/* About Card */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <Award className="w-5 h-5" style={{ color: '#3DBEA3' }} />
-                            </div>
-                            <h3 className="font-semibold text-gray-800">About</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Member Since</p>
-                                <p className="text-sm font-semibold text-gray-700">{formatMemberSince()}</p>
-                            </div>
-                            {user.role === 'ASSISTANT' && (
-                                <div>
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Appointments Managed</p>
-                                    <p className="text-sm font-semibold text-gray-700">150+</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Contact Information Card */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <Phone className="w-5 h-5" style={{ color: '#3DBEA3' }} />
-                            </div>
-                            <h3 className="font-semibold text-gray-800">Contact Details</h3>
-                        </div>
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Phone className="w-4 h-4 text-gray-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Phone Number</p>
-                                    <p className="text-sm font-medium text-gray-700 truncate">{user.phone || 'Not provided'}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <Mail className="w-4 h-4 text-gray-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Email Address</p>
-                                    <p className="text-sm font-medium text-gray-700 truncate">{user.email}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0">
-                                    <MapPin className="w-4 h-4 text-gray-500" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">Clinic Location</p>
-                                    <p className="text-sm font-medium text-gray-700">789 Dental Avenue, Medical Center</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Activity Statistics */}
-                    <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                        <div className="flex items-center gap-2 mb-5">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                <TrendingUp className="w-5 h-5" style={{ color: '#3DBEA3' }} />
-                            </div>
-                            <h3 className="font-semibold text-gray-800">Statistics</h3>
-                        </div>
-                        <div className="space-y-3">
-                            {user.role === 'DOCTOR' && user.doctorProfile && (
-                                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-transparent rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <Users className="w-4 h-4 text-blue-600" />
-                                        <span className="text-sm text-gray-700">Total Patients</span>
-                                    </div>
-                                    <span className="text-sm font-bold text-blue-700">{user.doctorProfile.patientCount || 0}</span>
-                                </div>
-                            )}
-                            <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-transparent rounded-lg">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-purple-600" />
-                                    <span className="text-sm text-gray-700">Member Since</span>
-                                </div>
-                                <span className="text-sm font-bold text-purple-700">{formatMemberSince()}</span>
-                            </div>
-                        </div>
+                        <Button variant="secondary" onClick={handleEditClick}>
+                            <Pencil className="h-4 w-4" />
+                            Edit Profile
+                        </Button>
                     </div>
                 </div>
 
-                {/* Right Content - Schedule */}
-                <div className="lg:col-span-2 space-y-6">
-                    {/* Working Schedule - Only for Doctors */}
-                    {user.role === 'DOCTOR' && (
-                        <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: '#E8F5F0' }}>
-                                    <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
-                                </div>
-                                <h3 className="font-semibold text-gray-800">Working Schedule</h3>
-                            </div>
-
-                            <div className="grid gap-3">
-                                {user.doctorProfile?.workingTime && Array.isArray(user.doctorProfile.workingTime) && user.doctorProfile.workingTime.length > 0 ? (
-                                    user.doctorProfile.workingTime.map((schedule: any, index: number) => (
-                                        <div 
-                                            key={index} 
-                                            className="flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
+                {isDoctor && (
+                    <div className="mt-8">
+                        <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-surface-400">Working Schedule</h2>
+                        {user.doctorProfile?.workingTime && Array.isArray(user.doctorProfile.workingTime) && user.doctorProfile.workingTime.length > 0 ? (
+                            <div className="grid grid-cols-7 gap-2">
+                                {user.doctorProfile.workingTime.map((schedule: any, index: number) => {
+                                    const isOpen = schedule.time && schedule.time !== 'Closed';
+                                    const label = (schedule.day || schedule.days || '').toString().slice(0, 3);
+                                    return (
+                                        <div
+                                            key={index}
+                                            className={cn(
+                                                'flex flex-col items-center gap-2 rounded-lg border px-2 py-3 text-center',
+                                                isOpen ? 'border-primary-200 bg-primary-50/50' : 'border-surface-200 bg-surface-50'
+                                            )}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: schedule.time && schedule.time !== 'Closed' ? '#E8F5F0' : '#FEE2E2' }}>
-                                                    <Clock className="w-4 h-4" style={{ color: schedule.time && schedule.time !== 'Closed' ? '#3DBEA3' : '#DC2626' }} />
-                                                </div>
-                                                <span className="text-sm font-semibold text-gray-700">{schedule.day || schedule.days}</span>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-sm text-gray-600 font-medium">{schedule.time || schedule.hours || 'Not set'}</span>
-                                                <span className={`text-xs px-3 py-1.5 rounded-full font-semibold ${
-                                                    schedule.time && schedule.time !== 'Closed'
-                                                        ? 'text-white'
-                                                        : 'bg-red-100 text-red-700'
-                                                }`} style={schedule.time && schedule.time !== 'Closed' ? { backgroundColor: '#3DBEA3' } : {}}>
-                                                    {schedule.time && schedule.time !== 'Closed' ? 'Open' : 'Closed'}
-                                                </span>
-                                            </div>
+                                            <span className={cn('text-xs font-semibold uppercase tracking-wide', isOpen ? 'text-primary-700' : 'text-surface-400')}>
+                                                {label}
+                                            </span>
+                                            <Clock className={cn('h-4 w-4', isOpen ? 'text-primary-500' : 'text-surface-300')} />
+                                            <span className={cn('text-[11px] leading-tight', isOpen ? 'text-surface-700' : 'text-surface-400')}>
+                                                {isOpen ? (schedule.time || schedule.hours) : 'Closed'}
+                                            </span>
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-12">
-                                        <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                                        <p className="text-sm text-gray-500">No working hours set.</p>
-                                        <p className="text-xs text-gray-400 mt-1">Click Edit Profile to add your schedule.</p>
-                                    </div>
-                                )}
+                                    );
+                                })}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="rounded-lg border border-dashed border-surface-200 py-10 text-center">
+                                <Calendar className="mx-auto mb-3 h-8 w-8 text-surface-300" />
+                                <p className="text-sm text-surface-500">No working hours set.</p>
+                                <p className="mt-1 text-xs text-surface-400">Click Edit Profile to add your schedule.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
 
-                    {/* Messages */}
-                    {error && (
-                        <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-2">
-                            <span className="font-bold">Error:</span> {error}
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+                    <Card className="p-5 lg:col-span-1">
+                        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-surface-400">
+                            <IdCard className="h-3.5 w-3.5" />
+                            Account Details
+                        </h2>
+                        <dl className="space-y-3 text-sm">
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Username</dt>
+                                <dd className="font-medium text-surface-800">@{user.username}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Role</dt>
+                                <dd className="font-medium text-surface-800">{ROLE_LABEL[user.role] ?? user.role}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="shrink-0 text-surface-500">User ID</dt>
+                                <dd className="truncate font-mono text-xs text-surface-500">{user.id}</dd>
+                            </div>
+                            <div className="flex items-center justify-between gap-3">
+                                <dt className="text-surface-500">Last updated</dt>
+                                <dd className="font-medium text-surface-800">
+                                    {new Date(user.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </dd>
+                            </div>
+                        </dl>
+                    </Card>
+
+                    <Card className="p-5 lg:col-span-2">
+                        <h2 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-surface-400">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            My Access
+                        </h2>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {PERMISSION_GROUPS.map((group) => (
+                                <div key={group.key} className="rounded-lg border border-surface-200 p-3">
+                                    <p className="mb-2 text-sm font-semibold text-surface-800">{group.label}</p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {group.actions.map((action) => {
+                                            const granted = permissions.includes(action.value);
+                                            return (
+                                                <span
+                                                    key={action.value}
+                                                    className={cn(
+                                                        'rounded px-1.5 py-0.5 text-[11px] font-medium',
+                                                        granted ? 'bg-success-50 text-success-700' : 'bg-surface-100 text-surface-400'
+                                                    )}
+                                                >
+                                                    {action.label}
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
-                    )}
-                    {success && (
-                        <div className="p-4 bg-green-50 border border-green-200 text-green-600 rounded-lg flex items-center gap-2">
-                            <span className="font-bold">Success:</span> {success}
-                        </div>
-                    )}
+                    </Card>
                 </div>
-            </div>
 
-            {/* Edit Profile Modal */}
-            <Modal isOpen={isEditing} onClose={() => setIsEditing(false)} title="Edit Profile">
+                {error && (
+                    <div className="mt-6 flex items-center gap-2 rounded-md border border-danger-100 bg-danger-50 p-4 text-sm text-danger-600">
+                        <span className="font-semibold">Error:</span> {error}
+                    </div>
+                )}
+            </motion.div>
+
+            <DialogPanel open={isEditing} onOpenChange={setIsEditing} title="Edit Profile">
                 <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <Input
-                            label="First Name"
-                            name="firstName"
-                            value={formData.firstName || ''}
-                            onChange={handleChange}
-                        />
-                        <Input
-                            label="Last Name"
-                            name="lastName"
-                            value={formData.lastName || ''}
-                            onChange={handleChange}
-                        />
+                        <Input label="First Name" name="firstName" value={formData.firstName || ''} onChange={handleChange} />
+                        <Input label="Last Name" name="lastName" value={formData.lastName || ''} onChange={handleChange} />
                     </div>
-                    <Input
-                        label="Email"
-                        name="email"
-                        type="email"
-                        value={formData.email || ''}
-                        onChange={handleChange}
-                    />
-                    <Input
-                        label="Phone"
-                        name="phone"
-                        value={formData.phone || ''}
-                        onChange={handleChange}
-                    />
-                    
-                    {/* Working Hours Editor - Only for Doctors */}
-                    {user?.role === 'DOCTOR' && (
+                    <Input label="Email" name="email" type="email" value={formData.email || ''} onChange={handleChange} />
+                    <Input label="Phone" name="phone" value={formData.phone || ''} onChange={handleChange} />
+
+                    {isDoctor && (
                         <div className="mt-6">
-                            <h4 className="text-sm font-semibold text-gray-700 mb-3">Working Hours</h4>
-                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                            <h4 className="mb-3 text-sm font-semibold text-surface-700">Working Hours</h4>
+                            <div className="max-h-60 space-y-2 overflow-y-auto">
                                 {Array.isArray(workingHours) && workingHours.length > 0 ? (
                                     workingHours.map((schedule, index) => (
                                         <div key={index} className="flex items-center gap-3">
-                                            <label className="w-24 text-sm text-gray-600">{schedule.day}</label>
+                                            <label className="w-24 text-sm text-surface-600">{schedule.day}</label>
                                             <input
                                                 type="text"
-                                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className="flex-1 rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:shadow-focus"
                                                 value={schedule.time}
                                                 onChange={(e) => handleWorkingHourChange(index, e.target.value)}
                                                 placeholder="e.g., 08:00 AM - 06:00 PM or Closed"
@@ -471,24 +411,19 @@ export function ProfilePage({ token }: ProfilePageProps) {
                                         </div>
                                     ))
                                 ) : (
-                                    <p className="text-sm text-gray-500">Loading working hours...</p>
+                                    <p className="text-sm text-surface-500">Loading working hours...</p>
                                 )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">Enter time ranges (e.g., "08:00 AM - 06:00 PM") or "Closed" for days off</p>
+                            <p className="mt-2 text-xs text-surface-500">Enter time ranges (e.g., "08:00 AM - 06:00 PM") or "Closed" for days off</p>
                         </div>
                     )}
-                    
-                    <div className="flex justify-end gap-3 mt-6">
-                        <Button variant="secondary" onClick={() => setIsEditing(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleSave} disabled={saving}>
-                            {saving ? 'Saving...' : 'Save Changes'}
-                        </Button>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <Button variant="secondary" onClick={() => setIsEditing(false)}>Cancel</Button>
+                        <Button onClick={handleSave} isLoading={saving}>Save Changes</Button>
                     </div>
                 </div>
-            </Modal>
+            </DialogPanel>
         </div>
     );
 }
-

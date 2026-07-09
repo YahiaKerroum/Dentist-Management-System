@@ -1,13 +1,15 @@
 import React from 'react';
+import { cn } from '../../utils/cn';
 
 interface TableProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-export const Table: React.FC<TableProps> = ({ children }) => {
+export const Table: React.FC<TableProps> = ({ children, className }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+    <div className="overflow-x-auto rounded-lg border border-surface-200">
+      <table className={cn('min-w-full bg-white', className)}>
         {children}
       </table>
     </div>
@@ -20,7 +22,7 @@ interface TableHeaderProps {
 
 export const TableHeader: React.FC<TableHeaderProps> = ({ children }) => {
   return (
-    <thead className="bg-gray-50">
+    <thead className="bg-surface-50">
       {children}
     </thead>
   );
@@ -32,7 +34,7 @@ interface TableBodyProps {
 
 export const TableBody: React.FC<TableBodyProps> = ({ children }) => {
   return (
-    <tbody className="divide-y divide-gray-200">
+    <tbody className="divide-y divide-surface-100">
       {children}
     </tbody>
   );
@@ -45,7 +47,7 @@ interface TableRowProps {
 
 export const TableRow: React.FC<TableRowProps> = ({ children, className = '' }) => {
   return (
-    <tr className={`hover:bg-gray-50 transition-colors ${className}`}>
+    <tr className={cn('transition-colors hover:bg-surface-50', className)}>
       {children}
     </tr>
   );
@@ -59,7 +61,7 @@ interface TableCellProps {
 
 export const TableCell: React.FC<TableCellProps> = ({ children, className = '', colSpan }) => {
   return (
-    <td className={`px-6 py-4 text-sm text-gray-900 ${className}`} colSpan={colSpan}>
+    <td className={cn('px-6 py-4 text-sm text-surface-800', className)} colSpan={colSpan}>
       {children}
     </td>
   );
@@ -72,7 +74,7 @@ interface TableHeadCellProps {
 
 export const TableHeadCell: React.FC<TableHeadCellProps> = ({ children, className = '' }) => {
   return (
-    <th className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${className}`}>
+    <th className={cn('px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-surface-500', className)}>
       {children}
     </th>
   );

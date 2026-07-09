@@ -1,4 +1,102 @@
 
+// Clinic Pulse Dashboard
+export interface ClinicPulseScheduleItem {
+  id: string;
+  time: string;
+  durationMinutes: number;
+  status: 'SCHEDULED' | 'CHECKED_IN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
+  patientId: string;
+  patientName: string;
+  doctorName: string;
+  treatmentType: string | null;
+  roomName: string | null;
+  isDelayed: boolean;
+}
+
+export interface ClinicPulseSummary {
+  totalToday: number;
+  waiting: number;
+  inTreatment: number;
+  completed: number;
+  delayed: number;
+  noShow: number;
+  cancelled: number;
+  revenueToday: number;
+  revenueYesterday: number;
+  revenueThisWeek: number;
+  totalPendingBalance: number;
+  followUpsDueCount: number;
+  treatmentsNeedingAttentionCount: number;
+  expensesAwaitingApproval: number;
+}
+
+export interface ClinicPulseFollowUp {
+  treatmentId: string;
+  patientName: string;
+  treatmentType: string;
+  doctorName: string;
+  followUpDate: string | null;
+  overdue: boolean;
+}
+
+export interface ClinicPulseAttentionTreatment {
+  treatmentId: string;
+  patientName: string;
+  treatmentType: string;
+  doctorName: string;
+  dateOfTreatment: string;
+}
+
+export interface ClinicPulseActionRequired {
+  followUpsDue: ClinicPulseFollowUp[];
+  treatmentsNeedingAttention: ClinicPulseAttentionTreatment[];
+  expensesAwaitingApproval: number;
+}
+
+export interface ClinicPulsePatientBalance {
+  patientId: string;
+  patientName: string;
+  billed: number;
+  paid: number;
+  balance: number;
+}
+
+export interface ClinicPulseRoomStatus {
+  roomId: string;
+  roomName: string;
+  roomType: 'CHAIR' | 'XRAY' | 'SURGERY';
+  status: 'occupied' | 'available';
+  patientName: string | null;
+  doctorName: string | null;
+  occupiedSince?: string;
+  availableAt?: string;
+  nextAppointmentAt?: string | null;
+}
+
+export interface ClinicPulseDoctorWorkload {
+  doctorId: string;
+  name: string;
+  total: number;
+  waiting: number;
+  inTreatment: number;
+  completed: number;
+}
+
+export interface ClinicPulseData {
+  generatedAt: string;
+  schedule: ClinicPulseScheduleItem[];
+  summary: ClinicPulseSummary;
+  actionRequired: ClinicPulseActionRequired;
+  patientBalances: ClinicPulsePatientBalance[];
+  roomStatus: ClinicPulseRoomStatus[];
+  doctorWorkload: ClinicPulseDoctorWorkload[];
+}
+
+export interface ClinicPulseResponse {
+  success: boolean;
+  data: ClinicPulseData;
+}
+
 // 1. My Patients Count - DOCTOR (Stat Card)
 export interface MyPatientsCountResponse {
   success: boolean;

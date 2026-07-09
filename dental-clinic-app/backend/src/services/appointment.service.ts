@@ -16,6 +16,8 @@ export class AppointmentService {
         procedure?: string;
         teethInvolved?: number[];
         followUpRequired?: boolean;
+        roomId?: string | null;
+        durationMinutes?: number;
         createdByUserId?: string;
     }) {
 
@@ -43,6 +45,8 @@ export class AppointmentService {
                 procedure: data.procedure,
                 teethInvolved: data.teethInvolved || [],
                 followUpRequired: data.followUpRequired || false,
+                roomId: data.roomId || null,
+                durationMinutes: data.durationMinutes || 30,
                 createdByUserId: data.createdByUserId,
                 status: AppointmentStatus.SCHEDULED,
             },
@@ -58,6 +62,7 @@ export class AppointmentService {
                     },
                 },
                 patient: true,
+                room: true,
             },
         });
 
@@ -122,6 +127,7 @@ export class AppointmentService {
                     },
                 },
                 patient: true,
+                room: true,
             },
             orderBy: {
                 dateOfTreatment: "asc",
@@ -156,6 +162,7 @@ export class AppointmentService {
                     },
                 },
                 patient: true,
+                room: true,
                 createdByUser: {
                     select: {
                         firstName: true,
@@ -181,6 +188,8 @@ export class AppointmentService {
             procedure?: string;
             teethInvolved?: number[];
             followUpRequired?: boolean;
+            roomId?: string | null;
+            durationMinutes?: number;
         },
         actorUserId?: string
     ) {
@@ -215,6 +224,7 @@ export class AppointmentService {
                     },
                 },
                 patient: true,
+                room: true,
             },
         });
 
@@ -252,6 +262,7 @@ export class AppointmentService {
                     },
                 },
                 patient: true,
+                room: true,
             },
         });
 

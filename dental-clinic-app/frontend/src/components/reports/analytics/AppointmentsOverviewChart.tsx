@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { CalendarCheck, Loader2 } from 'lucide-react';
 import { getAppointmentsOverview } from '../../../services/report.service';
+import { CHART_STATUS, chartTooltip } from '../../../lib/chartTheme';
 
 interface AppointmentsOverviewChartProps {
   token: string;
 }
 
 const COLORS = {
-  scheduled: '#3B82F6', // Blue
-  completed: '#10B981', // Green
-  cancelled: '#EF4444', // Red
-  noShow: '#F59E0B',    // Yellow
+  scheduled: CHART_STATUS.neutral,
+  completed: CHART_STATUS.positive,
+  cancelled: CHART_STATUS.negative,
+  noShow: CHART_STATUS.attention,
 };
 
 export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps> = ({ token }) => {
@@ -53,27 +54,27 @@ export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps>
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <CalendarCheck className="text-blue-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Appointments Overview</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <CalendarCheck className="text-primary-600" size={20} />
+        <h3 className="font-display font-semibold tracking-tight text-surface-900">Appointments Overview</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full tabular-nums">
           Total: {total}
         </span>
       </div>
@@ -97,23 +98,16 @@ export const AppointmentsOverviewChart: React.FC<AppointmentsOverviewChartProps>
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip
-              formatter={(value: any) => [value, 'Count']}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            />
+            <Tooltip formatter={(value: any) => [value, 'Count']} {...chartTooltip} />
             <Legend
               verticalAlign="bottom"
               height={36}
-              formatter={(value: any) => <span className="text-sm text-gray-600">{value}</span>}
+              formatter={(value: any) => <span className="text-sm text-surface-600">{value}</span>}
             />
           </PieChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No appointment data available
         </div>
       )}

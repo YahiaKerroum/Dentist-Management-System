@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { BarChart3, Download } from 'lucide-react';
+import { toast } from '../components/ui/Toaster';
+import { Button } from '../components/ui/Button';
 
 // Your Components
 import { MyPatientsCount } from '../components/reports/analytics/MyPatientsCount';
@@ -144,42 +146,35 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
         downloadCSV(expenseData, 'expenses-by-category');
       }
 
-      alert('✅ Reports exported successfully! Check your downloads folder for CSV files.');
+      toast.success('Reports exported', { description: 'Check your downloads folder for the CSV files.' });
     } catch (error) {
       console.error('Error exporting reports:', error);
-      alert('❌ Failed to export reports. Please try again.');
+      toast.error('Failed to export reports', { description: 'Please try again.' });
     } finally {
       setIsExporting(false);
     }
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
+    <div className="p-8">
       {/* Page Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-6 flex items-center justify-between">
+        <div>
           <div className="flex items-center gap-2">
-            <BarChart3 className="text-blue-600" size={28} />
-            <h1 className="text-2xl font-bold text-gray-800">Reports & Analytics</h1>
+            <BarChart3 className="text-primary-600" size={22} />
+            <h1 className="font-display text-xl font-semibold tracking-tight text-surface-900">Reports & Analytics</h1>
           </div>
-          
-          {/* Export Button */}
-          <button
-            onClick={handleExportReports}
-            disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-            title="Export all reports to CSV files"
-          >
-            <Download size={18} />
-            {isExporting ? 'Exporting...' : 'Export Reports'}
-          </button>
+          <p className="mt-1 text-sm text-surface-500">
+            {userRole === 'DOCTOR' && 'View your appointments, patients, and performance metrics'}
+            {userRole === 'MANAGER' && 'Monitor clinic performance, finances, and staff metrics'}
+            {userRole === 'ASSISTANT' && 'Track appointments, cancellations, and patient activity'}
+          </p>
         </div>
-        
-        <p className="text-gray-500">
-          {userRole === 'DOCTOR' && 'View your appointments, patients, and performance metrics'}
-          {userRole === 'MANAGER' && 'Monitor clinic performance, finances, and staff metrics'}
-          {userRole === 'ASSISTANT' && 'Track appointments, cancellations, and patient activity'}
-        </p>
+
+        <Button onClick={handleExportReports} isLoading={isExporting} title="Export all reports to CSV files">
+          {!isExporting && <Download size={16} />}
+          {isExporting ? 'Exporting...' : 'Export Reports'}
+        </Button>
       </div>
 
       {/* DOCTOR REPORTS */}
@@ -205,9 +200,11 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
       {/* MANAGER REPORTS */}
       {userRole === 'MANAGER' && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <TotalPatients token={token} />
-            <NewPatientsThisMonth token={token} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-6">
+            <div className="flex flex-col gap-4">
+              <TotalPatients token={token} />
+              <NewPatientsThisMonth token={token} />
+            </div>
             <PaymentStatusChart token={token} />
             <RevenueGeneratedChart token={token} />
           </div>

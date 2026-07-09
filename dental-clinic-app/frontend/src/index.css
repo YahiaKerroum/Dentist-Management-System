@@ -1,78 +1,61 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/space-grotesk';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'InterVariable', system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  @apply bg-surface-50 text-surface-900;
 }
 
 * {
   box-sizing: border-box;
 }
 
+/* Brand text selection */
+::selection {
+  @apply bg-primary-200 text-primary-950;
+}
+
+/* Slim, surface-toned scrollbars instead of the OS default */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.surface.300') transparent;
+}
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: theme('colors.surface.300');
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: theme('colors.surface.400');
+}
+
 @layer utilities {
-  /* Blob Animation - Floating background elements */
-  .animate-blob {
-    animation: blob 7s infinite;
+  .skeleton {
+    @apply relative overflow-hidden bg-surface-200;
   }
-  
-  @keyframes blob {
-    0%, 100% {
-      transform: translate(0px, 0px) scale(1);
-    }
-    33% {
-      transform: translate(30px, -50px) scale(1.1);
-    }
-    66% {
-      transform: translate(-20px, 20px) scale(0.9);
-    }
-  }
-  
-  /* Animation Delays for staggered effect */
-  .animation-delay-2000 {
-    animation-delay: 2s;
-  }
-  
-  .animation-delay-4000 {
-    animation-delay: 4s;
-  }
-  
-  /* Slide in from Right - For Payments Tab */
-  .animate-slideInRight {
-    animation: slideInRight 0.5s ease-out;
-  }
-  
-  @keyframes slideInRight {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  
-  /* Slide in from Left - For Expenses Tab */
-  .animate-slideInLeft {
-    animation: slideInLeft 0.5s ease-out;
-  }
-  
-  @keyframes slideInLeft {
-    from {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent;
   }
 }

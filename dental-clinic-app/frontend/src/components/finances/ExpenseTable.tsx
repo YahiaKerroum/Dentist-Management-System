@@ -1,21 +1,25 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { getExpenses, deleteExpense, searchExpenses, approveExpense } from '../../services/expense.service';
+import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getExpenses, deleteExpense, approveExpense } from '../../services/expense.service';
 import { Expense } from '../../types/expense.types';
-import { ExpenseFormModal } from './ExpenseFormModal';
+import { queryKeys } from '../../lib/queryKeys';
+import { ExpenseForm } from './ExpenseForm';
 import { ExpenseDetailModal } from './ExpenseDetailModal';
-import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Filter } from 'lucide-react';
+import { Plus, Search, X, Edit, Trash2, Loader2, ChevronLeft, ChevronRight, CheckCircle, Clock, Receipt, CalendarDays, Tag } from 'lucide-react';
+import { Button } from '../ui/Button';
+import { Modal } from '../ui/Modal';
+import { EmptyState } from '../ui/EmptyState';
+import { toast } from '../ui/Toaster';
+import { SummaryCard, categoryStyle, formatCurrency, groupByDay } from './financeUi';
 
 interface ExpenseTableProps {
   token: string;
 }
 
-// Items per page for pagination
 const ITEMS_PER_PAGE = 10;
 
-// Category options for filter
 const CATEGORIES = ['All', 'Equipment', 'Supplies', 'Utilities', 'Salaries', 'Rent', 'Maintenance', 'Insurance', 'Marketing', 'Other'];
-
-// Sort options
+const STATUSES = ['All', 'Approved', 'Pending'];
 const SORT_OPTIONS = [
   { value: 'date-desc', label: 'Date (Newest First)' },
   { value: 'date-asc', label: 'Date (Oldest First)' },
@@ -24,277 +28,193 @@ const SORT_OPTIONS = [
 ];
 
 export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
-  // Data state
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const {
+    data: expenses = [],
+    isLoading: loading,
+    error: queryError,
+    refetch: fetchExpenses,
+  } = useQuery({
+    queryKey: queryKeys.expenses,
+    queryFn: async () => {
+      const response: any = await getExpenses(token);
+      if (Array.isArray(response)) return response as Expense[];
+      if (response && response.data) return response.data as Expense[];
+      throw new Error(response?.message || 'Failed to load expenses');
+    },
+  });
+  const error = queryError ? (queryError instanceof Error ? queryError.message : 'An error occurred') : '';
 
-  // Search state
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Filter & Sort state
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
   const [sortBy, setSortBy] = useState('date-desc');
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Modal state (for create/edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
 
-  // Detail modal state (NEW)
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
 
-  // Toast state
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  // Show toast message
-  const showToast = (message: string, type: 'success' | 'error') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  // Fetch all expenses
-  const fetchExpenses = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await getExpenses(token);
-      const anyRes: any = response;
-      if (Array.isArray(anyRes)) {
-        setExpenses(anyRes);
-      } else if (anyRes && anyRes.data) {
-        setExpenses(anyRes.data);
-      } else {
-        setError(anyRes?.message || 'Failed to load expenses');
-      }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Apply filters and sorting
   useEffect(() => {
-    let result = [...expenses];
+    setCurrentPage(1);
+  }, [searchQuery, categoryFilter, statusFilter, sortBy]);
 
-    // Apply category filter
-    if (categoryFilter !== 'All') {
-      result = result.filter(expense => expense.category === categoryFilter);
+  let filteredExpenses = expenses.filter((expense) => {
+    const matchesCategory = categoryFilter === 'All' || expense.category === categoryFilter;
+    const matchesStatus =
+      statusFilter === 'All' || (statusFilter === 'Approved' ? expense.approved : !expense.approved);
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      expense.category.toLowerCase().includes(query) ||
+      expense.paidTo?.toLowerCase().includes(query) ||
+      expense.notes?.toLowerCase().includes(query);
+    return matchesCategory && matchesStatus && matchesSearch;
+  });
+
+  filteredExpenses = [...filteredExpenses].sort((a, b) => {
+    switch (sortBy) {
+      case 'date-desc':
+        return new Date(b.date).getTime() - new Date(a.date).getTime();
+      case 'date-asc':
+        return new Date(a.date).getTime() - new Date(b.date).getTime();
+      case 'amount-desc':
+        return Number(b.amount) - Number(a.amount);
+      case 'amount-asc':
+        return Number(a.amount) - Number(b.amount);
+      default:
+        return 0;
     }
+  });
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(expense =>
-        expense.category.toLowerCase().includes(query) ||
-        expense.paidTo?.toLowerCase().includes(query) ||
-        expense.notes?.toLowerCase().includes(query)
-      );
-    }
+  // Summary metrics over the filtered set
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).getTime();
+  const totalSpent = filteredExpenses.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const pendingList = filteredExpenses.filter((e) => !e.approved);
+  const pendingAmount = pendingList.reduce((s, e) => s + Number(e.amount || 0), 0);
+  const thisMonthTotal = filteredExpenses
+    .filter((e) => new Date(e.date).getTime() >= monthStart)
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
+  const lastMonthTotal = filteredExpenses
+    .filter((e) => {
+      const t = new Date(e.date).getTime();
+      return t >= lastMonthStart && t < monthStart;
+    })
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
+  const catTotals = new Map<string, number>();
+  filteredExpenses.forEach((e) => catTotals.set(e.category, (catTotals.get(e.category) || 0) + Number(e.amount || 0)));
+  const topCategory = [...catTotals.entries()].sort((a, b) => b[1] - a[1])[0];
 
-    // Apply sorting
-    result.sort((a, b) => {
-      switch (sortBy) {
-        case 'date-desc':
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        case 'date-asc':
-          return new Date(a.date).getTime() - new Date(b.date).getTime();
-        case 'amount-desc':
-          return Number(b.amount) - Number(a.amount);
-        case 'amount-asc':
-          return Number(a.amount) - Number(b.amount);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredExpenses(result);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [expenses, categoryFilter, searchQuery, sortBy]);
-
-  // Debounced search
-  const debounce = (func: Function, delay: number) => {
-    let timeoutId: ReturnType<typeof setTimeout>;
-    return (...args: any[]) => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => func(...args), delay);
-    };
-  };
-
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
-
-  // Clear all filters
   const handleClearFilters = () => {
     setSearchQuery('');
     setCategoryFilter('All');
+    setStatusFilter('All');
     setSortBy('date-desc');
   };
 
-  // Delete expense
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this expense?')) {
-      return;
-    }
-
     try {
       await deleteExpense(id, token);
-      showToast('Expense deleted successfully', 'success');
+      toast.success('Expense deleted successfully');
+      setDeleteConfirmId(null);
       fetchExpenses();
     } catch (err: any) {
-      showToast(err.message || 'Failed to delete expense', 'error');
+      toast.error(err.message || 'Failed to delete expense');
     }
   };
 
-  // Approve expense
   const handleApprove = async (id: string) => {
-    if (!window.confirm('Are you sure you want to approve this expense?')) {
-      return;
-    }
-
     try {
       await approveExpense(id, token);
-      showToast('Expense approved successfully', 'success');
+      toast.success('Expense approved successfully');
       fetchExpenses();
     } catch (err: any) {
-      showToast(err.message || 'Failed to approve expense', 'error');
+      toast.error(err.message || 'Failed to approve expense');
     }
   };
 
-  // Open modal for creating new expense
   const handleCreate = () => {
     setSelectedExpense(null);
     setIsModalOpen(true);
   };
 
-  // Open modal for editing expense
   const handleEdit = (expense: Expense) => {
     setSelectedExpense(expense);
     setIsModalOpen(true);
   };
 
-  // Close modal
   const handleModalClose = () => {
     setIsModalOpen(false);
     setSelectedExpense(null);
   };
 
-  // After successful save
   const handleSaveSuccess = (message: string) => {
     handleModalClose();
-    showToast(message, 'success');
+    toast.success(message);
     fetchExpenses();
   };
 
-  // Open detail modal (NEW)
   const handleViewDetail = (expense: Expense) => {
     setDetailExpense(expense);
     setIsDetailModalOpen(true);
   };
 
-  // Close detail modal (NEW)
   const handleDetailModalClose = () => {
     setIsDetailModalOpen(false);
     setDetailExpense(null);
   };
 
-  // Pagination calculations
   const totalPages = Math.ceil(filteredExpenses.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentExpenses = filteredExpenses.slice(startIndex, endIndex);
+  const pageExpenses = filteredExpenses.slice(startIndex, endIndex);
+  const dayGroups = groupByDay(pageExpenses, (e) => e.date);
 
-  // Pagination handlers
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  useEffect(() => {
-    fetchExpenses();
-  }, [token]);
-
-  // Format amount as currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
+  const hasActiveFilters =
+    searchQuery !== '' || categoryFilter !== 'All' || statusFilter !== 'All' || sortBy !== 'date-desc';
 
   return (
-    <div className="p-5">
-      {/* Toast notification */}
-      {toast && (
-        <div
-          className={`fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${
-            toast.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-          } text-white`}
-        >
-          {toast.message}
-        </div>
-      )}
-
-      {/* Header with title and create button */}
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-2xl font-semibold text-gray-800">Expenses</h2>
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <Plus size={20} />
-          Add Expense
-        </button>
+    <div>
+      {/* Summary strip */}
+      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <SummaryCard label="Total spent" value={formatCurrency(totalSpent)} sub={`${filteredExpenses.length} expenses`} icon={Receipt} tone="danger" />
+        <SummaryCard label="Pending approval" value={formatCurrency(pendingAmount)} sub={`${pendingList.length} awaiting`} icon={Clock} tone="warning" />
+        <SummaryCard label="This month" value={formatCurrency(thisMonthTotal)} sub={`vs ${formatCurrency(lastMonthTotal)} last month`} icon={CalendarDays} />
+        <SummaryCard label="Top category" value={topCategory ? topCategory[0] : '—'} sub={topCategory ? formatCurrency(topCategory[1]) : undefined} icon={Tag} />
       </div>
 
-      {/* Search and Filters */}
-      <div className="mb-5 flex flex-col sm:flex-row gap-3">
-        {/* Search bar */}
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+      {/* Toolbar */}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full sm:w-80">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" size={16} />
           <input
             type="text"
             placeholder="Search by category, paid to, or notes..."
             value={searchQuery}
-            onChange={handleSearchChange}
-            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-md border border-surface-300 py-2 pl-10 pr-9 focus:border-primary-500 focus:outline-none focus:shadow-focus"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-surface-600"
             >
-              <X size={20} />
+              <X size={16} />
             </button>
           )}
         </div>
 
-        {/* Category Filter */}
-        <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-500" />
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:shadow-focus"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat} value={cat}>
@@ -302,187 +222,180 @@ export const ExpenseTable: React.FC<ExpenseTableProps> = ({ token }) => {
               </option>
             ))}
           </select>
-        </div>
-
-        {/* Sort By */}
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {SORT_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        {/* Clear Filters */}
-        {(searchQuery || categoryFilter !== 'All' || sortBy !== 'date-desc') && (
-          <button
-            onClick={handleClearFilters}
-            className="px-3 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:shadow-focus"
           >
-            Clear
-          </button>
-        )}
+            {STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s === 'All' ? 'All Statuses' : s}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="rounded-md border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:shadow-focus"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearFilters}
+              className="rounded-md px-3 py-2 text-sm text-surface-600 transition-colors hover:bg-surface-100 hover:text-surface-800"
+            >
+              Clear
+            </button>
+          )}
+          <Button onClick={handleCreate}>
+            <Plus size={16} />
+            Add Expense
+          </Button>
+        </div>
       </div>
 
-      {/* Loading spinner */}
       {loading && (
-        <div className="flex justify-center items-center py-10">
-          <Loader2 className="animate-spin text-blue-600" size={40} />
-          <span className="ml-3 text-gray-600">Loading expenses...</span>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="animate-spin text-primary-600" size={32} />
+          <span className="ml-3 text-surface-600">Loading expenses...</span>
         </div>
       )}
 
-      {/* Error message */}
       {error && !loading && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
-          {error}
-        </div>
+        <div className="mb-4 rounded-lg border border-danger-100 bg-danger-50 p-4 text-danger-700">{error}</div>
       )}
 
-      {/* Empty state */}
-      {!loading && !error && filteredExpenses.length === 0 && (
-        <div className="text-center py-10 text-gray-500">
-          <p className="text-lg">No expenses found.</p>
-          <p className="mt-2">
-            {expenses.length === 0 
-              ? 'Click "Add Expense" to create one.' 
-              : 'Try adjusting your filters.'}
-          </p>
-        </div>
-      )}
+      {!loading && !error && (
+        <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
+          {filteredExpenses.length === 0 ? (
+            <EmptyState
+              icon={Receipt}
+              title="No expenses found"
+              description={expenses.length === 0 ? 'Click "Add Expense" to create one.' : 'Try adjusting your filters.'}
+            />
+          ) : (
+            dayGroups.map((group) => {
+              const daySum = group.rows.reduce((s, e) => s + Number(e.amount || 0), 0);
+              return (
+                <div key={group.key}>
+                  {/* Day divider */}
+                  <div className="flex items-center justify-between border-b border-surface-100 bg-surface-50/70 px-5 py-1.5">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-surface-400">{group.label}</span>
+                    <span className="text-xs font-medium tabular-nums text-surface-500">-{formatCurrency(daySum)}</span>
+                  </div>
 
-      {/* Expenses table */}
-      {!loading && !error && filteredExpenses.length > 0 && (
-        <>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Category</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Paid To</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Amount</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Date</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Notes</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Status</th>
-                  <th className="p-3 border-b-2 border-gray-200 font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentExpenses.map((expense) => (
-                  <tr 
-                    key={expense.id} 
-                    className="border-b border-gray-200 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleViewDetail(expense)}
-                  >
-                    <td className="p-3">{expense.category}</td>
-                    <td className="p-3">{expense.paidTo || 'N/A'}</td>
-                    <td className="p-3 font-medium">{formatCurrency(Number(expense.amount))}</td>
-                    <td className="p-3">{formatDate(expense.date)}</td>
-                    <td className="p-3 max-w-xs truncate">{expense.notes || 'N/A'}</td>
-                    <td className="p-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-sm ${
-                          expense.approved
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {expense.approved ? 'Approved' : 'Pending'}
-                      </span>
-                    </td>
-                    <td className="p-3" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex gap-2">
-                        {/* Approve button - only show for pending expenses */}
-                        {!expense.approved && (
-                          <button
-                            onClick={() => handleApprove(expense.id)}
-                            className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                            title="Approve"
+                  <div className="divide-y divide-surface-100">
+                    {group.rows.map((expense) => {
+                      const cat = categoryStyle(expense.category);
+                      return (
+                        <div
+                          key={expense.id}
+                          onClick={() => handleViewDetail(expense)}
+                          className={`group flex cursor-pointer items-center gap-3 px-5 py-2.5 transition-colors hover:bg-surface-50 ${
+                            expense.approved ? '' : 'bg-warning-50/40'
+                          }`}
+                        >
+                          {/* Vendor + category chip */}
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <p className="truncate font-medium text-surface-900">{expense.paidTo || 'Unspecified vendor'}</p>
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${cat.chip}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${cat.dot}`} />
+                              {expense.category}
+                            </span>
+                          </div>
+
+                          {/* Status pill */}
+                          <span
+                            className={`hidden shrink-0 items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium sm:inline-flex ${
+                              expense.approved ? 'bg-success-50 text-success-700' : 'bg-warning-50 text-warning-700'
+                            }`}
                           >
-                            <CheckCircle size={18} />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleEdit(expense)}
-                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(expense.id)}
-                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                            <span className={`h-1.5 w-1.5 rounded-full ${expense.approved ? 'bg-success-500' : 'bg-warning-500'}`} />
+                            {expense.approved ? 'Approved' : 'Pending'}
+                          </span>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-between items-center mt-4 px-2">
-              <span className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length} expenses
-              </span>
-              <div className="flex gap-2">
-                <button
-                  onClick={goToPrevPage}
-                  disabled={currentPage === 1}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-lg ${
-                    currentPage === 1
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  <ChevronLeft size={18} />
-                  Previous
-                </button>
-                <span className="flex items-center px-3 py-2 text-gray-600">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={goToNextPage}
-                  disabled={currentPage === totalPages}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-lg ${
-                    currentPage === totalPages
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  Next
-                  <ChevronRight size={18} />
-                </button>
-              </div>
-            </div>
+                          {/* Amount */}
+                          <span className="w-28 shrink-0 text-right font-display text-base font-semibold tabular-nums text-danger-600">
+                            -{formatCurrency(Number(expense.amount))}
+                          </span>
+
+                          {/* Actions */}
+                          <div className="flex w-24 shrink-0 items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                            {deleteConfirmId === expense.id ? (
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => handleDelete(expense.id)} className="rounded-md bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700">Delete</button>
+                                <button onClick={() => setDeleteConfirmId(null)} className="rounded-md px-1.5 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100">Cancel</button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-0.5 lg:opacity-0 lg:transition-opacity lg:group-hover:opacity-100">
+                                {!expense.approved && (
+                                  <button onClick={() => handleApprove(expense.id)} title="Approve" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-success-50 hover:text-success-600">
+                                    <CheckCircle size={16} />
+                                  </button>
+                                )}
+                                <button onClick={() => handleEdit(expense)} title="Edit" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-primary-600">
+                                  <Edit size={16} />
+                                </button>
+                                <button onClick={() => setDeleteConfirmId(expense.id)} title="Delete" className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600">
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
           )}
-        </>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm text-surface-500">
+            Showing {startIndex + 1}–{Math.min(endIndex, filteredExpenses.length)} of {filteredExpenses.length}
+          </span>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              className="flex items-center gap-1 rounded-lg border border-surface-300 px-3 py-1.5 text-sm transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+              Previous
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="flex items-center gap-1 rounded-lg border border-surface-300 px-3 py-1.5 text-sm transition-colors hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Modal for create/edit */}
-      <ExpenseFormModal
+      <Modal
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        onSave={handleSaveSuccess}
-        expense={selectedExpense}
-        token={token}
-      />
+        title={selectedExpense ? 'Edit Expense' : 'Add New Expense'}
+      >
+        <ExpenseForm expense={selectedExpense} onSave={handleSaveSuccess} onCancel={handleModalClose} token={token} />
+      </Modal>
 
       {/* Modal for viewing details */}
-      <ExpenseDetailModal
-        isOpen={isDetailModalOpen}
-        onClose={handleDetailModalClose}
-        expense={detailExpense}
-      />
+      <ExpenseDetailModal isOpen={isDetailModalOpen} onClose={handleDetailModalClose} expense={detailExpense} />
     </div>
   );
 };

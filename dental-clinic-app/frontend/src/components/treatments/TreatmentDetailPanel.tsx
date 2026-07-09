@@ -13,7 +13,8 @@ import {
     ExternalLink,
     ClipboardList,
 } from 'lucide-react';
-import { Treatment, TreatmentType, TREATMENT_TYPE_CONFIG, TEETH_QUADRANTS } from '../../types/treatment';
+import { motion } from 'framer-motion';
+import { Treatment, TreatmentType, TREATMENT_TYPE_CONFIG, TREATMENT_STATUS_CONFIG, TEETH_QUADRANTS } from '../../types/treatment';
 
 // Helper component for treatment type icon
 const TreatmentTypeIcon = ({ type, size = 'md' }: { type: TreatmentType; size?: 'sm' | 'md' | 'lg' | 'xl' }) => {
@@ -47,6 +48,8 @@ export function TreatmentDetailPanel({
     onNavigateToPatient,
 }: TreatmentDetailPanelProps) {
     const typeConfig = TREATMENT_TYPE_CONFIG[treatment.typeOfTreatment];
+    const statusConfig = TREATMENT_STATUS_CONFIG[treatment.status];
+    const teethNumbers = treatment.teeth.map((t) => t.toothNumber);
 
     const formatDate = (dateStr: string) => {
         return new Date(dateStr).toLocaleDateString('en-US', {
@@ -65,8 +68,6 @@ export function TreatmentDetailPanel({
     };
 
     const handlePatientClick = () => {
-        console.log('handlePatientClick called, patientId:', treatment.patientId);
-        console.log('onNavigateToPatient exists:', !!onNavigateToPatient);
         if (onNavigateToPatient) {
             onNavigateToPatient(treatment.patientId);
             onClose();
@@ -74,20 +75,13 @@ export function TreatmentDetailPanel({
     };
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-end z-50">
-            <div
-                className="bg-white w-full max-w-xl h-full overflow-hidden shadow-2xl animate-slide-in-right"
-                style={{
-                    animation: 'slideInRight 0.3s ease-out',
-                }}
+        <div className="fixed inset-0 z-50 flex justify-end bg-surface-950/40 backdrop-blur-[2px]">
+            <motion.div
+                className="h-full w-full max-w-xl overflow-hidden bg-white shadow-2xl"
+                initial={{ x: '100%' }}
+                animate={{ x: 0 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
             >
-                <style>{`
-                    @keyframes slideInRight {
-                        from { transform: translateX(100%); }
-                        to { transform: translateX(0); }
-                    }
-                `}</style>
-
                 {/* Header */}
                 <div
                     className="px-6 py-5 border-b"
@@ -113,35 +107,35 @@ export function TreatmentDetailPanel({
                                 className="p-2 hover:bg-white/50 rounded-lg transition-colors"
                                 title="Edit treatment"
                             >
-                                <Edit2 className="w-5 h-5 text-gray-600" />
+                                <Edit2 className="w-5 h-5 text-surface-600" />
                             </button>
                             <button
                                 onClick={onClose}
                                 className="p-2 hover:bg-white/50 rounded-lg transition-colors"
                             >
-                                <X className="w-5 h-5 text-gray-600" />
+                                <X className="w-5 h-5 text-surface-600" />
                             </button>
                         </div>
                     </div>
                     
                     {/* Treatment Description */}
-                    <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                    <p className="text-sm text-surface-600 mb-4 leading-relaxed">
                         {typeConfig.description}
                     </p>
 
                     {/* Status Badge */}
                     <div className="flex items-center gap-3">
-                        {treatment.completed ? (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium">
+                        <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium"
+                            style={{ backgroundColor: statusConfig.bgColor, color: statusConfig.color }}
+                        >
+                            {treatment.status === 'COMPLETED' || treatment.status === 'BILLED' ? (
                                 <CheckCircle2 className="w-4 h-4" />
-                                Completed
-                            </span>
-                        ) : (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-medium">
+                            ) : (
                                 <Clock className="w-4 h-4" />
-                                In Progress
-                            </span>
-                        )}
+                            )}
+                            {statusConfig.label}
+                        </span>
                         {treatment.followUpRequired && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-100 text-rose-700 rounded-full text-sm font-medium">
                                 <AlertCircle className="w-4 h-4" />
@@ -156,19 +150,19 @@ export function TreatmentDetailPanel({
                     {/* Date & Time */}
                     <div className="mb-6">
                         <div className="flex items-center gap-3 mb-2">
-                            <Calendar className="w-5 h-5" style={{ color: '#3DBEA3' }} />
-                            <span className="text-lg font-semibold text-gray-900">
+                            <Calendar className="w-5 h-5" style={{ color: '#26a37e' }} />
+                            <span className="text-lg font-semibold text-surface-900">
                                 {formatDate(treatment.dateOfTreatment)}
                             </span>
                         </div>
-                        <p className="text-sm text-gray-500 ml-8">
+                        <p className="text-sm text-surface-500 ml-8">
                             Created {formatTime(treatment.createdAt)}
                         </p>
                     </div>
 
                     {/* Patient Card */}
                     <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                             <User className="w-4 h-4" />
                             Patient Information
                         </h3>
@@ -177,26 +171,26 @@ export function TreatmentDetailPanel({
                             className={`rounded-xl p-4 border ${
                                 onNavigateToPatient ? 'cursor-pointer hover:shadow-md transition-shadow' : ''
                             }`}
-                            style={{ background: 'linear-gradient(to bottom right, #E8F5F0, #D5EDE8)', borderColor: '#D5EDE8' }}
+                            style={{ background: 'linear-gradient(to bottom right, #effcf6, #b0ecd2)', borderColor: '#b0ecd2' }}
                         >
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
+                                    <div className="w-14 h-14 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg" style={{ background: 'linear-gradient(to bottom right, #26a37e, #188467)' }}>
                                         {treatment.patient.firstName[0]}{treatment.patient.lastName[0]}
                                     </div>
                                     <div>
-                                        <h4 className="font-bold text-gray-900 text-lg">
+                                        <h4 className="font-bold text-surface-900 text-lg">
                                             {treatment.patient.firstName} {treatment.patient.lastName}
                                         </h4>
                                         <div className="flex items-center gap-4 mt-1">
                                             {treatment.patient.phone && (
-                                                <span className="flex items-center gap-1 text-sm text-gray-600">
+                                                <span className="flex items-center gap-1 text-sm text-surface-600">
                                                     <Phone className="w-3.5 h-3.5" />
                                                     {treatment.patient.phone}
                                                 </span>
                                             )}
                                             {treatment.patient.email && (
-                                                <span className="flex items-center gap-1 text-sm text-gray-600">
+                                                <span className="flex items-center gap-1 text-sm text-surface-600">
                                                     <Mail className="w-3.5 h-3.5" />
                                                     {treatment.patient.email}
                                                 </span>
@@ -205,7 +199,7 @@ export function TreatmentDetailPanel({
                                     </div>
                                 </div>
                                 {onNavigateToPatient && (
-                                    <ExternalLink className="w-5 h-5" style={{ color: '#3DBEA3' }} />
+                                    <ExternalLink className="w-5 h-5" style={{ color: '#26a37e' }} />
                                 )}
                             </div>
                         </div>
@@ -213,21 +207,21 @@ export function TreatmentDetailPanel({
 
                     {/* Doctor Card */}
                     <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                             <Stethoscope className="w-4 h-4" />
                             Attending Doctor
                         </h3>
-                        <div className="rounded-xl p-4 border" style={{ backgroundColor: '#E8F5F0', borderColor: '#D5EDE8' }}>
+                        <div className="rounded-xl p-4 border" style={{ backgroundColor: '#effcf6', borderColor: '#b0ecd2' }}>
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(to bottom right, #3DBEA3, #2FA88E)' }}>
+                                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(to bottom right, #26a37e, #188467)' }}>
                                     {treatment.doctor.user.firstName[0]}{treatment.doctor.user.lastName[0]}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-gray-900">
+                                    <h4 className="font-bold text-surface-900">
                                         Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
                                     </h4>
                                     {treatment.doctor.specialization && (
-                                        <p className="text-sm" style={{ color: '#3DBEA3' }}>{treatment.doctor.specialization}</p>
+                                        <p className="text-sm" style={{ color: '#26a37e' }}>{treatment.doctor.specialization}</p>
                                     )}
                                 </div>
                             </div>
@@ -235,12 +229,12 @@ export function TreatmentDetailPanel({
                     </div>
 
                     {/* Teeth Involved */}
-                    {treatment.teethInvolved.length > 0 && (
+                    {teethNumbers.length > 0 && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 🦷 Teeth Involved
                             </h3>
-                            <div className="bg-gray-50 rounded-xl p-4">
+                            <div className="bg-surface-50 rounded-xl p-4">
                                 <div className="flex flex-col gap-3">
                                     {/* Upper teeth */}
                                     <div className="flex justify-center gap-1">
@@ -249,24 +243,24 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-400'
+                                                            : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
                                                 >
                                                     {tooth}
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="w-px bg-gray-300 mx-1" />
+                                        <div className="w-px bg-surface-300 mx-1" />
                                         <div className="flex gap-1">
                                             {TEETH_QUADRANTS.upperLeft.map((tooth) => (
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-400'
+                                                            : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
                                                 >
                                                     {tooth}
@@ -274,7 +268,7 @@ export function TreatmentDetailPanel({
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="border-t border-gray-200 my-1" />
+                                    <div className="border-t border-surface-200 my-1" />
                                     {/* Lower teeth */}
                                     <div className="flex justify-center gap-1">
                                         <div className="flex gap-1">
@@ -282,24 +276,24 @@ export function TreatmentDetailPanel({
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-400'
+                                                            : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
                                                 >
                                                     {tooth}
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="w-px bg-gray-300 mx-1" />
+                                        <div className="w-px bg-surface-300 mx-1" />
                                         <div className="flex gap-1">
                                             {TEETH_QUADRANTS.lowerRight.map((tooth) => (
                                                 <div
                                                     key={tooth}
                                                     className={`w-6 h-7 rounded text-xs font-medium flex items-center justify-center ${
-                                                        treatment.teethInvolved.includes(tooth)
+                                                        teethNumbers.includes(tooth)
                                                             ? 'bg-teal-500 text-white shadow-md'
-                                                            : 'bg-white border border-gray-200 text-gray-400'
+                                                            : 'bg-white border border-surface-200 text-surface-400'
                                                     }`}
                                                 >
                                                     {tooth}
@@ -308,8 +302,8 @@ export function TreatmentDetailPanel({
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-center text-sm text-gray-500 mt-3">
-                                    {treatment.teethInvolved.length} tooth/teeth treated: {treatment.teethInvolved.join(', ')}
+                                <p className="text-center text-sm text-surface-500 mt-3">
+                                    {teethNumbers.length} tooth/teeth treated: {teethNumbers.join(', ')}
                                 </p>
                             </div>
                         </div>
@@ -318,12 +312,12 @@ export function TreatmentDetailPanel({
                     {/* Procedure Details */}
                     {treatment.procedure && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 <ClipboardList className="w-4 h-4" />
                                 Procedure Details
                             </h3>
-                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                <p className="text-gray-700 whitespace-pre-wrap">{treatment.procedure}</p>
+                            <div className="bg-surface-50 rounded-xl p-4 border border-surface-100">
+                                <p className="text-surface-700 whitespace-pre-wrap">{treatment.procedure}</p>
                             </div>
                         </div>
                     )}
@@ -331,12 +325,12 @@ export function TreatmentDetailPanel({
                     {/* Clinical Notes */}
                     {treatment.notes && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 <FileText className="w-4 h-4" />
                                 Clinical Notes
                             </h3>
                             <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
-                                <p className="text-gray-700 whitespace-pre-wrap">{treatment.notes}</p>
+                                <p className="text-surface-700 whitespace-pre-wrap">{treatment.notes}</p>
                             </div>
                         </div>
                     )}
@@ -344,7 +338,7 @@ export function TreatmentDetailPanel({
                     {/* Appointment Link */}
                     {treatment.appointment && (
                         <div className="mb-6">
-                            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-3 flex items-center gap-2">
                                 <Calendar className="w-4 h-4" />
                                 Linked Appointment
                             </h3>
@@ -369,15 +363,15 @@ export function TreatmentDetailPanel({
                     )}
 
                     {/* Record Info */}
-                    <div className="mt-8 pt-4 border-t border-gray-100">
-                        <div className="flex justify-between text-xs text-gray-400">
+                    <div className="mt-8 pt-4 border-t border-surface-100">
+                        <div className="flex justify-between text-xs text-surface-400">
                             <span>Created: {new Date(treatment.createdAt).toLocaleString()}</span>
                             <span>Updated: {new Date(treatment.updatedAt).toLocaleString()}</span>
                         </div>
-                        <p className="text-xs text-gray-300 mt-1 font-mono">ID: {treatment.id}</p>
+                        <p className="text-xs text-surface-300 mt-1 font-mono">ID: {treatment.id}</p>
                     </div>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 }

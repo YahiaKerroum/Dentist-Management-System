@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react';
 import { Patient } from '../types/patient';
 import { Appointment } from '../types/appointment';
-import { Treatment } from '../types/treatment';
+import { Treatment, TREATMENT_STATUS_CONFIG } from '../types/treatment';
 import { getDocumentsByPatientId, deleteDocument, Document, uploadDocument } from '../services/document.service';
 import { getTreatments } from '../services/treatment.service';
+import { getAllAppointments } from '../services/appointment.service';
+import { getPaymentsByPatient } from '../services/payment.service';
+import { Payment } from '../types/payment.types';
+import { getPatientOdontogram, upsertToothStatus } from '../services/tooth.service';
+import { PatientToothRecord, ToothStatus } from '../types/tooth';
+import { Odontogram } from '../components/patients/Odontogram';
+import { EmptyState } from '../components/ui/EmptyState';
+import { Loader2 } from 'lucide-react';
 import {
   Calendar,
   Phone,
   Mail,
   User as UserIcon,
   AlertCircle,
+  AlertTriangle,
   FileText,
   Edit,
   Trash2,
@@ -18,7 +27,10 @@ import {
   Activity,
   Stethoscope,
   Clock,
-  TrendingUp,
+  Wallet,
+  CheckCircle2,
+  XCircle,
+  CalendarClock,
 } from 'lucide-react';
 
 interface PatientDetailPanelProps {
@@ -35,14 +47,13 @@ interface PatientDetailPanelProps {
 export function PatientDetailPanel({
   patient,
   token,
-  userRole = '',
   currentUserId = '',
   userPermissions = [],
   onClose,
   onEdit,
   onDelete,
 }: PatientDetailPanelProps) {
-  const [activeTab, setActiveTab] = useState<'info' | 'treatments' | 'appointments' | 'documents'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'treatments' | 'appointments' | 'documents' | 'odontogram'>('info');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [documentsLoading, setDocumentsLoading] = useState(false);
@@ -63,6 +74,13 @@ export function PatientDetailPanel({
   const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loadingTreatments, setLoadingTreatments] = useState(false);
   const [treatmentsError, setTreatmentsError] = useState('');
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+
+  // State for odontogram
+  const [odontogram, setOdontogram] = useState<PatientToothRecord[]>([]);
+  const [loadingOdontogram, setLoadingOdontogram] = useState(false);
+  const [odontogramError, setOdontogramError] = useState('');
 
   // Permission checks
   const canEditPatient = userPermissions.includes('patients.update');
@@ -134,16 +152,13 @@ export function PatientDetailPanel({
     }
   };
 
-  // Mock teeth states for odontogram - REMOVED
-  // const mockTeethStates: Record<number, 'healthy' | 'filled' | 'treated' | 'missing' | 'implant'> = { ... };
-
-  // Check if current user is the primary dentist (for medical documents access)
-  const canViewMedicalDocs = true;
-
-  // Fetch appointments and treatments when component loads (for overview tab)
+  // Fetch appointments, treatments and payments when the record opens (for the overview)
   useEffect(() => {
     fetchAppointments();
     fetchTreatments();
+    getPaymentsByPatient(patient.id)
+      .then(setPayments)
+      .catch(() => setPayments([]));
   }, [patient.id]);
 
   // Fetch appointments when the appointments tab is active
@@ -160,25 +175,43 @@ export function PatientDetailPanel({
     }
   }, [activeTab, patient.id]);
 
+  // Fetch odontogram when the odontogram tab is active
+  useEffect(() => {
+    if (activeTab === 'odontogram') {
+      fetchOdontogram();
+    }
+  }, [activeTab, patient.id]);
+
+  const fetchOdontogram = async () => {
+    setLoadingOdontogram(true);
+    setOdontogramError('');
+
+    try {
+      const response = await getPatientOdontogram(patient.id, token);
+      setOdontogram(response.data);
+    } catch (error: any) {
+      setOdontogramError(error.message || 'Failed to load odontogram');
+    } finally {
+      setLoadingOdontogram(false);
+    }
+  };
+
+  const handleToothSave = async (toothNumber: number, status: ToothStatus, notes: string) => {
+    const response = await upsertToothStatus(patient.id, toothNumber, status, notes || undefined, token);
+    setOdontogram((prev) => {
+      const next = prev.filter((t) => t.toothNumber !== toothNumber);
+      next.push(response.data);
+      return next;
+    });
+  };
+
   const fetchAppointments = async () => {
     setLoadingAppointments(true);
     setAppointmentsError('');
     
     try {
-      const response = await fetch('http://localhost:4000/api/appointments', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const allAppointments = await getAllAppointments();
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch appointments');
-      }
-
-      const data = await response.json();
-      const allAppointments = data.data || data;
-      
       // Filter appointments for this specific patient
       const patientAppointments = allAppointments.filter(
         (apt: Appointment) => apt.patientId === patient.id
@@ -219,45 +252,105 @@ export function PatientDetailPanel({
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const apptStatusPill = (status: string): { chip: string; dot: string } => {
     switch (status) {
       case 'SCHEDULED':
-        return 'bg-blue-100 text-blue-800';
+        return { chip: 'bg-info-50 text-info-700', dot: 'bg-info-500' };
+      case 'CHECKED_IN':
+      case 'IN_PROGRESS':
+        return { chip: 'bg-warning-50 text-warning-700', dot: 'bg-warning-500' };
       case 'COMPLETED':
-        return 'bg-green-100 text-green-800';
+        return { chip: 'bg-success-50 text-success-700', dot: 'bg-success-500' };
       case 'CANCELLED':
-        return 'bg-red-100 text-red-800';
-      case 'NO_SHOW':
-        return 'bg-gray-100 text-gray-800';
+        return { chip: 'bg-danger-50 text-danger-700', dot: 'bg-danger-500' };
       default:
-        return 'bg-gray-100 text-gray-800';
+        return { chip: 'bg-surface-100 text-surface-500', dot: 'bg-surface-400' };
     }
   };
+
+  // ---- Derived clinical/financial signal (all from real, loaded data) ----
+  const currency = (n: number) => `$${Math.round(n).toLocaleString()}`;
+  const fullDate = (d: string | number) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const titleType = (t: string | null) => (t ? t.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : 'Visit');
+
+  const billed = treatments.reduce((s, t) => s + (Number((t as any).cost) || 0), 0);
+  const paidTotal = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const balance = billed - paidTotal;
+
+  const nowMs = Date.now();
+  const upcomingStatuses = ['SCHEDULED', 'CHECKED_IN', 'IN_PROGRESS'];
+  const nextAppt = appointments
+    .filter((a) => upcomingStatuses.includes(a.status) && new Date(a.dateOfTreatment).getTime() >= nowMs)
+    .sort((a, b) => new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime())[0];
+  const completedAppts = appointments.filter((a) => a.status === 'COMPLETED');
+  const lastVisit = completedAppts.length
+    ? Math.max(...completedAppts.map((a) => new Date(a.dateOfTreatment).getTime()))
+    : null;
+  const missedCount = appointments.filter((a) => a.status === 'NO_SHOW' || a.status === 'CANCELLED').length;
+  const resolvedAppts = appointments.filter((a) =>
+    ['COMPLETED', 'NO_SHOW', 'CANCELLED'].includes(a.status)
+  ).length;
+  const attendanceRate = resolvedAppts > 0 ? Math.round((completedAppts.length / resolvedAppts) * 100) : null;
+
+  // Reverse-chronological activity feed merged across sources
+  type FeedItem = { id: string; date: number; icon: typeof Wallet; tone: string; title: string; detail: string };
+  const activity: FeedItem[] = [
+    ...payments.map((p) => ({
+      id: `pay-${p.id}`,
+      date: new Date(p.date).getTime(),
+      icon: Wallet,
+      tone: 'text-success-600 bg-success-50',
+      title: `Payment received · ${currency(Number(p.amount))}`,
+      detail: p.method ? titleType(p.method) : 'Payment',
+    })),
+    ...treatments.map((t) => ({
+      id: `tr-${t.id}`,
+      date: new Date(t.dateOfTreatment).getTime(),
+      icon: Stethoscope,
+      tone: 'text-primary-600 bg-primary-50',
+      title: `${titleType(t.typeOfTreatment)} logged`,
+      detail: TREATMENT_STATUS_CONFIG[t.status]?.label ?? t.status,
+    })),
+    ...appointments.map((a) => {
+      const completed = a.status === 'COMPLETED';
+      const missed = a.status === 'NO_SHOW' || a.status === 'CANCELLED';
+      return {
+        id: `apt-${a.id}`,
+        date: new Date(a.dateOfTreatment).getTime(),
+        icon: missed ? XCircle : completed ? CheckCircle2 : CalendarClock,
+        tone: missed ? 'text-danger-600 bg-danger-50' : completed ? 'text-info-600 bg-info-50' : 'text-surface-500 bg-surface-100',
+        title: `Appointment ${a.status.replace('_', ' ').toLowerCase()}`,
+        detail: titleType(a.typeOfTreatment),
+      };
+    }),
+  ]
+    .sort((a, b) => b.date - a.date)
+    .slice(0, 8);
 
   return (
     <div>
       {/* Back Button Header */}
-      <div className="mb-6 pb-4 border-b border-gray-200">
+      <div className="mb-6 pb-4 border-b border-surface-200">
         <div className="flex justify-between items-start">
           <div>
             <button 
               onClick={onClose}
               className="mb-4 font-medium flex items-center gap-2 text-sm"
-              style={{ color: '#3DBEA3' }}
+              style={{ color: '#26a37e' }}
             >
               ← Back to Patients
             </button>
-            <h2 className="text-3xl font-bold">
+            <h2 className="font-display text-3xl font-semibold tracking-tight">
               {patient.firstName} {patient.lastName}
             </h2>
-            <p className="text-gray-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
+            <p className="text-surface-600 text-sm mt-1">Patient ID: {patient.id.slice(0, 8)}</p>
           </div>
           <div className="flex gap-2">
             {canEditPatient && onEdit && (
               <button
                 onClick={() => onEdit(patient)}
                 className="flex items-center gap-2 px-4 py-2 text-white rounded-lg hover:opacity-90 transition-colors"
-                style={{ backgroundColor: '#3DBEA3' }}
+                style={{ backgroundColor: '#26a37e' }}
               >
                 <Edit className="w-4 h-4" />
                 Edit Patient
@@ -275,7 +368,7 @@ export function PatientDetailPanel({
                     </button>
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                      className="px-4 py-2 bg-surface-200 text-surface-700 rounded-lg hover:bg-surface-300 transition-colors"
                     >
                       Cancel
                     </button>
@@ -298,8 +391,35 @@ export function PatientDetailPanel({
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sidebar - Patient Info */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+        <div className="lg:col-span-1 space-y-4">
+          {/* Status + balance + quick action */}
+          <div className="rounded-xl border border-surface-200 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-2 py-0.5 text-xs font-medium text-success-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-success-500" />
+                Active
+              </span>
+              {patient.phone && (
+                <a
+                  href={`tel:${patient.phone}`}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-surface-300 px-2.5 py-1 text-xs font-medium text-surface-700 transition-colors hover:bg-surface-100"
+                >
+                  <Phone className="h-3.5 w-3.5" /> Call
+                </a>
+              )}
+            </div>
+            <div className="mt-3 border-t border-surface-100 pt-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-surface-400">Outstanding balance</p>
+              <p className={`mt-1 font-display text-2xl font-semibold tracking-tight tabular-nums ${balance > 0.5 ? 'text-danger-600' : 'text-surface-900'}`}>
+                {balance > 0.5 ? currency(balance) : '$0'}
+              </p>
+              <p className="mt-0.5 text-xs text-surface-400 tabular-nums">
+                {currency(paidTotal)} paid of {currency(billed)} billed
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg border border-surface-200 p-4">
             <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <UserIcon className="w-5 h-5" />
               Patient Information
@@ -308,7 +428,7 @@ export function PatientDetailPanel({
             <div className="space-y-4">
               {/* Basic Info */}
               <div>
-                <p className="text-xs text-gray-600 font-semibold">DATE OF BIRTH</p>
+                <p className="text-xs text-surface-600 font-semibold">DATE OF BIRTH</p>
                 <p className="text-sm">
                   {patient.dateOfBirth
                     ? new Date(patient.dateOfBirth).toLocaleDateString()
@@ -317,7 +437,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold flex items-center gap-2">
+                <p className="text-xs text-surface-600 font-semibold flex items-center gap-2">
                   <Phone className="w-4 h-4" />
                   PHONE
                 </p>
@@ -325,7 +445,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold flex items-center gap-2">
+                <p className="text-xs text-surface-600 font-semibold flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   EMAIL
                 </p>
@@ -333,7 +453,7 @@ export function PatientDetailPanel({
               </div>
 
               <div>
-                <p className="text-xs text-gray-600 font-semibold">PATIENT SINCE</p>
+                <p className="text-xs text-surface-600 font-semibold">PATIENT SINCE</p>
                 <p className="text-sm">
                   {new Date(patient.createdAt).toLocaleDateString()}
                 </p>
@@ -341,13 +461,13 @@ export function PatientDetailPanel({
 
               {/* Primary Dentist */}
               <div>
-                <p className="text-xs text-gray-600 font-semibold">PRIMARY DENTIST</p>
+                <p className="text-xs text-surface-600 font-semibold">PRIMARY DENTIST</p>
                 {patient.primaryDentist ? (
                   <p className="text-sm font-medium text-blue-600">
                     Dr. {patient.primaryDentist.user.firstName} {patient.primaryDentist.user.lastName}
                   </p>
                 ) : (
-                  <p className="text-sm text-gray-500">Not assigned</p>
+                  <p className="text-sm text-surface-500">Not assigned</p>
                 )}
               </div>
             </div>
@@ -359,13 +479,13 @@ export function PatientDetailPanel({
         {/* Main Content - Tabs */}
         <div className="lg:col-span-2">
           {/* Tab Navigation */}
-          <div className="flex gap-2 mb-6 border-b border-gray-200">
+          <div className="flex gap-2 mb-6 border-b border-surface-200">
             <button
               onClick={() => setActiveTab('info')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'info'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Overview
@@ -374,8 +494,8 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('treatments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'treatments'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Treatments
@@ -384,8 +504,8 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('appointments')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'appointments'
-                  ? 'border-b-2 border-[#3DBEA3] text-[#3DBEA3]'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Appointments
@@ -394,313 +514,201 @@ export function PatientDetailPanel({
               onClick={() => setActiveTab('documents')}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
                 activeTab === 'documents'
-                  ? 'border-b-2 border-blue-600 text-blue-600'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'border-b-2 border-primary-500 text-primary-700'
+                  : 'text-surface-600 hover:text-surface-900'
               }`}
             >
               Documents
+            </button>
+            <button
+              onClick={() => setActiveTab('odontogram')}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                activeTab === 'odontogram'
+                  ? 'border-b-2 border-[#26a37e] text-[#26a37e]'
+                  : 'text-surface-600 hover:text-surface-900'
+              }`}
+            >
+              Odontogram
             </button>
           </div>
 
           {/* Tab Content */}
           {activeTab === 'info' && (
             <div className="space-y-6">
-              {/* Patient Summary Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Total Treatments */}
-                <div className="bg-gradient-to-br from-[#3DBEA3]/10 to-[#3DBEA3]/5 rounded-xl p-5 border border-[#3DBEA3]/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-[#3DBEA3]/20 rounded-lg flex items-center justify-center">
-                      <Stethoscope size={20} className="text-[#3DBEA3]" />
+              {/* Alerts — surfaced from real signal only */}
+              {(balance > 0.5 || missedCount >= 2) && (
+                <div className="space-y-2">
+                  {balance > 0.5 && (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-danger-100 bg-danger-50 px-4 py-2.5 text-sm text-danger-700">
+                      <AlertCircle className="h-4 w-4 shrink-0" />
+                      <span>Outstanding balance of <span className="font-semibold tabular-nums">{currency(balance)}</span></span>
                     </div>
-                    <span className="text-xs text-gray-500 font-medium">Total</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {treatments.length}
-                  </h3>
-                  <p className="text-sm text-gray-600">Treatments Completed</p>
+                  )}
+                  {missedCount >= 2 && (
+                    <div className="flex items-center gap-2.5 rounded-lg border border-warning-100 bg-warning-50 px-4 py-2.5 text-sm text-warning-700">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      <span><span className="font-semibold tabular-nums">{missedCount}</span> missed or cancelled appointments — possible no-show risk</span>
+                    </div>
+                  )}
                 </div>
+              )}
 
-                {/* Upcoming Appointments */}
-                <div className="bg-gradient-to-br from-blue-50 to-blue-50/50 rounded-xl p-5 border border-blue-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Calendar size={20} className="text-blue-600" />
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">Upcoming</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {appointments.filter(a => a.status === 'SCHEDULED').length}
-                  </h3>
-                  <p className="text-sm text-gray-600">Appointments Scheduled</p>
+              {/* Flat metric cards */}
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><Wallet className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Balance</span></div>
+                  <p className={`mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums ${balance > 0.5 ? 'text-danger-600' : 'text-surface-900'}`}>
+                    {balance > 0.5 ? currency(balance) : '$0'}
+                  </p>
                 </div>
-
-                {/* Last Visit */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-xl p-5 border border-purple-100">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Clock size={20} className="text-purple-600" />
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">Recent</span>
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                    {appointments.filter(a => a.status === 'COMPLETED').length > 0
-                      ? new Date(
-                          Math.max(...appointments.filter(a => a.status === 'COMPLETED').map(a => new Date(a.dateOfTreatment).getTime()))
-                        ).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                      : 'Never'}
-                  </h3>
-                  <p className="text-sm text-gray-600">Last Visit Date</p>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><CalendarClock className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Next appt</span></div>
+                  {nextAppt ? (
+                    <>
+                      <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-primary-700 tabular-nums">{fullDate(nextAppt.dateOfTreatment)}</p>
+                      <p className="text-xs text-surface-400">{titleType(nextAppt.typeOfTreatment)}</p>
+                    </>
+                  ) : (
+                    <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-surface-300">None</p>
+                  )}
+                </div>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><Clock className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Last visit</span></div>
+                  <p className="mt-1.5 font-display text-lg font-semibold tracking-tight text-surface-900 tabular-nums">{lastVisit ? fullDate(lastVisit) : 'Never'}</p>
+                </div>
+                <div className="rounded-xl border border-surface-200 bg-white p-4">
+                  <div className="flex items-center gap-1.5 text-surface-400"><CheckCircle2 className="h-3.5 w-3.5" /><span className="text-[11px] font-semibold uppercase tracking-wide">Attendance</span></div>
+                  <p className={`mt-1.5 font-display text-2xl font-semibold tracking-tight tabular-nums ${attendanceRate !== null && attendanceRate < 70 ? 'text-warning-600' : 'text-surface-900'}`}>
+                    {attendanceRate !== null ? `${attendanceRate}%` : '—'}
+                  </p>
+                  {missedCount > 0 && <p className="text-xs text-surface-400 tabular-nums">{missedCount} missed</p>}
                 </div>
               </div>
 
-              {/* Patient Information Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Contact Information */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <UserIcon size={16} className="text-gray-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900">Contact Information</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {patient.email && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Mail size={16} className="text-gray-400" />
-                        <span className="text-gray-700">{patient.email}</span>
-                      </div>
-                    )}
-                    {patient.phone && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Phone size={16} className="text-gray-400" />
-                        <span className="text-gray-700">{patient.phone}</span>
-                      </div>
-                    )}
-                    {patient.dateOfBirth && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <Calendar size={16} className="text-gray-400" />
-                        <span className="text-gray-700">
-                          Born: {new Date(patient.dateOfBirth).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+              {/* Activity feed */}
+              <div className="rounded-xl border border-surface-200 bg-white">
+                <div className="flex items-center gap-2 border-b border-surface-100 px-5 py-3">
+                  <Activity size={16} className="text-surface-500" />
+                  <h3 className="font-display font-semibold tracking-tight text-surface-900">Activity</h3>
                 </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <Activity size={16} className="text-gray-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900">Recent Activity</h3>
-                  </div>
-                  <div className="space-y-3">
-                    {treatments.length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-[#3DBEA3] mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Latest Treatment</p>
-                          <p className="text-xs text-gray-500">
-                            {treatments[0]?.typeOfTreatment || 'N/A'} - {new Date(treatments[0]?.dateOfTreatment || Date.now()).toLocaleDateString()}
-                          </p>
+                {activity.length === 0 ? (
+                  <div className="px-5 py-10 text-center text-sm text-surface-400">No activity recorded yet.</div>
+                ) : (
+                  <div className="divide-y divide-surface-100">
+                    {activity.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div key={item.id} className="flex items-center gap-3 px-5 py-3">
+                          <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.tone}`}>
+                            <Icon className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium text-surface-800">{item.title}</p>
+                            <p className="truncate text-xs text-surface-400">{item.detail}</p>
+                          </div>
+                          <span className="shrink-0 text-xs text-surface-400 tabular-nums">{fullDate(item.date)}</span>
                         </div>
-                      </div>
-                    )}
-                    {appointments.filter(a => a.status === 'COMPLETED').length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-blue-500 mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Last Appointment</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(
-                              appointments.filter(a => a.status === 'COMPLETED')[0]?.dateOfTreatment || Date.now()
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {appointments.filter(a => a.status === 'SCHEDULED').length > 0 && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-2 h-2 rounded-full bg-purple-500 mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm text-gray-700 font-medium">Next Scheduled</p>
-                          <p className="text-xs text-gray-500">
-                            {new Date(
-                              appointments
-                                .filter(a => a.status === 'SCHEDULED')
-                                .sort((a, b) => new Date(a.dateOfTreatment).getTime() - new Date(b.dateOfTreatment).getTime())[0]?.dateOfTreatment || Date.now()
-                            ).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                    {treatments.length === 0 && appointments.length === 0 && (
-                      <p className="text-sm text-gray-500 italic">No recent activity</p>
-                    )}
+                      );
+                    })}
                   </div>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp size={16} className="text-gray-600" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900">Treatment Summary</h3>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{treatments.length}</p>
-                    <p className="text-xs text-gray-600 mt-1">Total Treatments</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">{appointments.length}</p>
-                    <p className="text-xs text-gray-600 mt-1">All Appointments</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {appointments.filter(a => a.status === 'COMPLETED').length}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">Completed Visits</p>
-                  </div>
-                  <div className="text-center p-3 bg-gray-50 rounded-lg">
-                    <p className="text-2xl font-bold text-gray-900">
-                      {documents.length}
-                    </p>
-                    <p className="text-xs text-gray-600 mt-1">Documents</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
 
           {activeTab === 'treatments' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
               {loadingTreatments ? (
-                <div className="flex flex-col justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-gray-500">Loading treatments...</p>
+                <div className="flex items-center justify-center gap-3 py-16 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading treatments…</span>
                 </div>
               ) : treatmentsError ? (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                <div className="m-4 rounded-lg border border-danger-100 bg-danger-50 p-4 text-sm text-danger-700">
                   {treatmentsError}
                 </div>
               ) : treatments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No treatment records found for this patient</p>
-                </div>
+                <EmptyState icon={Stethoscope} title="No treatments yet" description="Logged treatments for this patient will appear here." />
               ) : (
-                <div className="space-y-3">
-                  {treatments.map((treatment) => (
-                    <div key={treatment.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {treatment.typeOfTreatment.replace(/_/g, ' ')}
-                          </p>
-                          <p className="text-xs text-gray-600 flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(treatment.dateOfTreatment).toLocaleDateString()}
-                          </p>
+                <div className="divide-y divide-surface-100">
+                  {treatments.map((treatment) => {
+                    const cfg = TREATMENT_STATUS_CONFIG[treatment.status];
+                    return (
+                      <div key={treatment.id} className="px-5 py-3.5 transition-colors hover:bg-surface-50">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-surface-900">{titleType(treatment.typeOfTreatment)}</p>
+                              <span
+                                className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium"
+                                style={{ backgroundColor: cfg.bgColor, color: cfg.color }}
+                              >
+                                {cfg.label}
+                              </span>
+                              {treatment.followUpRequired && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-warning-50 px-2 py-0.5 text-[11px] font-medium text-warning-700">
+                                  <AlertCircle className="h-3 w-3" /> Follow-up
+                                </span>
+                              )}
+                            </div>
+                            <p className="mt-1 text-xs text-surface-500">
+                              Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
+                              {treatment.teeth.length > 0 && <span> · Teeth {treatment.teeth.map((t) => t.toothNumber).join(', ')}</span>}
+                            </p>
+                            {treatment.notes && <p className="mt-1.5 text-sm text-surface-600">{treatment.notes}</p>}
+                          </div>
+                          <span className="shrink-0 text-xs text-surface-400 tabular-nums">{fullDate(treatment.dateOfTreatment)}</span>
                         </div>
-                        <span className={`px-2 py-1 text-xs rounded font-medium ${
-                          treatment.completed 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {treatment.completed ? 'Completed' : 'In Progress'}
-                        </span>
                       </div>
-                      {treatment.notes && (
-                        <p className="text-sm text-gray-700 mb-2">{treatment.notes}</p>
-                      )}
-                      {treatment.procedure && (
-                        <p className="text-xs text-gray-600 mb-2">
-                          <span className="font-semibold">Procedure:</span> {treatment.procedure}
-                        </p>
-                      )}
-                      <div className="flex justify-between text-xs text-gray-600">
-                        <span>
-                          Dr. {treatment.doctor.user.firstName} {treatment.doctor.user.lastName}
-                        </span>
-                        {treatment.teethInvolved && treatment.teethInvolved.length > 0 && (
-                          <span>Teeth: {treatment.teethInvolved.join(', ')}</span>
-                        )}
-                      </div>
-                      {treatment.followUpRequired && (
-                        <div className="mt-2 flex items-center gap-1 text-xs text-blue-600">
-                          <AlertCircle className="w-3 h-3" />
-                          <span>Follow-up required</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
           )}
 
           {activeTab === 'appointments' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="overflow-hidden rounded-xl border border-surface-200 bg-white shadow-xs">
               {loadingAppointments ? (
-                <div className="flex flex-col justify-center items-center py-12">
-                  <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-3"></div>
-                  <p className="text-sm text-gray-500">Loading appointments...</p>
+                <div className="flex items-center justify-center gap-3 py-16 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading appointments…</span>
                 </div>
               ) : appointmentsError ? (
-                <div className="p-4 bg-red-50 border border-red-200 text-red-600 rounded">
+                <div className="m-4 rounded-lg border border-danger-100 bg-danger-50 p-4 text-sm text-danger-700">
                   {appointmentsError}
                 </div>
               ) : appointments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No appointments found for this patient</p>
-                </div>
+                <EmptyState icon={Calendar} title="No appointments" description="This patient has no appointment history yet." />
               ) : (
-                <div className="space-y-3">
-                  {appointments.map((appt) => {
+                <div className="divide-y divide-surface-100">
+                  {[...appointments].reverse().map((appt) => {
+                    const pill = apptStatusPill(appt.status);
                     const isPast = new Date(appt.dateOfTreatment) < new Date();
                     return (
-                      <div key={appt.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <p className="font-semibold text-sm">
-                              {appt.typeOfTreatment ? appt.typeOfTreatment.replace(/_/g, ' ') : 'Appointment'}
+                      <div key={appt.id} className="flex items-start justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-surface-50">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-medium text-surface-900">
+                              {appt.typeOfTreatment ? titleType(appt.typeOfTreatment) : 'Appointment'}
                             </p>
-                            <p className="text-xs text-gray-600 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(appt.dateOfTreatment).toLocaleDateString()} at{' '}
-                              {new Date(appt.dateOfTreatment).toLocaleTimeString([], { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
-                              {isPast && <span className="ml-2 text-gray-500">(Past)</span>}
-                            </p>
-                          </div>
-                          <span className={`px-2 py-1 text-xs rounded font-medium ${getStatusColor(appt.status)}`}>
-                            {appt.status.replace(/_/g, ' ')}
-                          </span>
-                        </div>
-                        {appt.notes && (
-                          <p className="text-sm text-gray-700 mb-2">{appt.notes}</p>
-                        )}
-                        <div className="flex justify-between text-xs text-gray-600">
-                          {appt.doctor && (
-                            <span>
-                              Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}
+                            <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium ${pill.chip}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${pill.dot}`} />
+                              {titleType(appt.status)}
                             </span>
-                          )}
-                          {appt.teethInvolved && appt.teethInvolved.length > 0 && (
-                            <span>Teeth: {appt.teethInvolved.join(', ')}</span>
-                          )}
+                          </div>
+                          <p className="mt-1 text-xs text-surface-500">
+                            {appt.doctor && <>Dr. {appt.doctor.user.firstName} {appt.doctor.user.lastName}</>}
+                            {appt.teethInvolved && appt.teethInvolved.length > 0 && <span> · Teeth {appt.teethInvolved.join(', ')}</span>}
+                          </p>
+                          {appt.notes && <p className="mt-1.5 text-sm text-surface-600">{appt.notes}</p>}
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm text-surface-700 tabular-nums">{fullDate(appt.dateOfTreatment)}</p>
+                          <p className="text-xs text-surface-400 tabular-nums">
+                            {new Date(appt.dateOfTreatment).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {isPast && ' · Past'}
+                          </p>
                         </div>
                       </div>
                     );
@@ -711,39 +719,39 @@ export function PatientDetailPanel({
           )}
 
           {activeTab === 'documents' && (
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="rounded-xl border border-surface-200 bg-white p-6 shadow-xs">
 
               {documentsError && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded flex gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-700 flex-shrink-0 mt-0.5" />
-                  <p className="text-sm text-red-800">{documentsError}</p>
+                <div className="mb-4 flex gap-2 rounded-lg border border-danger-100 bg-danger-50 p-4">
+                  <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-danger-600" />
+                  <p className="text-sm text-danger-700">{documentsError}</p>
                 </div>
               )}
               {documentsSuccess && (
-                <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded flex gap-2">
-                  <svg className="w-5 h-5 text-green-700 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" stroke="currentColor" strokeWidth="2"/></svg>
-                  <p className="text-sm text-green-800">{documentsSuccess}</p>
+                <div className="mb-4 flex gap-2 rounded-lg border border-success-100 bg-success-50 p-4">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 flex-shrink-0 text-success-600" />
+                  <p className="text-sm text-success-700">{documentsSuccess}</p>
                 </div>
               )}
 
-              <div className="mb-4 flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Documents</h3>
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-display text-lg font-semibold tracking-tight text-surface-900">Documents</h3>
                 {!showUploadForm && (
                   <button
                     onClick={() => setShowUploadForm(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    className="flex items-center gap-2 rounded-md bg-gradient-to-b from-primary-500 to-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:from-primary-600 hover:to-primary-700"
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="h-4 w-4" />
                     Upload Document
                   </button>
                 )}
               </div>
 
               {showUploadForm && (
-                <form onSubmit={handleUploadDocument} className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <form onSubmit={handleUploadDocument} className="mb-6 p-4 bg-surface-50 rounded-lg border border-surface-200">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         Document Name
                       </label>
                       <input
@@ -751,17 +759,17 @@ export function PatientDetailPanel({
                         placeholder="e.g., X-ray report, Prescription"
                         value={uploadData.name}
                         onChange={(e) => setUploadData({ ...uploadData, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:shadow-focus focus:outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         Document Type
                       </label>
                       <select
                         value={uploadData.type}
                         onChange={(e) => setUploadData({ ...uploadData, type: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-surface-300 px-3 py-2 text-sm focus:border-primary-500 focus:shadow-focus focus:outline-none"
                       >
                         <option value="">Select a type</option>
                         <option value="X-RAY">X-Ray</option>
@@ -772,7 +780,7 @@ export function PatientDetailPanel({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-surface-700 mb-1">
                         File
                       </label>
                       <input
@@ -786,14 +794,14 @@ export function PatientDetailPanel({
                       <button
                         type="button"
                         onClick={() => setShowUploadForm(false)}
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                        className="px-4 py-2 bg-surface-200 text-surface-700 rounded-lg hover:bg-surface-300 transition-colors text-sm"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         disabled={uploading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors text-sm"
+                        className="rounded-lg bg-gradient-to-b from-primary-500 to-primary-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:from-primary-600 hover:to-primary-700 disabled:opacity-50"
                       >
                         {uploading ? 'Uploading...' : 'Upload'}
                       </button>
@@ -803,73 +811,69 @@ export function PatientDetailPanel({
               )}
 
               {documentsLoading ? (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="animate-spin inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mb-2"></div>
-                  <p className="text-sm">Loading documents...</p>
+                <div className="flex items-center justify-center gap-3 py-12 text-surface-500">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary-600" />
+                  <span className="text-sm">Loading documents…</span>
                 </div>
               ) : documents.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">No documents uploaded yet</p>
-                  <p className="text-xs mt-2">Upload medical documents, X-rays, prescriptions, and reports here</p>
-                </div>
+                <EmptyState
+                  icon={FileText}
+                  title="No documents uploaded yet"
+                  description="X-rays, prescriptions, reports and invoices for this patient will live here."
+                  action={
+                    !showUploadForm ? (
+                      <button
+                        onClick={() => setShowUploadForm(true)}
+                        className="inline-flex items-center gap-2 rounded-md border border-surface-300 px-3 py-1.5 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-100"
+                      >
+                        <Upload className="h-4 w-4" /> Upload document
+                      </button>
+                    ) : undefined
+                  }
+                />
               ) : (
-                <div className="space-y-3">
+                <div className="divide-y divide-surface-100 overflow-hidden rounded-lg border border-surface-200">
                   {documents.map((doc) => (
-                    <div key={doc.id} className="border border-gray-200 rounded p-4 hover:bg-gray-50 transition">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-3 flex-1">
-                          <FileText className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                          <div>
-                              <a
-                                href={doc.filePath}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-sm text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 group"
-                              >
-                                {doc.name}
-                                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              </a>
-                            <p className="text-xs text-gray-600 flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              {new Date(doc.createdAt).toLocaleDateString()}
+                    <div key={doc.id} className="px-4 py-3 transition-colors hover:bg-surface-50">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-info-50 text-info-600">
+                            <FileText className="h-4 w-4" />
+                          </span>
+                          <div className="min-w-0">
+                            <a
+                              href={doc.filePath}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center gap-1 truncate font-medium text-surface-900 hover:text-primary-700 hover:underline"
+                            >
+                              {doc.name}
+                              <ExternalLink className="h-3 w-3 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+                            </a>
+                            <p className="truncate text-xs text-surface-400">
+                              <span className="tabular-nums">{fullDate(doc.createdAt)}</span> · {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded font-medium">
-                            {doc.type}
-                          </span>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <span className="rounded-full bg-info-50 px-2 py-0.5 text-[11px] font-medium text-info-700">{doc.type}</span>
                           {doc.uploadedBy.id === currentUserId && (
                             <button
                               onClick={() => setDeleteConfirmDocId(doc.id)}
-                              className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
                               title="Delete document"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           )}
                         </div>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">
-                        Uploaded by: {doc.uploadedBy.firstName} {doc.uploadedBy.lastName}
-                      </p>
-                      
+
                       {deleteConfirmDocId === doc.id && (
-                        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded flex gap-2 items-center">
-                          <p className="text-xs text-red-800 flex-1">Are you sure you want to delete this document?</p>
-                          <button
-                            onClick={() => handleDeleteDocument(doc.id)}
-                            className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirmDocId(null)}
-                            className="px-2 py-1 bg-gray-300 text-gray-700 text-xs rounded hover:bg-gray-400 transition-colors"
-                          >
-                            Cancel
-                          </button>
+                        <div className="mt-2 flex items-center gap-2 rounded-lg border border-danger-100 bg-danger-50 p-2">
+                          <p className="flex-1 text-xs text-danger-700">Delete this document?</p>
+                          <button onClick={() => handleDeleteDocument(doc.id)} className="rounded-md bg-danger-600 px-2 py-1 text-xs font-medium text-white hover:bg-danger-700">Delete</button>
+                          <button onClick={() => setDeleteConfirmDocId(null)} className="rounded-md px-2 py-1 text-xs font-medium text-surface-500 hover:bg-surface-100">Cancel</button>
                         </div>
                       )}
                     </div>
@@ -877,6 +881,15 @@ export function PatientDetailPanel({
                 </div>
               )}
             </div>
+          )}
+
+          {activeTab === 'odontogram' && (
+            <Odontogram
+              teeth={odontogram}
+              loading={loadingOdontogram}
+              error={odontogramError}
+              onSave={handleToothSave}
+            />
           )}
         </div>
       </div>

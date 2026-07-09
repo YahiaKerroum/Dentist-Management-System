@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DollarSign, Loader2 } from 'lucide-react';
 import { getRevenueGenerated } from '../../../services/report.service';
+import { CHART_STATUS, chartTooltip, CHART_GRID_COLOR, CHART_AXIS_TICK } from '../../../lib/chartTheme';
 
 interface RevenueGeneratedChartProps {
   token: string;
@@ -41,40 +42,40 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-green-600" size={24} />
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <DollarSign className="text-green-600" size={20} />
-          <h3 className="font-semibold text-gray-800">Revenue Generated</h3>
-          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
+          <DollarSign className="text-primary-600" size={20} />
+          <h3 className="font-display font-semibold tracking-tight text-surface-900">Revenue Generated</h3>
+          <span className="bg-success-100 text-success-700 text-xs px-2 py-1 rounded-full tabular-nums">
             {formatCurrency(totalRevenue)}
           </span>
         </div>
 
-        <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex gap-1 bg-surface-100 rounded-lg p-1">
           {[3, 6, 12].map((m) => (
             <button
               key={m}
               onClick={() => setMonths(m)}
               className={`px-3 py-1 text-sm rounded-md transition-colors ${
                 months === m
-                  ? 'bg-white text-green-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
+                  ? 'bg-white text-primary-700 shadow-sm'
+                  : 'text-surface-600 hover:text-surface-800'
               }`}
             >
               {m}M
@@ -88,37 +89,30 @@ export const RevenueGeneratedChart: React.FC<RevenueGeneratedChartProps> = ({ to
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                <stop offset="5%" stopColor={CHART_STATUS.positive} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={CHART_STATUS.positive} stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
+            <XAxis dataKey="month" tick={CHART_AXIS_TICK} tickLine={false} axisLine={false} />
             <YAxis
-              fontSize={12}
+              tick={CHART_AXIS_TICK}
               tickLine={false}
               axisLine={false}
               tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
             />
-            <Tooltip
-              formatter={(value: any) => [formatCurrency(value), 'Revenue']}
-              contentStyle={{
-                backgroundColor: 'white',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
-              }}
-            />
+            <Tooltip formatter={(value: any) => [formatCurrency(value), 'Revenue']} {...chartTooltip} />
             <Area
               type="monotone"
               dataKey="revenue"
-              stroke="#10B981"
+              stroke={CHART_STATUS.positive}
               strokeWidth={2}
               fill="url(#revenueGradient)"
             />
           </AreaChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No revenue data available
         </div>
       )}

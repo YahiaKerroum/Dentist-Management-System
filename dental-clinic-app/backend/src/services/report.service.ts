@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { TreatmentStatus } from "../types/prisma.types";
 import { PaymentService } from "./payment.service";
 import { ExpenseService } from "./expense.service";
 
@@ -31,6 +32,238 @@ export class ReportService {
             totalRevenue,
             totalExpenses,
             profit,
+        };
+    }
+
+    // ============================
+    // CLINIC PULSE DASHBOARD
+    // ============================
+    static async getClinicPulse() {
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const todayEnd = new Date(todayStart);
+        todayEnd.setHours(23, 59, 59, 999);
+        const now = new Date();
+
+        const yesterdayStart = new Date(todayStart);
+        yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+        const yesterdayEnd = new Date(todayStart.getTime() - 1);
+
+        const dayOfWeek = now.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const [
+            todaysAppointments,
+            rooms,
+            treatmentCostTotals,
+            paymentTotals,
+            todaysPayments,
+            yesterdaysPayments,
+            weeksPayments,
+            followUpsDue,
+            followUpsDueTotal,
+            overdueTreatments,
+            overdueTreatmentsTotal,
+            pendingExpenses,
+        ] = await Promise.all([
+            prisma.appointment.findMany({
+                where: { dateOfTreatment: { gte: todayStart, lte: todayEnd } },
+                include: {
+                    patient: { select: { id: true, firstName: true, lastName: true, phone: true } },
+                    doctor: { select: { id: true, user: { select: { firstName: true, lastName: true } } } },
+                    room: true,
+                },
+                orderBy: { dateOfTreatment: "asc" },
+            }),
+            prisma.room.findMany({ where: { active: true }, orderBy: { order: "asc" } }),
+            prisma.treatment.groupBy({
+                by: ["patientId"],
+                where: { cost: { not: null } },
+                _sum: { cost: true },
+            }),
+            prisma.payment.groupBy({
+                by: ["patientId"],
+                _sum: { amount: true },
+            }),
+            prisma.payment.aggregate({
+                where: { date: { gte: todayStart, lte: todayEnd } },
+                _sum: { amount: true },
+            }),
+            prisma.payment.aggregate({
+                where: { date: { gte: yesterdayStart, lte: yesterdayEnd } },
+                _sum: { amount: true },
+            }),
+            prisma.payment.aggregate({
+                where: { date: { gte: weekStart, lte: todayEnd } },
+                _sum: { amount: true },
+            }),
+            prisma.treatment.findMany({
+                where: { followUpRequired: true, followUpDate: { lte: todayEnd } },
+                include: {
+                    patient: { select: { id: true, firstName: true, lastName: true } },
+                    doctor: { select: { user: { select: { firstName: true, lastName: true } } } },
+                },
+                orderBy: { followUpDate: "asc" },
+                take: 20,
+            }),
+            prisma.treatment.count({
+                where: { followUpRequired: true, followUpDate: { lte: todayEnd } },
+            }),
+            prisma.treatment.findMany({
+                where: { status: { notIn: [TreatmentStatus.COMPLETED, TreatmentStatus.BILLED, TreatmentStatus.ARCHIVED] }, dateOfTreatment: { lt: todayStart } },
+                include: {
+                    patient: { select: { id: true, firstName: true, lastName: true } },
+                    doctor: { select: { user: { select: { firstName: true, lastName: true } } } },
+                },
+                orderBy: { dateOfTreatment: "asc" },
+                take: 20,
+            }),
+            prisma.treatment.count({
+                where: { status: { notIn: [TreatmentStatus.COMPLETED, TreatmentStatus.BILLED, TreatmentStatus.ARCHIVED] }, dateOfTreatment: { lt: todayStart } },
+            }),
+            prisma.expense.count({ where: { approved: false } }),
+        ]);
+
+        // Patient balances = total treatment cost billed minus total payments received
+        const paidByPatient = new Map<string, number>();
+        paymentTotals.forEach((p) => paidByPatient.set(p.patientId, Number(p._sum.amount) || 0));
+
+        const patientIds = Array.from(new Set(treatmentCostTotals.map((t) => t.patientId)));
+        const patientsForBalance = patientIds.length
+            ? await prisma.patient.findMany({
+                where: { id: { in: patientIds } },
+                select: { id: true, firstName: true, lastName: true },
+            })
+            : [];
+        const patientById = new Map(patientsForBalance.map((p) => [p.id, p]));
+
+        const balances = treatmentCostTotals
+            .map((t) => {
+                const billed = Number(t._sum.cost) || 0;
+                const paid = paidByPatient.get(t.patientId) || 0;
+                const balance = billed - paid;
+                const patient = patientById.get(t.patientId);
+                return {
+                    patientId: t.patientId,
+                    patientName: patient ? `${patient.firstName} ${patient.lastName}` : "Unknown patient",
+                    billed,
+                    paid,
+                    balance,
+                };
+            })
+            .filter((b) => b.balance > 0.5)
+            .sort((a, b) => b.balance - a.balance);
+
+        const totalPendingBalance = balances.reduce((sum, b) => sum + b.balance, 0);
+
+        // Today's appointment status breakdown
+        const waiting = todaysAppointments.filter((a) => a.status === "CHECKED_IN");
+        const inTreatment = todaysAppointments.filter((a) => a.status === "IN_PROGRESS");
+        const completed = todaysAppointments.filter((a) => a.status === "COMPLETED");
+        const delayed = todaysAppointments.filter((a) => a.status === "SCHEDULED" && new Date(a.dateOfTreatment) < now);
+        const noShow = todaysAppointments.filter((a) => a.status === "NO_SHOW");
+        const cancelled = todaysAppointments.filter((a) => a.status === "CANCELLED");
+
+        // Chair/room status board
+        const roomStatus = rooms.map((room) => {
+            const roomAppointments = todaysAppointments.filter((a) => a.roomId === room.id);
+            const active = roomAppointments.find((a) => a.status === "CHECKED_IN" || a.status === "IN_PROGRESS");
+
+            if (active) {
+                const endsAt = new Date(active.dateOfTreatment.getTime() + active.durationMinutes * 60000);
+                return {
+                    roomId: room.id,
+                    roomName: room.name,
+                    roomType: room.type,
+                    status: "occupied" as const,
+                    patientName: active.patient ? `${active.patient.firstName} ${active.patient.lastName}` : null,
+                    doctorName: active.doctor ? `Dr. ${active.doctor.user.firstName} ${active.doctor.user.lastName}` : null,
+                    occupiedSince: active.dateOfTreatment,
+                    availableAt: endsAt,
+                };
+            }
+
+            const next = roomAppointments
+                .filter((a) => a.status === "SCHEDULED" && new Date(a.dateOfTreatment) > now)
+                .sort((a, b) => a.dateOfTreatment.getTime() - b.dateOfTreatment.getTime())[0];
+
+            return {
+                roomId: room.id,
+                roomName: room.name,
+                roomType: room.type,
+                status: "available" as const,
+                patientName: null,
+                doctorName: null,
+                nextAppointmentAt: next ? next.dateOfTreatment : null,
+            };
+        });
+
+        // Doctor workload today
+        const doctorMap = new Map<string, { doctorId: string; name: string; total: number; waiting: number; inTreatment: number; completed: number }>();
+        todaysAppointments.forEach((a) => {
+            const name = a.doctor ? `Dr. ${a.doctor.user.firstName} ${a.doctor.user.lastName}` : "Unassigned";
+            const entry = doctorMap.get(a.doctorId) || { doctorId: a.doctorId, name, total: 0, waiting: 0, inTreatment: 0, completed: 0 };
+            entry.total += 1;
+            if (a.status === "CHECKED_IN") entry.waiting += 1;
+            if (a.status === "IN_PROGRESS") entry.inTreatment += 1;
+            if (a.status === "COMPLETED") entry.completed += 1;
+            doctorMap.set(a.doctorId, entry);
+        });
+        const doctorWorkload = Array.from(doctorMap.values()).sort((a, b) => b.total - a.total);
+
+        return {
+            generatedAt: now,
+            schedule: todaysAppointments.map((a) => ({
+                id: a.id,
+                time: a.dateOfTreatment,
+                durationMinutes: a.durationMinutes,
+                status: a.status,
+                patientId: a.patientId,
+                patientName: a.patient ? `${a.patient.firstName} ${a.patient.lastName}` : "Unknown patient",
+                doctorName: a.doctor ? `Dr. ${a.doctor.user.firstName} ${a.doctor.user.lastName}` : "Unassigned",
+                treatmentType: a.typeOfTreatment,
+                roomName: a.room?.name ?? null,
+                isDelayed: a.status === "SCHEDULED" && new Date(a.dateOfTreatment) < now,
+            })),
+            summary: {
+                totalToday: todaysAppointments.length,
+                waiting: waiting.length,
+                inTreatment: inTreatment.length,
+                completed: completed.length,
+                delayed: delayed.length,
+                noShow: noShow.length,
+                cancelled: cancelled.length,
+                revenueToday: Number(todaysPayments._sum.amount) || 0,
+                revenueYesterday: Number(yesterdaysPayments._sum.amount) || 0,
+                revenueThisWeek: Number(weeksPayments._sum.amount) || 0,
+                totalPendingBalance,
+                followUpsDueCount: followUpsDueTotal,
+                treatmentsNeedingAttentionCount: overdueTreatmentsTotal,
+                expensesAwaitingApproval: pendingExpenses,
+            },
+            actionRequired: {
+                followUpsDue: followUpsDue.map((t) => ({
+                    treatmentId: t.id,
+                    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+                    treatmentType: t.typeOfTreatment,
+                    doctorName: `Dr. ${t.doctor.user.firstName} ${t.doctor.user.lastName}`,
+                    followUpDate: t.followUpDate,
+                    overdue: t.followUpDate ? t.followUpDate < todayStart : false,
+                })),
+                treatmentsNeedingAttention: overdueTreatments.map((t) => ({
+                    treatmentId: t.id,
+                    patientName: `${t.patient.firstName} ${t.patient.lastName}`,
+                    treatmentType: t.typeOfTreatment,
+                    doctorName: `Dr. ${t.doctor.user.firstName} ${t.doctor.user.lastName}`,
+                    dateOfTreatment: t.dateOfTreatment,
+                })),
+                expensesAwaitingApproval: pendingExpenses,
+            },
+            patientBalances: balances.slice(0, 10),
+            roomStatus,
+            doctorWorkload,
         };
     }
 

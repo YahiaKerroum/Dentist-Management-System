@@ -5,16 +5,18 @@ export interface Appointment {
     doctorId: string;
     patientId: string;
     dateOfTreatment: string;
+    durationMinutes: number;
     status: AppointmentStatus;
     typeOfTreatment: TreatmentType | null;
     notes: string | null;
     procedure: string | null;
     teethInvolved: number[];
     followUpRequired: boolean;
+    roomId: string | null;
     createdAt: string;
     updatedAt: string;
     createdByUserId: string | null;
-    
+
     doctor?: {
         id: string;
         user: {
@@ -30,11 +32,19 @@ export interface Appointment {
         phone: string | null;
         email: string | null;
     };
+
+    room?: {
+        id: string;
+        name: string;
+        type: string;
+    } | null;
 }
 
 
 export enum AppointmentStatus {
     SCHEDULED = 'SCHEDULED',
+    CHECKED_IN = 'CHECKED_IN',
+    IN_PROGRESS = 'IN_PROGRESS',
     COMPLETED = 'COMPLETED',
     CANCELLED = 'CANCELLED',
     NO_SHOW = 'NO_SHOW',
@@ -61,6 +71,8 @@ export interface CreateAppointmentDTO {
     procedure?: string;
     teethInvolved?: number[];
     followUpRequired?: boolean;
+    roomId?: string | null;
+    durationMinutes?: number;
 }
 
 export interface UpdateAppointmentDTO {
@@ -71,6 +83,8 @@ export interface UpdateAppointmentDTO {
     teethInvolved?: number[];
     followUpRequired?: boolean;
     status?: AppointmentStatus;
+    roomId?: string | null;
+    durationMinutes?: number;
 }
 
 export interface AppointmentResponse {

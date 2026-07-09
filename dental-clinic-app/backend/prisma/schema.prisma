@@ -20,6 +20,8 @@ enum Role {
 
 enum AppointmentStatus {
   SCHEDULED
+  CHECKED_IN
+  IN_PROGRESS
   COMPLETED
   CANCELLED
   NO_SHOW
@@ -41,6 +43,34 @@ enum PaymentMethod {
   CARD
   INSURANCE
   TRANSFER
+}
+
+enum RoomType {
+  CHAIR
+  XRAY
+  SURGERY
+}
+
+enum TreatmentStatus {
+  PLANNED
+  IN_PROGRESS
+  NEEDS_FOLLOW_UP
+  COMPLETED
+  BILLED
+  ARCHIVED
+}
+
+enum ToothStatus {
+  HEALTHY
+  DECAYED
+  FILLED
+  CROWNED
+  ROOT_CANAL
+  MISSING
+  IMPLANT
+  EXTRACTION_NEEDED
+  SEALANT
+  OTHER
 }
 
 model User {
@@ -67,6 +97,7 @@ model User {
   expensesRecorded Expense[]     @relation("ExpenseRecordedBy")
   auditLogs        AuditLog[]
   documentsUploaded Document[]
+  toothUpdates     PatientTooth[]
 
   registeredPatients Patient[] @relation("PatientRegistrations")
 
@@ -127,6 +158,7 @@ model Patient {
   treatments   Treatment[]
   payments     Payment[]
   documents    Document[]
+  teeth        PatientTooth[]
 
   registeredBy   User?   @relation("PatientRegistrations", fields: [registeredById], references: [id], onDelete: Restrict, onUpdate: Restrict)
   registeredById String?
@@ -153,6 +185,7 @@ model Appointment {
   patientId String
 
   dateOfTreatment  DateTime
+  durationMinutes  Int               @default(30)
   status           AppointmentStatus @default(SCHEDULED)
   typeOfTreatment  TreatmentType?
   notes            String?
@@ -162,32 +195,73 @@ model Appointment {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
+  room   Room?   @relation(fields: [roomId], references: [id])
+  roomId String?
+
   // audit
   createdByUser   User?       @relation("UserAppointments", fields: [createdByUserId], references: [id], onDelete: Restrict, onUpdate: Restrict)
   createdByUserId String?
   Treatment       Treatment[]
 }
 
+model Room {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  type      RoomType @default(CHAIR)
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+}
+
 
 model Treatment {
-  id               String        @id @default(uuid())
-  doctor           Doctor        @relation(fields: [doctorId], references: [id])
+  id               String          @id @default(uuid())
+  doctor           Doctor          @relation(fields: [doctorId], references: [id])
   doctorId         String
-  patient          Patient       @relation(fields: [patientId], references: [id])
+  patient          Patient         @relation(fields: [patientId], references: [id])
   patientId        String
   dateOfTreatment  DateTime
   typeOfTreatment  TreatmentType
   notes            String?
   procedure        String?
-  teethInvolved    Int[]         @default([])
-  followUpRequired Boolean       @default(false)
-  completed        Boolean       @default(false)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  status           TreatmentStatus @default(PLANNED)
+  followUpRequired Boolean         @default(false)
+  followUpDate     DateTime?
+  cost             Decimal?        @db.Decimal(10, 2)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  teeth TreatmentTooth[]
 
   // Link to an appointment if this treatment was performed as part of one
   appointment   Appointment? @relation(fields: [appointmentId], references: [id])
   appointmentId String?
+}
+
+model TreatmentTooth {
+  id          String    @id @default(uuid())
+  treatment   Treatment @relation(fields: [treatmentId], references: [id], onDelete: Cascade)
+  treatmentId String
+  toothNumber Int
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+model PatientTooth {
+  id          String      @id @default(uuid())
+  patient     Patient     @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+  toothNumber Int
+  status      ToothStatus @default(HEALTHY)
+  notes       String?
+  updatedAt   DateTime    @updatedAt
+  updatedBy   User?       @relation(fields: [updatedById], references: [id], onDelete: SetNull, onUpdate: Restrict)
+  updatedById String?
+
+  @@unique([patientId, toothNumber])
 }
 
 model Payment {

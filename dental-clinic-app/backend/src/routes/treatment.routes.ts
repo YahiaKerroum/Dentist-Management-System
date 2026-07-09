@@ -10,7 +10,7 @@ router.post("/", TreatmentController.create);
 router.get("/", TreatmentController.getAll);
 router.get("/:id", TreatmentController.getById);
 router.put("/:id", TreatmentController.update);
-router.patch("/:id/complete", TreatmentController.markCompleted);
+router.patch("/:id/status", TreatmentController.updateStatus);
 router.delete("/:id", TreatmentController.delete);
 
 export default router;

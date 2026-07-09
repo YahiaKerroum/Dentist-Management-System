@@ -14,6 +14,11 @@ export class ReportController {
     sendSuccess(res, stats);
   });
 
+  static getClinicPulse = asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
+    const data = await ReportService.getClinicPulse();
+    sendSuccess(res, data);
+  });
+
   static getFinancial = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { dateFrom, dateTo } = req.query;
 

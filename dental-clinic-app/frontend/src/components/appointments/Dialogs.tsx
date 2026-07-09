@@ -48,10 +48,10 @@ export function ConfirmationDialog({
                                 <AlertCircle className={`h-6 w-6 ${iconColor}`} />
                             </div>
                             <div className="ml-4 flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-surface-900">
                                     {title}
                                 </h3>
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-sm text-surface-500">
                                     {message}
                                 </p>
                             </div>
@@ -63,7 +63,7 @@ export function ConfirmationDialog({
                             type="button"
                             onClick={onCancel}
                             disabled={isLoading}
-                            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="px-4 py-2 text-sm font-medium text-surface-700 bg-white border border-surface-300 rounded-lg hover:bg-surface-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {cancelText}
                         </button>
@@ -114,10 +114,10 @@ export function SuccessDialog({ isOpen, message, onClose, autoClose = true }: Su
                                 <CheckCircle className="h-6 w-6 text-green-600" />
                             </div>
                             <div className="ml-4 flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-surface-900">
                                     Success!
                                 </h3>
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-sm text-surface-500">
                                     {message}
                                 </p>
                             </div>
@@ -160,10 +160,10 @@ export function ErrorDialog({ isOpen, message, onClose }: ErrorDialogProps) {
                                 <XCircle className="h-6 w-6 text-red-600" />
                             </div>
                             <div className="ml-4 flex-1">
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-lg font-semibold text-surface-900">
                                     Error
                                 </h3>
-                                <p className="mt-2 text-sm text-gray-500">
+                                <p className="mt-2 text-sm text-surface-500">
                                     {message}
                                 </p>
                             </div>

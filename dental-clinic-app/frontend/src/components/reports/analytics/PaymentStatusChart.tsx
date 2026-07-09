@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { getPaymentStatus } from '../../../services/report.service';
+import { CHART_STATUS, chartTooltip } from '../../../lib/chartTheme';
 
 interface PaymentStatusChartProps {
   token: string;
 }
 
 const COLORS = {
-  paid: '#10B981',
-  pending: '#F59E0B',
-  overdue: '#EF4444',
+  paid: CHART_STATUS.positive,
+  pending: CHART_STATUS.attention,
+  overdue: CHART_STATUS.negative,
 };
 
 export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token }) => {
@@ -53,31 +54,31 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
 
   const renderLabel = (entry: any) => {
     const percent = entry.percent || 0;
-    return `${entry.name} ${(percent * 100).toFixed(0)}%`;
+    return `${(percent * 100).toFixed(0)}%`;
   };
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-4">
-        <CreditCard className="text-green-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Payment Status</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <CreditCard className="text-primary-600" size={20} />
+        <h3 className="font-display font-semibold tracking-tight text-surface-900">Payment Status</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full tabular-nums">
           Total: {total}
         </span>
       </div>
@@ -85,13 +86,13 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
       {data.length > 0 ? (
         <>
           <ResponsiveContainer width="100%" height={200}>
-            <PieChart>
+            <PieChart margin={{ top: 8, right: 28, bottom: 8, left: 28 }}>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
                 innerRadius={50}
-                outerRadius={80}
+                outerRadius={75}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderLabel}
@@ -101,14 +102,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip
-                formatter={(value: any) => [value, 'Count']}
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
+              <Tooltip formatter={(value: any) => [value, 'Count']} {...chartTooltip} />
             </PieChart>
           </ResponsiveContainer>
 
@@ -116,8 +110,8 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
           <div className="grid grid-cols-3 gap-2 mt-4">
             {data.map((item) => (
               <div key={item.name} className="text-center">
-                <div className="text-xs text-gray-500">{item.name}</div>
-                <div className="text-sm font-semibold" style={{ color: item.color }}>
+                <div className="text-xs text-surface-500">{item.name}</div>
+                <div className="text-sm font-semibold tabular-nums" style={{ color: item.color }}>
                   {formatCurrency(item.amount)}
                 </div>
               </div>
@@ -125,7 +119,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
           </div>
         </>
       ) : (
-        <div className="flex items-center justify-center h-64 text-gray-500">
+        <div className="flex items-center justify-center h-64 text-surface-500">
           No payment data available
         </div>
       )}

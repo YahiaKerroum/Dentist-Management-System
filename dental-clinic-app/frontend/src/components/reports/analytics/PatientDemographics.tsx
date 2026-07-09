@@ -2,19 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Users, Loader2 } from 'lucide-react';
 import { getPatientDemographics } from '../../../services/report.service';
+import { CHART_CATEGORICAL, CHART_OTHER, categoricalColor, chartTooltip } from '../../../lib/chartTheme';
 
 interface PatientDemographicsProps {
   token: string;
 }
 
 const GENDER_COLORS: Record<string, string> = {
-  MALE: '#3B82F6',
-  FEMALE: '#EC4899',
-  OTHER: '#8B5CF6',
-  Unknown: '#9CA3AF',
+  MALE: CHART_CATEGORICAL[1], // blue
+  FEMALE: CHART_CATEGORICAL[4], // magenta
+  OTHER: CHART_CATEGORICAL[3], // violet
+  Unknown: CHART_OTHER,
 };
-
-const AGE_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6'];
 
 export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token }) => {
   const [genderData, setGenderData] = useState<{ name: string; value: number }[]>([]);
@@ -61,26 +60,26 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-center h-80">
-        <Loader2 className="animate-spin text-blue-600" size={24} />
+      <div className="bg-white border border-surface-200 rounded-lg p-4 flex items-center justify-center h-80">
+        <Loader2 className="animate-spin text-primary-600" size={24} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <p className="text-red-500 text-sm">{error}</p>
+      <div className="bg-white border border-surface-200 rounded-lg p-4">
+        <p className="text-danger-600 text-sm">{error}</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-surface-200 rounded-lg p-4">
       <div className="flex items-center gap-2 mb-4">
-        <Users className="text-blue-600" size={20} />
-        <h3 className="font-semibold text-gray-800">Patient Demographics</h3>
-        <span className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+        <Users className="text-primary-600" size={20} />
+        <h3 className="font-display font-semibold tracking-tight text-surface-900">Patient Demographics</h3>
+        <span className="bg-surface-100 text-surface-600 text-xs px-2 py-1 rounded-full tabular-nums">
           Total: {totalPatients}
         </span>
       </div>
@@ -88,7 +87,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Gender Distribution */}
         <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">By Gender</h4>
+          <h4 className="text-sm font-medium text-surface-600 mb-2 text-center">By Gender</h4>
           {genderData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -101,17 +100,10 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
                   label={renderLabel}
                 >
                   {genderData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={GENDER_COLORS[entry.name] || '#9CA3AF'} />
+                    <Cell key={`cell-${index}`} fill={GENDER_COLORS[entry.name] || CHART_OTHER} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value: any, name: any) => [value, name]}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
+                <Tooltip formatter={(value: any, name: any) => [value, name]} {...chartTooltip} />
                 <Legend
                   verticalAlign="bottom"
                   formatter={(value: any) => <span className="text-xs">{value}</span>}
@@ -119,7 +111,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+            <div className="h-44 flex items-center justify-center text-surface-500 text-sm">
               No data
             </div>
           )}
@@ -127,7 +119,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
 
         {/* Age Distribution */}
         <div>
-          <h4 className="text-sm font-medium text-gray-600 mb-2 text-center">By Age Group</h4>
+          <h4 className="text-sm font-medium text-surface-600 mb-2 text-center">By Age Group</h4>
           {ageData.length > 0 ? (
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
@@ -139,18 +131,11 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
                   dataKey="value"
                   label={renderLabel}
                 >
-                  {ageData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={AGE_COLORS[index % AGE_COLORS.length]} />
+                  {ageData.map((_entry, index) => (
+                    <Cell key={`cell-${index}`} fill={categoricalColor(index)} />
                   ))}
                 </Pie>
-                <Tooltip
-                  formatter={(value: any, name: any) => [value, name]}
-                  contentStyle={{
-                    backgroundColor: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                />
+                <Tooltip formatter={(value: any, name: any) => [value, name]} {...chartTooltip} />
                 <Legend
                   verticalAlign="bottom"
                   formatter={(value: any) => <span className="text-xs">{value}</span>}
@@ -158,7 +143,7 @@ export const PatientDemographics: React.FC<PatientDemographicsProps> = ({ token 
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-44 flex items-center justify-center text-gray-500 text-sm">
+            <div className="h-44 flex items-center justify-center text-surface-500 text-sm">
               No data
             </div>
           )}

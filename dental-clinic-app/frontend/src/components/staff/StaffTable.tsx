@@ -1,6 +1,11 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 import { User, Role } from '../../types/user';
-import { Users, Pencil, Trash2, Eye, Clock } from 'lucide-react';
+import { Pencil, Trash2, Mail, Phone, Users } from 'lucide-react';
+import { Card } from '../ui/Card';
+import { Badge } from '../ui/Badge';
+import { EmptyState } from '../ui/EmptyState';
+import { getAvatarColor } from '../../utils/avatarColor';
 
 interface StaffTableProps {
     staff: User[];
@@ -9,211 +14,100 @@ interface StaffTableProps {
     onView: (staff: User) => void;
 }
 
-const getRoleBadgeColor = (role: Role): string => {
-    switch (role) {
-        case 'MANAGER':
-            return '#dc3545';
-        case 'DOCTOR':
-            return '#3DBEA3';
-        case 'ASSISTANT':
-            return '#28a745';
-        default:
-            return '#6c757d';
-    }
+const ROLE_BADGE: Record<Role, 'danger' | 'primary' | 'success' | 'neutral'> = {
+    MANAGER: 'danger',
+    DOCTOR: 'primary',
+    ASSISTANT: 'success',
+    RECEPTIONIST: 'neutral',
 };
 
-const getRoleIcon = () => {
-    return <Users size={16} />;
+const ROLE_ACCENT: Record<Role, string> = {
+    MANAGER: 'bg-danger-500',
+    DOCTOR: 'bg-primary-500',
+    ASSISTANT: 'bg-success-500',
+    RECEPTIONIST: 'bg-surface-400',
 };
 
 export const StaffTable: React.FC<StaffTableProps> = ({ staff, onEdit, onDelete, onView }) => {
     if (staff.length === 0) {
         return (
-            <div style={{
-                padding: '60px 20px',
-                textAlign: 'center',
-                color: '#6c757d',
-                backgroundColor: '#f8f9fa',
-                borderRadius: '8px',
-                border: '2px dashed #dee2e6'
-            }}>
-                <Users size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                <p style={{ fontSize: '18px', marginBottom: '8px' }}>No staff members found</p>
-                <p style={{ fontSize: '14px' }}>Add your first staff member to get started</p>
-            </div>
+            <EmptyState
+                icon={Users}
+                title="No staff members found"
+                description="Add your first staff member to get started"
+            />
         );
     }
 
     return (
-        <div style={{ overflowX: 'auto', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                    <tr style={{ backgroundColor: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Name</th>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Email</th>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Role</th>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Phone</th>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Specialization</th>
-                        <th style={{ padding: '16px', textAlign: 'left', fontWeight: 600, color: '#495057' }}>Last Updated</th>
-                        <th style={{ padding: '16px', textAlign: 'right', fontWeight: 600, color: '#495057' }}>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {staff.map((member) => (
-                        <tr
-                            key={member.id}
-                            style={{
-                                borderBottom: '1px solid #dee2e6',
-                                transition: 'background-color 0.2s',
-                                cursor: 'pointer'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {staff.map((member, i) => {
+                const avatar = getAvatarColor(`${member.firstName}${member.lastName}`);
+                return (
+                    <motion.div
+                        key={member.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2, delay: Math.min(i * 0.03, 0.3) }}
+                    >
+                        <Card
+                            className="group flex h-full cursor-pointer flex-col overflow-hidden transition-shadow hover:shadow-md"
                             onClick={() => onView(member)}
                         >
-                            <td style={{ padding: '16px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{
-                                        width: '40px',
-                                        height: '40px',
-                                        borderRadius: '50%',
-                                        backgroundColor: getRoleBadgeColor(member.role),
-                                        color: 'white',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontWeight: 600,
-                                        fontSize: '14px'
-                                    }}>
-                                        {member.firstName[0]}{member.lastName[0]}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: 500, color: '#212529' }}>
-                                            {member.firstName} {member.lastName}
-                                        </div>
-                                        <div style={{ fontSize: '12px', color: '#6c757d' }}>
-                                            @{member.username}
-                                        </div>
-                                    </div>
+                            <div className={`h-1 w-full shrink-0 ${ROLE_ACCENT[member.role] ?? 'bg-surface-400'}`} />
+                            <div className="flex flex-1 flex-col p-5">
+                            <div className="flex items-start justify-between">
+                                <div className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold ${avatar.bg} ${avatar.text}`}>
+                                    {member.firstName[0]}
+                                    {member.lastName[0]}
                                 </div>
-                            </td>
-                            <td style={{ padding: '16px', color: '#495057' }}>{member.email}</td>
-                            <td style={{ padding: '16px' }}>
-                                <span style={{
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '6px',
-                                    padding: '4px 12px',
-                                    borderRadius: '12px',
-                                    fontSize: '12px',
-                                    fontWeight: 600,
-                                    backgroundColor: getRoleBadgeColor(member.role) + '20',
-                                    color: getRoleBadgeColor(member.role)
-                                }}>
-                                    {getRoleIcon()}
-                                    {member.role}
-                                </span>
-                            </td>
-                            <td style={{ padding: '16px', color: '#495057' }}>
-                                {member.phone || <span style={{ color: '#adb5bd' }}>Not set</span>}
-                            </td>
-                            <td style={{ padding: '16px', color: '#495057' }}>
-                                {member.doctorProfile?.specialization || <span style={{ color: '#adb5bd' }}>N/A</span>}
-                            </td>
-                            <td style={{ padding: '16px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#6c757d', fontSize: '14px' }}>
-                                    <Clock size={16} style={{ opacity: 0.6 }} />
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span>{member.updatedAt ? new Date(member.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}</span>
-                                        <span style={{ fontSize: '12px', color: '#adb5bd' }}>
-                                            {member.updatedAt ? new Date(member.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : ''}
-                                        </span>
-                                    </div>
-                                </div>
-                            </td>
-                            <td style={{ padding: '16px' }} onClick={(e) => e.stopPropagation()}>
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                                     <button
-                                        onClick={() => onView(member)}
-                                        style={{
-                                            padding: '8px',
-                                            backgroundColor: '#E8F5F0',
-                                            color: '#3DBEA3',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#3DBEA3';
-                                            e.currentTarget.style.color = 'white';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#E8F5F0';
-                                            e.currentTarget.style.color = '#3DBEA3';
-                                        }}
-                                        title="View Profile"
+                                        onClick={(e) => { e.stopPropagation(); onEdit(member); }}
+                                        className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-surface-100 hover:text-surface-700"
+                                        title="Edit"
                                     >
-                                        <Eye size={16} />
+                                        <Pencil className="h-4 w-4" />
                                     </button>
                                     <button
-                                        onClick={() => onEdit(member)}
-                                        style={{
-                                            padding: '8px',
-                                            backgroundColor: '#fff3cd',
-                                            color: '#856404',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#ffc107';
-                                            e.currentTarget.style.color = 'white';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#fff3cd';
-                                            e.currentTarget.style.color = '#856404';
-                                        }}
-                                        title="Edit Staff"
+                                        onClick={(e) => { e.stopPropagation(); onDelete(member); }}
+                                        className="rounded-md p-1.5 text-surface-400 transition-colors hover:bg-danger-50 hover:text-danger-600"
+                                        title="Delete"
                                     >
-                                        <Pencil size={16} />
-                                    </button>
-                                    <button
-                                        onClick={() => onDelete(member)}
-                                        style={{
-                                            padding: '8px',
-                                            backgroundColor: '#f8d7da',
-                                            color: '#721c24',
-                                            border: 'none',
-                                            borderRadius: '6px',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#dc3545';
-                                            e.currentTarget.style.color = 'white';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.backgroundColor = '#f8d7da';
-                                            e.currentTarget.style.color = '#721c24';
-                                        }}
-                                        title="Delete Staff"
-                                    >
-                                        <Trash2 size={16} />
+                                        <Trash2 className="h-4 w-4" />
                                     </button>
                                 </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                            </div>
+
+                            <div className="mt-3">
+                                <h3 className="truncate text-sm font-semibold text-surface-900">
+                                    {member.firstName} {member.lastName}
+                                </h3>
+                                <p className="truncate text-xs text-surface-400">@{member.username}</p>
+                            </div>
+
+                            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+                                <Badge variant={ROLE_BADGE[member.role]}>{member.role}</Badge>
+                                {member.doctorProfile?.specialization && (
+                                    <Badge variant="info">{member.doctorProfile.specialization}</Badge>
+                                )}
+                            </div>
+
+                            <div className="mt-4 space-y-1.5 border-t border-surface-100 pt-3 text-xs text-surface-500">
+                                <div className="flex items-center gap-2 truncate">
+                                    <Mail className="h-3.5 w-3.5 shrink-0 text-surface-400" />
+                                    <span className="truncate">{member.email}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-3.5 w-3.5 shrink-0 text-surface-400" />
+                                    <span>{member.phone || 'Not set'}</span>
+                                </div>
+                            </div>
+                            </div>
+                        </Card>
+                    </motion.div>
+                );
+            })}
         </div>
     );
 };
