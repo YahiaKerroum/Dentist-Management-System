@@ -89,43 +89,97 @@ Express + Prisma + PostgreSQL backend — with JWT auth and role-based access co
 
 ## Features
 
+### 🔑 Granular permission control &nbsp;<sub>— the signature feature</sub>
+
+Beyond the four base roles, a **Manager can grant or revoke any individual action for any staff
+member**. Every feature is broken into four actions — **View · Create · Update · Delete** — and each
+is an independent toggle in the staff editor:
+
+| Feature | View | Create | Update | Delete |
+|---------|:---:|:-----:|:-----:|:-----:|
+| Patients | ◻ | ◻ | ◻ | ◻ |
+| Appointments | ◻ | ◻ | ◻ | ◻ |
+| Treatments | ◻ | ◻ | ◻ | ◻ |
+| Payments | ◻ | ◻ | ◻ | ◻ |
+| Documents | ◻ | ◻ | ◻ | ◻ |
+| Expenses | ◻ | ◻ | ◻ | ◻ |
+
+So a manager can, for example, let an assistant **view but not delete** payments, allow a specific
+doctor to **upload and view documents** but not edit treatment details, or hand a receptionist
+**create-only** access to appointments. Permissions are stored per-user, enforced server-side on
+every route, and reflected in the UI (a read-only "My Access" grid on each profile). This is what
+turns Clinic Pulse from a fixed-role app into something a real clinic can shape to its own workflow.
+
 ### 🩺 Clinic Pulse dashboard
-A real-time command center: today's schedule, patients waiting / in treatment, chair occupancy,
-revenue collected today vs. yesterday, pending patient balances, follow-ups due, and expenses
-awaiting approval — all from a single aggregation endpoint, never fabricated.
+The live command center that opens the app. A single aggregation endpoint powers today's schedule,
+patients **waiting / in treatment**, **chair occupancy** with elapsed-time meters, **revenue
+collected today vs. yesterday** (with the delta), pending patient balances, follow-ups due, per-doctor
+workload and expenses awaiting approval — with a self-drawing "pulse" line and count-up numerals.
+Every figure is computed from real data; nothing is faked.
 
 ### 👥 Patients
-A working records table sortable by **next appointment, outstanding balance, last visit and
-status** (active/inactive derived from real visit history). Quick actions on hover, a full patient
-record with a balance-and-alerts snapshot, and a reverse-chronological activity feed.
+A working **records table** — not a contact list — sortable by **next appointment, outstanding
+balance, last visit and status**. "Active / Inactive" is *derived* from real visit history (upcoming
+appointment or seen within 18 months), the balance is billed-minus-paid, and avatar colors are tied
+to the assigned dentist. **Search** by name/email, filter tabs with live counts (All · Active ·
+Inactive), and hover actions (call, edit, delete). Each patient opens a full record with a
+**balance-and-alerts snapshot** (outstanding balance, no-show-risk flag), next appointment, and a
+**reverse-chronological activity feed** across payments, treatments and appointments — plus tabs for
+Treatments, Appointments, Documents and the Odontogram.
 
-### 📅 Appointments
-A **chair/day planner** (drag to reschedule, per-chair rows) plus a date-grouped table view,
-status workflow (Scheduled → Checked-in → In-progress → Completed / Cancelled / No-show), rooms,
-and durations.
+### 📅 Appointments &amp; scheduling
+Two views of the day:
+
+- **Chair / Day Planner (schedule view)** — a time-grid of chair rows with **drag-to-reschedule**,
+  **drag-to-zoom** into a time range, per-chair expand, and a slide-in details drawer. Prev / next /
+  Today date navigation.
+- **Table view** — a date-grouped list with time, patient, doctor and **status pills** (Scheduled →
+  Checked-in → In-progress → Completed / Cancelled / No-show), plus **search** and per-status filter
+  chips.
+
+Appointments carry rooms, durations and a full status workflow.
 
 ### 🦷 Treatments &amp; odontogram
-Per-tooth clinical data: a **Kanban treatment board** by status (Planned, In-progress, Needs
-follow-up, Completed, Billed, Archived), a `TreatmentTooth` model for per-tooth notes, and an
-interactive **odontogram** tooth chart on each patient.
+Per-tooth clinical records. A **Kanban treatment board** with **drag-and-drop** between statuses
+(Planned → In-progress → Needs follow-up → Completed → Billed → Archived) alongside a searchable
+table view. A `TreatmentTooth` model captures **per-tooth notes**, and each patient has an
+interactive **odontogram** tooth chart with a 10-state status per tooth. Treatment cost feeds the
+patient balance and revenue reporting.
 
 ### 💳 Finances
-**Payments** (money in) and **Expenses** (money out) designed as one consistent system: summary
-strips (total, this month, by method / pending approval), date-grouped ledgers with per-day
-subtotals, method chips, and an expense approval workflow.
+**Payments** (money in) and **Expenses** (money out) built as **one consistent system** — green for
+in, red for out. Each opens with a **summary strip** (Payments: total received, this month, top
+method, a by-method breakdown; Expenses: total spent, pending approval, this-month-vs-last, top
+category), then a **date-grouped ledger** with per-day subtotals. Payments show a method chip
+(card / cash / transfer / insurance) with the patient as the primary line; expenses show the vendor
+with a colored category chip, **Approve / Pending** status pills, and an **expense-approval
+workflow** with inline approve-on-hover.
 
 ### 📊 Reports &amp; analytics
-Revenue trends, payment status, appointments overview, most-common treatments, expenses by
-category, staff performance and an appointment heatmap — role-aware and CSV-exportable, built on a
-single validated chart palette.
+Answers "**is the practice healthy?**" before it shows a single chart:
+
+- A **KPI strip** — total patients, revenue this month (with % vs. last month), **no-show rate**, and
+  outstanding balance.
+- A **didn't-happen callout** that surfaces the share of appointments that were no-shows or
+  cancellations — the number a clinic owner needs to see, not bury.
+- A unified chart system: three matching **donuts** (payment status, appointments overview, common
+  treatments), revenue vs. expense **trend** charts with 3M/6M/12M toggles, expenses by category, a
+  staff-performance bar, patient demographics and an **appointment heatmap** — all on one
+  CVD-validated palette, with semantic red/amber/green reserved strictly for good/warning/bad.
+
+Everything is role-aware and **CSV-exportable**.
 
 ### 🧑‍💼 Staff management
-Role-based staff directory with a rich profile view: per-doctor activity metrics (appointments,
-completion rate, assigned patients, attributed revenue), upcoming schedule, and access.
+A role-based directory (searchable, role-filtered) where each member opens a **management profile**,
+not a business card: for doctors, real **activity metrics** (appointments, completion rate, assigned
+patients, attributed revenue), an **upcoming schedule**, assigned-patient chips, and the granular
+access grid described above.
 
-### 🔐 Auth &amp; access control
-JWT authentication with a single 401→logout interceptor, four roles (Manager / Doctor / Assistant /
-Receptionist) and granular per-user permissions.
+### 🔐 Auth &amp; platform
+JWT authentication with a single 401→logout interceptor; **TanStack Query** caches every main screen
+so navigation is instant (revisits are served from cache, refreshed in the background); a home-grown
+design system (teal *Clinic Pulse* brand, Inter + Space Grotesk, shared motion tokens, branded
+skeletons and empty states).
 
 ---
 
@@ -252,6 +306,8 @@ The seed script creates ready-to-use accounts (all share the same password):
 
 ## Roles &amp; permissions
 
+Four base roles set sensible defaults for what each screen shows:
+
 | Capability | Manager | Doctor | Assistant |
 |------------|:------:|:-----:|:--------:|
 | Clinic Pulse dashboard | ✅ | ✅ | ✅ |
@@ -262,7 +318,9 @@ The seed script creates ready-to-use accounts (all share the same password):
 | Reports &amp; analytics | ✅ (all) | ✅ (own) | ✅ (subset) |
 | Staff management | ✅ | — | — |
 
-Access is enforced by role plus granular per-user permissions on the backend.
+…and on top of that, a Manager can **override any single action** (view / create / update / delete)
+for any feature, per staff member — see [Granular permission control](#-granular-permission-control----the-signature-feature).
+Every grant is enforced server-side on the route, not just hidden in the UI.
 
 ---
 
