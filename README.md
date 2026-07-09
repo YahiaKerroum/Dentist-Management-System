@@ -1,319 +1,425 @@
-# Dentist-Management-System
-The Dental Clinic Management System (DCMS) is a production-ready full-stack web application designed to streamline operations for dental clinics. It provides comprehensive management of patients, treatments, appointments, finances, and staff, with role-based access control for Managers, Doctors, and Assistants.
+<div align="center">
 
-### Key Objectives
-- **Efficiency**: Automate scheduling, billing, and record-keeping
-- **Accuracy**: Maintain precise patient records and treatment history
-- **Security**: Protect sensitive medical data with RBAC and encryption
-- **Scalability**: Support multiple clinics and growing patient bases
-- **Usability**: Intuitive interface for non-technical staff
+<img src="dental-clinic-app/frontend/public/favicon.svg" width="76" alt="Clinic Pulse logo" />
 
-### Target Users
-- **Managers**: Clinic administrators managing staff, finances, and operations
-- **Doctors**: Practitioners recording treatments and viewing schedules
-- **Assistants**: Front-desk staff handling appointments and patient intake
+# Clinic Pulse
 
-### Architecture Layers
+### The dental practice OS — run your clinic by its pulse.
 
-#### Backend Layers
-1. **Routes** (`backend/src/routes/`): HTTP endpoint definitions
-2. **Controllers** (`backend/src/controllers/`): Request/response handling
-3. **Services** (`backend/src/services/`): Business logic
-4. **Repositories** (Prisma): Data access
-5. **Middleware** (`backend/src/middleware/`): Auth, validation, error handling
-6. **Utils** (`backend/src/utils/`): Shared utilities
+A full-stack practice-management platform for dental clinics: patients, appointments,
+per-tooth clinical records, finances and staff — with a live command-center dashboard
+and role-based access for Managers, Doctors and Assistants.
 
-#### Frontend Layers
-1. **Pages** (`frontend/src/pages/`): Screen-level components
-2. **Components** (`frontend/src/components/`): Reusable UI components
-3. **Services** (`frontend/src/services/api/`): API client functions
-4. **Store** (`frontend/src/store/`): Zustand state management
-5. **Hooks** (`frontend/src/hooks/`): Custom React hooks
-6. **Routes** (`frontend/src/routes/`): React Router configuration
+<br />
+
+![React](https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node-20+-339933?logo=nodedotjs&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4-000000?logo=express&logoColor=white)
+![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?logo=postgresql&logoColor=white)
+
+</div>
+
+<br />
+
+<div align="center">
+  <img src="docs/screenshots/dashboard.png" width="90%" alt="Clinic Pulse dashboard" />
+  <p><em>Clinic Pulse — the live command center that opens the app.</em></p>
+</div>
 
 ---
 
-## Technology Stack
+## Table of contents
 
-### Frontend
-- **React 18.3**: UI library
-- **TypeScript 5.4**: Type safety
-- **Vite 5.2**: Build tool and dev server
-- **Ant Design 5.19**: Component library
-- **React Router 6.23**: Client-side routing
-- **React Query 5.35**: Server state management
-- **Zustand 4.5**: Client state management
-- **Recharts 2.9**: Data visualization
-- **Axios 1.7**: HTTP client
-- **Day.js 1.11**: Date manipulation
+- [Overview](#overview)
+- [Screenshots](#screenshots)
+- [Features](#features)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Demo accounts](#demo-accounts)
+- [Available scripts](#available-scripts)
+- [Roles &amp; permissions](#roles--permissions)
+- [Project structure](#project-structure)
+- [Architecture &amp; data model](#architecture--data-model)
+- [Documentation](#documentation)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-### Backend
-- **Node.js 20+**: Runtime
-- **Express.js 4.19**: Web framework
-- **TypeScript 5.4**: Type safety
-- **Prisma 5.17**: ORM and database toolkit
-- **PostgreSQL 15+**: Relational database
-- **JWT (jsonwebtoken 9.0)**: Authentication
-- **bcryptjs 2.4**: Password hashing
-- **Zod 3.23**: Schema validation
-- **Pino 9.1**: Logging
-- **Helmet 7.1**: Security headers
-- **CORS 2.8**: Cross-origin resource sharing
+---
 
-### Development Tools
-- **pnpm 9.0**: Package manager
-- **ESLint**: Code linting
-- **Prettier**: Code formatting
-- **Vitest**: Testing framework
-- **Docker**: Containerization
-- **Git**: Version control
+## Overview
 
-## Project Structure
+**Clinic Pulse** turns the day-to-day of a dental practice into one coherent product. Instead of
+a generic CRUD admin panel, each area is designed around the job the user is actually doing:
+
+- A **front desk** sees who's waiting, who owes money, and today's schedule at a glance.
+- A **doctor** sees their chair schedule, per-tooth treatment plans and clinical history.
+- A **manager** sees revenue, pending approvals, staff performance and outstanding balances.
+
+The app is built as a modern **TypeScript monorepo** — a React + Vite + Tailwind frontend and an
+Express + Prisma + PostgreSQL backend — with JWT auth and role-based access control throughout.
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/patients.png" alt="Patients records table" /><p align="center"><strong>Patients</strong> — a sortable records table with next appointment, balance, last visit and status.</p></td>
+    <td width="50%"><img src="docs/screenshots/patient-detail.png" alt="Patient detail" /><p align="center"><strong>Patient record</strong> — balance, alerts, next appointment and a live activity feed.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/appointments.png" alt="Appointments" /><p align="center"><strong>Appointments</strong> — chair/day planner and a date-grouped list with status pills.</p></td>
+    <td width="50%"><img src="docs/screenshots/treatments.png" alt="Treatments board" /><p align="center"><strong>Treatments</strong> — a Kanban board of treatment plans by clinical status.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/finances-payments.png" alt="Finances payments" /><p align="center"><strong>Finances</strong> — payments and expenses as one system with summary strips.</p></td>
+    <td width="50%"><img src="docs/screenshots/reports.png" alt="Reports and analytics" /><p align="center"><strong>Reports</strong> — revenue, payment status, appointments and treatment analytics.</p></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/staff-profile.png" alt="Staff profile" /><p align="center"><strong>Staff</strong> — a management view with per-person metrics, schedule and access.</p></td>
+    <td width="50%"><img src="docs/screenshots/login.png" alt="Login" /><p align="center"><strong>Sign in</strong> — branded, role-based login.</p></td>
+  </tr>
+</table>
+
+---
+
+## Features
+
+### 🩺 Clinic Pulse dashboard
+A real-time command center: today's schedule, patients waiting / in treatment, chair occupancy,
+revenue collected today vs. yesterday, pending patient balances, follow-ups due, and expenses
+awaiting approval — all from a single aggregation endpoint, never fabricated.
+
+### 👥 Patients
+A working records table sortable by **next appointment, outstanding balance, last visit and
+status** (active/inactive derived from real visit history). Quick actions on hover, a full patient
+record with a balance-and-alerts snapshot, and a reverse-chronological activity feed.
+
+### 📅 Appointments
+A **chair/day planner** (drag to reschedule, per-chair rows) plus a date-grouped table view,
+status workflow (Scheduled → Checked-in → In-progress → Completed / Cancelled / No-show), rooms,
+and durations.
+
+### 🦷 Treatments &amp; odontogram
+Per-tooth clinical data: a **Kanban treatment board** by status (Planned, In-progress, Needs
+follow-up, Completed, Billed, Archived), a `TreatmentTooth` model for per-tooth notes, and an
+interactive **odontogram** tooth chart on each patient.
+
+### 💳 Finances
+**Payments** (money in) and **Expenses** (money out) designed as one consistent system: summary
+strips (total, this month, by method / pending approval), date-grouped ledgers with per-day
+subtotals, method chips, and an expense approval workflow.
+
+### 📊 Reports &amp; analytics
+Revenue trends, payment status, appointments overview, most-common treatments, expenses by
+category, staff performance and an appointment heatmap — role-aware and CSV-exportable, built on a
+single validated chart palette.
+
+### 🧑‍💼 Staff management
+Role-based staff directory with a rich profile view: per-doctor activity metrics (appointments,
+completion rate, assigned patients, attributed revenue), upcoming schedule, and access.
+
+### 🔐 Auth &amp; access control
+JWT authentication with a single 401→logout interceptor, four roles (Manager / Doctor / Assistant /
+Receptionist) and granular per-user permissions.
+
+---
+
+## Tech stack
+
+| Layer | Technologies |
+|------|--------------|
+| **Frontend** | React 18 · TypeScript · Vite 5 · Tailwind CSS 3 · TanStack Query 5 · React Router 7 · Framer Motion · Radix UI · Recharts 3 · Axios · Lucide · Sonner |
+| **Backend** | Node.js 20+ · Express 4 · TypeScript · Prisma 5 · JWT · bcryptjs · Zod · Helmet · Pino · Multer |
+| **Database** | PostgreSQL 15+ |
+| **Tooling** | ESLint · ts-node-dev · Prisma Migrate · Docker (optional) |
+
+The design system is home-grown: a teal **"Clinic Pulse"** brand, Inter for body + Space Grotesk
+for display, a shared motion vocabulary, and a CVD-validated chart palette.
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- **Node.js 20+** and npm
+- **PostgreSQL 15+** (local install or Docker)
+
+### 1. Clone
+
+```bash
+git clone https://github.com/YahiaKerroum/Dentist-Management-System.git
+cd Dentist-Management-System/dental-clinic-app
+```
+
+### 2. Start PostgreSQL (Docker option)
+
+```bash
+docker run -d --name clinic-pulse-db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=dental_clinic_db \
+  -p 5432:5432 postgres:15
+```
+
+### 3. Configure the backend environment
+
+Create `dental-clinic-app/backend/.env`:
+
+```properties
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dental_clinic_db?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/dental_clinic_db?schema=public"
+JWT_SECRET="change_this_to_a_strong_secret"
+PORT=4000
+```
+
+Optionally create `dental-clinic-app/frontend/.env` to point the client at the API
+(defaults to `http://localhost:4000/api`):
+
+```properties
+VITE_API_URL="http://localhost:4000/api"
+```
+
+### 4. Install, migrate &amp; seed the backend
+
+```bash
+cd backend
+npm install
+npx prisma generate
+npx prisma migrate deploy   # or: npx prisma migrate dev --name init
+npm run seed                # loads demo staff, patients, appointments, treatments, payments
+```
+
+### 5. Run the backend
+
+```bash
+npm run dev                 # http://localhost:4000  (health: /health)
+```
+
+### 6. Run the frontend
+
+```bash
+cd ../frontend
+npm install
+npm run dev                 # http://localhost:5173
+```
+
+Open **http://localhost:5173** and sign in with a demo account below.
+
+---
+
+## Demo accounts
+
+The seed script creates ready-to-use accounts (all share the same password):
+
+| Role | Username | Password |
+|------|----------|----------|
+| Manager | `manager` | `password123` |
+| Doctor | `doctor` | `password123` |
+| Assistant | `assistant` | `password123` |
+
+> Use the **Manager** account for the full experience (finances, reports, staff).
+> The login screen also has a "Demo accounts" shortcut that fills these in for you.
+
+---
+
+## Available scripts
+
+**Backend** (`dental-clinic-app/backend`)
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the API in watch mode (ts-node-dev) |
+| `npm run build` | Compile TypeScript to `dist/` |
+| `npm start` | Run the compiled server |
+| `npm run seed` | Seed the database with demo data |
+
+**Frontend** (`dental-clinic-app/frontend`)
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run ESLint |
+
+---
+
+## Roles &amp; permissions
+
+| Capability | Manager | Doctor | Assistant |
+|------------|:------:|:-----:|:--------:|
+| Clinic Pulse dashboard | ✅ | ✅ | ✅ |
+| Patients | ✅ | ✅ | ✅ |
+| Appointments | ✅ | ✅ | ✅ |
+| Treatments &amp; odontogram | ✅ | ✅ | ✅ |
+| Finances (payments &amp; expenses) | ✅ | ✅ | ✅ |
+| Reports &amp; analytics | ✅ (all) | ✅ (own) | ✅ (subset) |
+| Staff management | ✅ | — | — |
+
+Access is enforced by role plus granular per-user permissions on the backend.
+
+---
+
+## Project structure
 
 ```
-dental-clinic-app/
-├── backend/
-│   ├── src/
-│   │   ├── config/          # Configuration (env, logger, prisma)
-│   │   ├── uploads/         # Local file storage (created at runtime)
-│   │   ├── controllers/     # Handle HTTP requests and responses
-│   │   ├── errors/          # Custom error classes,and error handling
-│   │   ├── middleware/      # Express middleware for Authentication, validation, and security
-│   │   ├── routes/          # API endpoints and URL paths definitions
-│   │   ├── services/        # Business logic
-│   │   ├── types/           # TypeScript interfaces and type definitions
-│   │   ├── utils/           # Helper functions, constants, and utilities
-│   │   ├── scripts/         # Database seeding and maintenance scripts
-│   │   ├── app.ts           # Express app setup
-│   │   └── server.ts        # Server entry point
-│   ├── prisma/
-│   │   ├── schema.prisma    # Database models and relationships
-│   │   ├── migrations/      # Database version control and changes
-│   │   └── seed.ts          # Populate database with initial test data
-│   ├── .env                 # Environment variables (create this)
-│   ├── package.json
-│   ├── tsconfig.json
-│   └── Dockerfile
-├── frontend/
-│   ├── src/
-│   │   ├── components/      # Shared UI components (buttons, forms, tables)
-│   │   │   └── layout/      # Navigation, header, sidebar, footer
-│   │   ├── pages/           # Page components
-│   │   │   ├── auth/        # Login page
-│   │   │   ├── dashboard/   # Role-specific dashboards
-│   │   │   ├── patients/    # Patient management
-│   │   │   ├── appointments/# Appointment scheduling
-│   │   │   ├── finance/     # Financial management
-│   │   │   ├── reports/      # Reports and analytics
-│   │   │   ├── profile/      # User profiles
-│   │   │   └── admin/       # Team management (Manager only)
-│   │   ├── services/        # API services
-│   │   │   └── api/         # API client functions
-│   │   ├── store/           # Zustand stores
-│   │   ├── hooks/           # Custom React hooks for reusable logic
-│   │   ├── routes/          # Application routing and navigation
-│   │   ├── styles/          # Global styles
-│   │   ├── App.tsx          # Main application component and router
-│   │   └── main.tsx         # Entry point
-│   ├── public/              # Static assets
-│   ├── index.html           # HTML template
-│   ├── package.json
-│   ├── vite.config.ts
-│   └── Dockerfile
-├── docs/                    # Documentation
-│   ├── srs.md              # Software Requirements Specification
-│   ├── api.md              # API documentation
-│   ├── database.md         # Database schema docs
-│   ├── components.md       # Component documentation
-│   ├── setup.md            # Setup instructions
-│   ├── testing.md          # Testing guide
-├── package.json            # Root package.json (workspace)
-├── pnpm-workspace.yaml     # pnpm workspace config
-└── README.md               # Project README
+Dentist-Management-System/
+└── dental-clinic-app/
+    ├── backend/
+    │   ├── src/
+    │   │   ├── controllers/     # HTTP request/response handling
+    │   │   ├── services/        # Business logic (reports, appointments, finances, …)
+    │   │   ├── routes/          # API endpoint definitions
+    │   │   ├── middleware/      # Auth, validation, error handling
+    │   │   ├── utils/           # Shared helpers (JWT, Drive, permissions)
+    │   │   ├── scripts/         # Database seed
+    │   │   ├── app.ts           # Express app setup
+    │   │   └── server.ts        # Entry point
+    │   └── prisma/
+    │       ├── schema.prisma    # Data models & relationships
+    │       └── migrations/      # Versioned schema changes
+    ├── frontend/
+    │   └── src/
+    │       ├── pages/           # Screen-level components (ClinicPulse, Patients, …)
+    │       ├── components/      # UI primitives, layout, feature components
+    │       │   ├── ui/          # Design-system primitives (Button, Card, BrandMark, …)
+    │       │   ├── layout/      # Sidebar, header, main layout
+    │       │   ├── appointments/ patients/ treatments/ finances/ staff/ reports/
+    │       ├── services/        # Typed API client functions
+    │       ├── lib/             # Query keys, motion tokens, chart theme
+    │       ├── contexts/        # Auth context
+    │       ├── routes/          # React Router configuration
+    │       └── types/           # Shared TypeScript types
+    └── docs/                    # Setup, API, database, and design docs
 ```
-### UML Class Diagram
+
+---
+
+## Architecture &amp; data model
+
+The backend is a layered Express app (routes → controllers → services → Prisma), and the frontend
+is a routed React SPA that caches server state with TanStack Query.
+
+<details>
+<summary><strong>Domain model (UML class diagram)</strong></summary>
 
 ```mermaid
-
-
 classDiagram
     class Staff {
         <<abstract>>
         -UserID: String
-        -Fname: String
-        -Lname: String
+        -firstName: String
+        -lastName: String
         -phone: String
         -email: String
         -username: String
-        -password: String
-        +login(): Boolean
-        +logout(): void
-        +updateProfile(): void
-        +resetPassword(): void
-        +viewSchedule(): void
+        +login() Boolean
+        +updateProfile() void
     }
-
     class Manager {
-        -ManagerID: String
-        +ModifyPermissions(staff): void
-        +ViewExpenses(): List~Expense~
-        +addStaff(staff): void
-        +removeStaff(staffID): void
-        +updateStaff(staff): void
-        +generateReport(): Report
-        +approveExpense(expenseID): void
-        +viewAllAppointments(): List~Appointment~
+        +modifyPermissions(staff) void
+        +approveExpense(expenseID) void
+        +generateReport() Report
+        +addStaff(staff) void
     }
-
-    class Assistant {
-        -AssistantID: String
-        +ScheduleAppointment(): Appointment
-        +managePatient(): void
-        +ModifyPayments(): Payment
-        +cancelAppointment(appointmentID): void
-        +rescheduleAppointment(appointmentID, newDate): void
-        +checkInPatient(patientID): void
-        +sendReminder(appointmentID): void
-        +registerPatient(): Patient
-        +updatePatientInfo(patientID): void
-    }
-
     class Doctor {
-        -DoctorID: String
-        -Specialization: String
-        -WorkingTime: List~String~
-        +CreateTreatment(): Treatment
-        +ViewAppointments(): List~Appointment~
-        +UpdatePatientDetails(): void
-        +viewPatientHistory(patientID): void
-        +addDiagnosis(patientID, diagnosis): void
-        +completeTreatment(treatmentID): void
-        +addTreatmentNotes(treatmentID, notes): void
-        +updateAvailability(): void
+        -specialization: String
+        -workingTime: List~String~
+        +createTreatment() Treatment
+        +viewAppointments() List~Appointment~
+        +completeTreatment(treatmentID) void
     }
-
+    class Assistant {
+        +scheduleAppointment() Appointment
+        +registerPatient() Patient
+        +recordPayment() Payment
+    }
     class Patient {
-        -ID: String
-        -Fname: String
-        -Lname: String
-        -date_of_birth: Date
-        -phone: String
-        -email: String
-        -PrimaryDentistID: String(FK)
-        -creation_date: Date
-        -last_update: Date
-        +UpdatePatient(): Patient
-        +viewTreatmentHistory(): List~Treatment~
-        +viewAppointments(): List~Appointment~
-        +viewPaymentHistory(): List~Payment~
-        +getOutstandingBalance(): Decimal
-        +updateContactInfo(): void
+        -firstName: String
+        -lastName: String
+        -dateOfBirth: Date
+        -primaryDentistID: String
+        +getOutstandingBalance() Decimal
+        +viewTreatmentHistory() List~Treatment~
     }
-
     class Appointment {
-        <<association class>>
-        -AppointmentID: String
-        -DoctorID: String(FK)
-        -PatientID: String(FK)
-        -dateofTreatment: Date
-        -type_of_treatment: Enum
-        -notes: String
-        -Procedure: String
-        -TeethInvolved: List~Integer~
-        -CreatedAt: Date
-        -FollowUpRequired: Boolean
-        +reschedule(newDate): void
-        +cancel(): void
-        +markComplete(): void
-        +updateNotes(notes): void
-        +getDetails(): Appointment
+        -dateOfTreatment: Date
+        -status: Enum
+        -typeOfTreatment: Enum
+        -roomID: String
+        +reschedule(newDate) void
+        +updateStatus(status) void
     }
-
     class Treatment {
-        <<association class>>
-        -TreatmentID: String
-        -DoctorID: String(FK)
-        -PatientID: String(FK)
-        -dateofTreatment: Date
-        -type_of_treatment: Enum
-        -notes: String
-        -Procedure: String
-        -TeethInvolved: List~Integer~
-        -CreatedAt: Date
-        -FollowUpRequired: Boolean
-        +UpdatePatient(): Patient
-        +addNotes(notes): void
-        +updateProcedure(procedure): void
-        +getTreatmentDetails(): Treatment
-        +markAsComplete(): void
-        +scheduleFollowUp(): Appointment
+        -dateOfTreatment: Date
+        -status: Enum
+        -cost: Decimal
+        +addNotes(notes) void
+        +scheduleFollowUp() Appointment
     }
-
     class Payment {
-        -PatientID: String(FK)
-        -UserID: String(FK)
-        -PaymentID: String
-        -date: Date
         -amount: Decimal
         -method: Enum
-        +processPayment(): Boolean
-        +generateReceipt(): Receipt
-        +refund(): void
-        +updateAmount(amount): void
-        +getPaymentDetails(): Payment
-    }
-
-    class FinancialRecord {
-        <<abstract>>
-        -ID: String
         -date: Date
-        -amount: Decimal
-        -method: Enum
-        -RecordedByID: String(FK)
-        -RecordedAt: Date
-        -Notes: String
-        +generateReport(): Report
-        +updateRecord(): void
-        +deleteRecord(): void
-        +getRecordDetails(): FinancialRecord
     }
-
     class Expense {
-        -Category: String
-        -PaidTo: String
-        +requestApproval(): void
-        +markAsPaid(): void
-        +updateCategory(category): void
-        +getExpenseDetails(): Expense
+        -category: String
+        -paidTo: String
+        -approved: Boolean
+        +requestApproval() void
     }
 
-    %% Inheritance Relationships - Staff hierarchy
-    Staff <|-- Doctor : inherits
-    
-    %% Inheritance Relationships - FinancialRecord hierarchy
-    FinancialRecord <|-- Payment : inherits
-    FinancialRecord <|-- Expense : inherits
-        Assistant -- Payment : processes
-
-    Staff -- FinancialRecord : manage
-
-
-
-    %% Assistant Associations
-    Assistant -- Appointment : schedules
-    Assistant -- Patient : registers
-
-    %% Manager Associations
-
+    Staff <|-- Manager
+    Staff <|-- Doctor
+    Staff <|-- Assistant
     Patient "1" -- "0..*" Treatment : receives
     Patient "1" -- "0..*" Appointment : books
     Doctor "1" -- "0..*" Appointment : has
     Doctor "1" -- "0..*" Treatment : creates
     Patient "1" -- "0..*" Payment : makes
-    Manager -- Expense : reviews
+    Manager -- Expense : approves
     Manager -- Staff : supervises
-
-    Staff <|-- Manager : inherits
-    Staff <|-- Assistant : inherits
-  end
 ```
+
+</details>
+
+---
+
+## Documentation
+
+More detailed docs live in [`dental-clinic-app/docs/`](dental-clinic-app/docs/):
+
+| Doc | What it covers |
+|-----|----------------|
+| [setup.md](dental-clinic-app/docs/setup.md) | Full local setup & troubleshooting |
+| [api.md](dental-clinic-app/docs/api.md) | REST API endpoints |
+| [database.md](dental-clinic-app/docs/database.md) | Prisma schema & relationships |
+| [components.md](dental-clinic-app/docs/components.md) | Frontend component reference |
+| [REDESIGN_STATUS.md](dental-clinic-app/docs/REDESIGN_STATUS.md) | Product/design overhaul status & decisions |
+
+---
+
+## Roadmap
+
+- [ ] Treatment plans + cost estimator + e-signature / consent
+- [ ] Online booking + automated appointment reminders
+- [ ] Patient portal (separate patient login)
+- [ ] Medical alerts / allergies on the patient record
+- [ ] Automated tests &amp; CI
+
+---
+
+## License
+
+This project was built for educational purposes. See the repository for license details.
+
+<div align="center">
+<br />
+<sub>Built with React, Express, Prisma & PostgreSQL · <strong>Clinic Pulse</strong></sub>
+</div>
