@@ -5,7 +5,6 @@ import { Button } from '../components/ui/Button';
 
 // Your Components
 import { MyPatientsCount } from '../components/reports/analytics/MyPatientsCount';
-import { TotalPatients } from '../components/reports/analytics/TotalPatients';
 import { MyAppointmentsTable } from '../components/reports/analytics/MyAppointmentsTable';
 import { CancellationsReport } from '../components/reports/analytics/CancellationsReport';
 import { AppointmentsOverviewChart } from '../components/reports/analytics/AppointmentsOverviewChart';
@@ -24,6 +23,7 @@ import { PatientDemographics } from '../components/reports/analytics/PatientDemo
 import { RevenueGeneratedChart } from '../components/reports/analytics/RevenueGeneratedChart';
 import { RevenueTrendChart } from '../components/reports/analytics/RevenueTrendChart';
 import { StaffPerformanceChart } from '../components/reports/analytics/StaffPerformanceChart';
+import { ReportsKpiStrip } from '../components/reports/ReportsKpiStrip';
 
 interface ReportsPageProps {
   token: string;
@@ -200,32 +200,35 @@ export function ReportsPage({ token, userRole = 'MANAGER' }: ReportsPageProps) {
       {/* MANAGER REPORTS */}
       {userRole === 'MANAGER' && (
         <>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 mb-6">
-            <div className="flex flex-col gap-4">
-              <TotalPatients token={token} />
-              <NewPatientsThisMonth token={token} />
-            </div>
-            <PaymentStatusChart token={token} />
-            <RevenueGeneratedChart token={token} />
+          {/* KPI strip + didn't-happen callout — the headline health of the practice */}
+          <div className="mb-6">
+            <ReportsKpiStrip token={token} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Donut trio — one consistent style */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 mb-6">
+            <PaymentStatusChart token={token} />
             <AppointmentsOverviewChart token={token} />
             <CommonTreatmentsChart token={token} />
           </div>
 
+          {/* Time-series: money in vs. out */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <ExpensesByCategoryChart token={token} />
+            <RevenueGeneratedChart token={token} />
             <ExpenseTrendsChart token={token} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <RevenueTrendChart token={token} />
+            <ExpensesByCategoryChart token={token} />
             <StaffPerformanceChart token={token} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <RevenueTrendChart token={token} />
             <PatientDemographics token={token} />
+          </div>
+
+          <div className="mb-6">
             <AppointmentHeatmap token={token} />
           </div>
         </>

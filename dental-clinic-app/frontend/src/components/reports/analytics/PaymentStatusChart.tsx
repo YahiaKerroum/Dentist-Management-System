@@ -49,6 +49,7 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
@@ -91,8 +92,8 @@ export const PaymentStatusChart: React.FC<PaymentStatusChartProps> = ({ token })
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={75}
+                innerRadius={55}
+                outerRadius={80}
                 paddingAngle={2}
                 dataKey="value"
                 label={renderLabel}
