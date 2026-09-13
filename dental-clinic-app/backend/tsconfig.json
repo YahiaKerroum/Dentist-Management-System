@@ -10,7 +10,7 @@
     "skipLibCheck": true
   },
   "exclude": [
-    "src/app.ts",
-    "src/server.ts"
+    "node_modules",
+    "dist"
   ]
 }

@@ -13,7 +13,7 @@ node -v
 ```
 
 - npm (comes with Node) or pnpm (optional). If you use pnpm, substitute `pnpm` for `npm` where shown.
-- Docker (optional) — recommended for quickly running PostgreSQL locally.
+- Docker + Docker Compose (optional) — either for quickly running PostgreSQL locally, or to run the entire stack (db + backend + frontend) in containers. See [Run everything with Docker Compose](#run-everything-with-docker-compose) below.
 
 ## 2) Clone the repo
 
@@ -46,11 +46,14 @@ Create the backend `.env` file at `dental-clinic-app/backend/.env` (don't commit
 
 ```properties
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/dental_clinic_db?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/dental_clinic_db?schema=public"
 JWT_SECRET="change_this_to_a_strong_secret"
 PORT=4000
 JWT_EXPIRES_IN="15m"
 JWT_REFRESH_EXPIRES_IN="7d"
 ```
+
+`DIRECT_URL` is required by `prisma/schema.prisma` (used for migrations) — point it at the same database as `DATABASE_URL` unless you're using a connection pooler.
 
 Adjust `DATABASE_URL` user/password/host/port to match your Postgres setup.
 
@@ -140,7 +143,39 @@ npm run build
 npm start
 ```
 
-To run everything in Docker, you can build images using the Dockerfiles in `backend/` and `frontend/` and use a `docker-compose.yml` to wire services together (this repo currently has a placeholder `docker-compose.yml` — create one tying `db`, `backend`, and `frontend` if you need containerized deployment).
+## Run everything with Docker Compose
+
+`dental-clinic-app/docker-compose.yml` wires up `db` (Postgres), `backend`, and `frontend` as three
+containers. From `dental-clinic-app/`:
+
+```bash
+docker-compose up --build
+```
+
+- Frontend: `http://localhost:3000`
+- Backend / health check: `http://localhost:4000/health`
+- Postgres: exposed on host port `5433` (mapped to the container's `5432`)
+
+On every backend start, `prisma migrate deploy` runs automatically, so the schema is always up to
+date — this is safe to run repeatedly and never touches existing data. **Seeding is not automatic.**
+A fresh database (e.g. the first run, or after `docker-compose down -v`) has the correct tables but
+zero users. Seed it once with:
+
+```bash
+docker-compose exec backend node dist/prisma/seed.js
+```
+
+This creates the same [demo accounts](../../README.md#demo-accounts) and dummy patients/appointments
+as the local `npm run seed` script (the container image doesn't include `ts-node`, so use the
+compiled `dist/prisma/seed.js` instead of `npm run seed` here).
+
+To stop the stack: `docker-compose down` (add `-v` only if you also want to delete the Postgres
+volume — this wipes all data, including anything you seeded).
+
+The credentials in `docker-compose.yml` (`JWT_SECRET`, the Postgres password) are placeholder dev
+values checked into git — fine for local/demo use, but replace them (e.g. via a `.env` file passed
+to `docker-compose` and out of the compose file entirely) before deploying anywhere reachable by
+others.
 
 ## 10) Quick verification
 
@@ -156,16 +191,6 @@ To run everything in Docker, you can build images using the Dockerfiles in `back
 
 ## Suggested next improvements
 
-- Add an `env.example` file for `backend` with safe placeholders.
-- Add a simple `docker-compose.yml` that starts `postgres`, `backend`, and `frontend` for an easy `docker-compose up` dev flow.
+- Add an `.env.example` file for `backend` with safe placeholders.
 - Add a top-level `Makefile` or `package.json` workspace scripts to run both backend and frontend with one command.
-
----
-
-If you'd like, I can:
-- create `backend/.env.example` from your current `.env`,
-- scaffold a `docker-compose.yml` that runs Postgres + backend + frontend for a one-command dev environment, or
-- add a single root script that installs all packages and starts both services.
-
-Tell me which of the above you'd like me to add and I'll implement it here in the repo.
 

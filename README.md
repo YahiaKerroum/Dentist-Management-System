@@ -194,7 +194,7 @@ skeletons and empty states).
 | **Frontend** | React 18 · TypeScript · Vite 5 · Tailwind CSS 3 · TanStack Query 5 · React Router 7 · Framer Motion · Radix UI · Recharts 3 · Axios · Lucide · Sonner |
 | **Backend** | Node.js 20+ · Express 4 · TypeScript · Prisma 5 · JWT · bcryptjs · Zod · Helmet · Pino · Multer |
 | **Database** | PostgreSQL 15+ |
-| **Tooling** | ESLint · ts-node-dev · Prisma Migrate · Docker (optional) |
+| **Tooling** | ESLint · ts-node-dev · Prisma Migrate · Docker &amp; Docker Compose (optional, full-stack) |
 
 The design system is home-grown: a teal **"Clinic Pulse"** brand, Inter for body + Space Grotesk
 for display, a shared motion vocabulary, and a CVD-validated chart palette.
@@ -269,6 +269,32 @@ npm run dev                 # http://localhost:5173
 
 Open **http://localhost:5173** and sign in with a demo account below.
 
+### Alternative: run everything with Docker Compose
+
+Instead of steps 2–6 above, with Docker + Docker Compose installed you can bring up Postgres,
+the backend and the frontend together:
+
+```bash
+cd dental-clinic-app
+docker-compose up --build
+```
+
+- Frontend: **http://localhost:3000**
+- Backend health check: http://localhost:4000/health
+
+The backend applies pending Prisma migrations automatically on every start, so the schema is
+always current. Seeding is a separate, manual step (by design — see below), and the container
+image doesn't include `ts-node`, so seed it with the compiled script instead of `npm run seed`:
+
+```bash
+docker-compose exec backend node dist/prisma/seed.js
+```
+
+`docker-compose down` stops the stack; add `-v` only if you also want to delete the Postgres
+volume (this wipes all data). The `JWT_SECRET` and database password in `docker-compose.yml` are
+placeholder dev values — fine for a local demo, replace them before deploying anywhere public.
+See [docs/setup.md](dental-clinic-app/docs/setup.md#run-everything-with-docker-compose) for more detail.
+
 ---
 
 ## Demo accounts
@@ -305,6 +331,14 @@ The seed script creates ready-to-use accounts (all share the same password):
 | `npm run build` | Type-check and build for production |
 | `npm run preview` | Preview the production build |
 | `npm run lint` | Run ESLint |
+
+**Docker** (`dental-clinic-app`)
+
+| Command | Description |
+|---------|-------------|
+| `docker-compose up --build` | Build images and start db + backend + frontend |
+| `docker-compose exec backend node dist/prisma/seed.js` | Seed the containerized database with demo data |
+| `docker-compose down` | Stop the stack (add `-v` to also delete the Postgres volume) |
 
 ---
 

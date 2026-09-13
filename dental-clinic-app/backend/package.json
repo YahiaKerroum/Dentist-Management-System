@@ -25,6 +25,7 @@
         "multer": "^1.4.5-lts.1",
         "pino": "^10.1.0",
         "pino-pretty": "^13.1.2",
+        "prisma": "^5.22.0",
         "zod": "^4.1.13"
     },
     "devDependencies": {
@@ -34,7 +35,6 @@
         "@types/jsonwebtoken": "^9.0.10",
         "@types/multer": "^1.4.11",
         "@types/node": "^18.0.0",
-        "prisma": "^5.22.0",
         "ts-node": "^10.9.1",
         "ts-node-dev": "^2.0.0",
         "typescript": "^5.0.0"
